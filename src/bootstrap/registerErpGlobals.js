@@ -7,6 +7,7 @@ import { getDicts } from '@/api/system/dict/data'
 import { useDict } from '@/utils/dict'
 import MyDictDataClass from '@/utils/dict/myDictDataClass'
 import TypeJudge from '@/utils/jsType/index'
+import bigUtils from '@/utils/bigUtils'
 import { checkPermi, checkRole } from '@/utils/permission'
 import {
   parseTime,
@@ -186,6 +187,7 @@ function registerGlobalComponents(app) {
 }
 
 export default function registerErpGlobals(app, i18n) {
+  app.use(bigUtils)
   registerGlobalMethods(app, i18n)
   registerGlobalComponents(app)
 }
