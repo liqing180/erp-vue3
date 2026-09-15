@@ -74,6 +74,8 @@ import CommonSelectGroup from '@/components/Common/commonSelect/commonSelectGrou
 import CommonSelectAndList from '@/components/Common/commonSelect/CommonSelectAndList.vue'
 import CommonMultipleSelect from '@/components/Common/commonMultipleSelect'
 import ToolTipShowList from '@/components/Common/ToolTipShowList'
+import TablePropError from '@/components/Common/TablePropError'
+import TableNonInventoryItem from '@/components/Common/TableNonInventoryItem'
 import myUpload from '@/components/Common/htz-image-upload/my-upload.vue'
 import ExportDlg from '@/components/Common/exportDlg/ExportDlg.vue'
 import ImportDlg from '@/components/Common/importDlg/importDlg.vue'
@@ -168,6 +170,8 @@ app.component('CommonSelectGroup', CommonSelectGroup)
 app.component('CommonSelectAndList', CommonSelectAndList)
 app.component('CommonMultipleSelect', CommonMultipleSelect)
 app.component('ToolTipShowList', ToolTipShowList)
+app.component('TablePropError', TablePropError)
+app.component('TableNonInventoryItem', TableNonInventoryItem)
 app.component('myUpload', myUpload)
 app.component('ExportDlg', ExportDlg)
 app.component('ImportDlg', ImportDlg)
