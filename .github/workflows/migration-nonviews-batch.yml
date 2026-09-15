@@ -34,27 +34,32 @@ jobs:
       - name: 安装 Yarn
         run: npm install --global yarn@1.22.22
 
-      - name: 补齐 ERP 缺失 API
+      - name: 对齐 ERP API 契约并补业务资源
         run: |
+          cp -R source/src/api/. target/src/api/
+
           python3 - <<'PY'
           from pathlib import Path
           import shutil
 
-          src_root = Path('source/src/api')
-          dst_root = Path('target/src/api')
+          pairs = [
+              (Path('source/src/assets/icons/svg'), Path('target/src/assets/icons/svg')),
+              (Path('source/src/assets/images'), Path('target/src/assets/images')),
+          ]
           copied = []
-          for source_file in src_root.rglob('*'):
-              if not source_file.is_file():
-                  continue
-              rel = source_file.relative_to(src_root)
-              target_file = dst_root / rel
-              if target_file.exists():
-                  continue
-              target_file.parent.mkdir(parents=True, exist_ok=True)
-              shutil.copy2(source_file, target_file)
-              copied.append(rel.as_posix())
+          for src_root, dst_root in pairs:
+              for source_file in src_root.rglob('*'):
+                  if not source_file.is_file():
+                      continue
+                  rel = source_file.relative_to(src_root)
+                  target_file = dst_root / rel
+                  if target_file.exists():
+                      continue
+                  target_file.parent.mkdir(parents=True, exist_ok=True)
+                  shutil.copy2(source_file, target_file)
+                  copied.append(target_file.as_posix())
 
-          print(f'COPIED_API_FILES={len(copied)}')
+          print(f'COPIED_ASSET_FILES={len(copied)}')
           for path in copied:
               print(path)
           PY
@@ -63,7 +68,7 @@ jobs:
         working-directory: target
         run: yarn install --non-interactive --network-timeout 100000
 
-      - name: 格式化新增 API
+      - name: 格式化 ERP API
         working-directory: target
         run: yarn prettier --write src/api
 
@@ -78,12 +83,12 @@ jobs:
       - name: 提交迁移结果
         working-directory: target
         run: |
-          if [ -z "$(git status --porcelain src/api)" ]; then
-            echo "没有 API 缺口需要提交"
+          if [ -z "$(git status --porcelain src/api src/assets/icons/svg src/assets/images)" ]; then
+            echo "API 与业务资源已对齐"
             exit 0
           fi
           git config user.name "liqing180"
           git config user.email "54855614+liqing180@users.noreply.github.com"
-          git add src/api
-          git commit -m "迁移：补齐 ERP 剩余 API [migration-auto]"
+          git add src/api src/assets/icons/svg src/assets/images
+          git commit -m "迁移：对齐 ERP API 契约与业务资源 [migration-auto]"
           git push origin HEAD:develop
