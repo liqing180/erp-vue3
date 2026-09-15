@@ -34,9 +34,31 @@ jobs:
       - name: 安装 Yarn
         run: npm install --global yarn@1.22.22
 
-      - name: 对齐 ERP API 契约并补业务资源
+      - name: 对齐 ERP API 契约并保留 Vue3 兼容导出
         run: |
           cp -R source/src/api/. target/src/api/
+
+          # Vue CLI 环境变量迁移到 Vite。
+          grep -RIl "process.env.VUE_APP_" target/src/api | while read -r file; do
+            sed -i 's/process\.env\.VUE_APP_BASE_API/import.meta.env.VITE_APP_BASE_API/g' "$file"
+            sed -i 's/process\.env\.VUE_APP_URL/import.meta.env.VITE_APP_URL/g' "$file"
+            sed -i 's/process\.env\.VUE_APP_ENV/import.meta.env.VITE_APP_ENV/g' "$file"
+          done
+
+          # Vue3 公共导入弹窗仍依赖此兼容导出；ERP 源没有同名接口，因此保留目标扩展。
+          if ! grep -q "export function downTemplate" target/src/api/basic/basic.js; then
+            cat >> target/src/api/basic/basic.js <<'EOF'
+
+          // Vue3 公共导入弹窗兼容：下载模板
+          export function downTemplate(url) {
+            return request({
+              url,
+              data: {},
+              method: 'post'
+            })
+          }
+          EOF
+          fi
 
           python3 - <<'PY'
           from pathlib import Path
