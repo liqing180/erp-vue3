@@ -6,7 +6,12 @@
         :style="{ height: `${isExpand ? 180 : 48}px` }"
       >
         <div class="card-title task-title">
-          <el-button link type="primary" size="small" @click="$emit('changeIsExpand')">
+          <el-button
+            link
+            type="primary"
+            size="small"
+            @click="$emit('changeIsExpand')"
+          >
             <el-icon>
               <CaretTop v-if="isExpand" />
               <CaretBottom v-else />
@@ -30,11 +35,7 @@
         </div>
 
         <div v-if="isExpand" class="task-list">
-          <div
-            v-for="item in taskItems"
-            :key="item.key"
-            class="task-item"
-          >
+          <div v-for="item in taskItems" :key="item.key" class="task-item">
             <div class="task-icon-wrap">
               <img class="card-img" :src="item.icon" :alt="item.label" />
             </div>
