@@ -1,16 +1,17 @@
 <template>
   <el-select
-    :value="comShow"
+    ref="mySelect"
+    :model-value="comShow"
     :disabled="disabled"
     placeholder=""
     style="width: 100%"
     :loading="loading"
     :clearable="clearable"
     :filterable="filterable"
+    :size="elementSize"
+    :teleported="appendToBody"
     @change="change"
-    :size="size"
     @visible-change="visibleChange"
-    :popper-append-to-body="appendToBody"
   >
     <el-option-group
       v-for="group in options"
@@ -22,8 +23,7 @@
         :key="item[idKey]"
         :label="item[labelKey]"
         :value="item[idKey]"
-      >
-      </el-option>
+      />
     </el-option-group>
   </el-select>
 </template>
@@ -40,77 +40,78 @@ export default {
       default: ''
     },
     disabled: {
-      type: [Boolean],
+      type: Boolean,
       default: false
     },
     loading: {
-      type: [Boolean],
+      type: Boolean,
       default: false
     },
     labelKey: {
-      type: [String],
+      type: String,
       default: 'label'
     },
     idKey: {
-      type: [String],
+      type: String,
       default: 'value'
     },
     options: {
-      type: [Array],
-      default() {
-        return []
-      }
+      type: Array,
+      default: () => []
     },
     filterable: {
-      type: [Boolean],
-      default: false
+      type: Boolean,
+      default: true
     },
     clearable: {
-      type: [Boolean],
+      type: Boolean,
       default: true
     },
     size: {
-      type: [String],
+      type: String,
       default: undefined
     },
     appendToBody: {
-      type: [Boolean],
+      type: Boolean,
       default: true
     }
   },
-  data() {
-    return {}
-  },
+  emits: ['change', 'visible-change'],
   computed: {
+    elementSize() {
+      if (this.size === 'mini') return 'small'
+      if (this.size === 'medium') return 'default'
+      return this.size
+    },
+    optionList() {
+      return this.options.flatMap(group => group.options || [])
+    },
     comShow() {
-      const list = []
-      this.options.forEach(item => {
-        if (item.options) {
-          list.push(...item.options)
-        }
-      })
-      if (this.id && list.find(item => item[this.idKey] === this.id)) {
+      if (this.id && this.optionList.find(item => item[this.idKey] === this.id)) {
         return this.id
-      } else {
-        return this.label || this.id
+      }
+      return this.label || this.id
+    }
+  },
+  watch: {
+    options: {
+      immediate: true,
+      handler() {
+        this.$nextTick(() => {
+          this.$refs.mySelect?.setSelected?.()
+        })
       }
     }
   },
   methods: {
     change(value) {
-      const list = []
-      this.options.forEach(item => {
-        if (item.options) {
-          list.push(...item.options)
-        }
-      })
-      const item = list.find(item => item[this.idKey] === value) || {}
+      const item = this.optionList.find(row => row[this.idKey] === value) || {}
       this.$emit('change', item)
     },
     visibleChange(value) {
+      this.$refs.mySelect?.resetQuery?.()
       this.$emit('visible-change', value)
     }
-  },
-  emits: ['change', 'visible-change']
+  }
 }
 </script>
