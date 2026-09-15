@@ -18,8 +18,13 @@ export default class Dict {
   }
 
   init(options) {
-    const normalizedOptions = Array.isArray(options) ? { types: options } : options || {}
-    const opts = mergeRecursive(mergeRecursive({}, DEFAULT_DICT_OPTIONS), normalizedOptions)
+    const normalizedOptions = Array.isArray(options)
+      ? { types: options }
+      : options || {}
+    const opts = mergeRecursive(
+      mergeRecursive({}, DEFAULT_DICT_OPTIONS),
+      normalizedOptions
+    )
 
     if (opts.types === undefined) {
       throw new Error('need dict types')
@@ -53,7 +58,8 @@ export default class Dict {
 function loadDict(dict, dictMeta) {
   const defaultRequest = DictOptions.metas['*'].request
   const request =
-    typeof dictMeta.request === 'function' && dictMeta.request !== defaultRequest
+    typeof dictMeta.request === 'function' &&
+    dictMeta.request !== defaultRequest
       ? Promise.resolve(dictMeta.request(dictMeta))
       : MyDictDataClass.getDictFn(dictMeta.type)
 

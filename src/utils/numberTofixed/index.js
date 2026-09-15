@@ -23,7 +23,11 @@ export const numberStr = function (
   if (TypeJudge.isNull(numData) || TypeJudge.isUndefined(numData)) {
     return ''
   }
-  if (Number.isNaN(numData) || Number.isNaN(Number(numData)) || numData === '') {
+  if (
+    Number.isNaN(numData) ||
+    Number.isNaN(Number(numData)) ||
+    numData === ''
+  ) {
     return ''
   }
 
@@ -60,7 +64,8 @@ export const numberStr = function (
 
   if (minPrecision !== undefined) {
     const decimalIndex = result.indexOf('.')
-    const decimalLength = decimalIndex === -1 ? 0 : result.length - decimalIndex - 1
+    const decimalLength =
+      decimalIndex === -1 ? 0 : result.length - decimalIndex - 1
     if (decimalLength < minPrecision) {
       if (decimalIndex === -1) {
         result += '.'

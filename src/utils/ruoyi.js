@@ -133,40 +133,39 @@ export function addDateRange(params, dateRange, propName) {
 
 // 回显数据字典
 export function selectDictLabel(datas, value) {
-  if (value === undefined) return ''
+  if (value === undefined || value === null) return ''
   const actions = []
-  Object.keys(datas).some(key => {
+  Object.keys(datas || {}).some(key => {
     if (datas[key].value == '' + value) {
       actions.push(datas[key].label)
       return true
     }
     return false
   })
-  if (actions.length === 0) actions.push(value)
   return actions.join('')
 }
 
 // 回显数据字典（字符串数组）
 export function selectDictLabels(datas, value, separator) {
-  if (value === undefined || value.length === 0) return ''
-  if (Array.isArray(value)) value = value.join(',')
+  if (value === undefined || value === null || value === '') return ''
 
   const actions = []
   const currentSeparator = separator === undefined ? ',' : separator
-  const temp = value.split(currentSeparator)
+  const values = Array.isArray(value)
+    ? value
+    : String(value).split(currentSeparator)
 
-  Object.keys(temp).forEach(index => {
-    let match = false
-    Object.keys(datas).forEach(key => {
-      if (datas[key].value == '' + temp[index]) {
-        actions.push(datas[key].label + currentSeparator)
-        match = true
+  values.forEach(item => {
+    Object.keys(datas || {}).some(key => {
+      if (datas[key].value === '' + item) {
+        actions.push(datas[key].label)
+        return true
       }
+      return false
     })
-    if (!match) actions.push(temp[index] + currentSeparator)
   })
 
-  return actions.join('').substring(0, actions.join('').length - 1)
+  return actions.join(currentSeparator)
 }
 
 // 字符串格式化(%s )

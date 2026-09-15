@@ -17,7 +17,7 @@ export default function dictConverter(dict, dictMeta) {
 }
 
 function determineDictField(dict, ...fields) {
-  return fields.filter(Boolean).find(field =>
-    Object.prototype.hasOwnProperty.call(dict, field)
-  )
+  return fields
+    .filter(Boolean)
+    .find(field => Object.prototype.hasOwnProperty.call(dict, field))
 }
