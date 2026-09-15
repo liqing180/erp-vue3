@@ -165,6 +165,7 @@ service.interceptors.response.use(
           dangerouslyUseHTMLString: true,
           message: `<div style="line-height: 20px">${msg}</div>`,
           type: 'error',
+          showClose: true,
           duration: 0
         })
       }
@@ -217,7 +218,8 @@ service.interceptors.response.use(
         resetMessage({
           message: errorCode.getErrorTimeout(),
           type: 'error',
-          duration: 0
+          duration: 0,
+          showClose: true
         })
       }
       return Promise.reject(error)
@@ -232,7 +234,8 @@ service.interceptors.response.use(
       resetMessage({
         message: message || errorCode.getErrorDefault(),
         type: 'error',
-        duration: 0
+        duration: 0,
+        showClose: true
       })
     }
 

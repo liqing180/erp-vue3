@@ -36,7 +36,7 @@
             <svg-icon v-if="!settingsStore.isDark" icon-class="moon" />
           </div>
         </el-tooltip> -->
-        <div class="right-menu-item hover-effect">
+        <div class="right-menu-item hover-effect" v-if="false">
           <QrCode />
         </div>
 
