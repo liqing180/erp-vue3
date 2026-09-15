@@ -86,6 +86,7 @@ import TableNonInventoryItem from '@/components/Common/TableNonInventoryItem'
 import DocumentNoLink from '@/components/Common/documentNoLink'
 import ComparisonInput from '@/components/Common/comparisonInput'
 import FileImport from '@/components/Common/fileImport/fileImport.vue'
+import CustomDateTime from '@/components/Common/customDateTime/customDateTime.vue'
 import myUpload from '@/components/Common/htz-image-upload/my-upload.vue'
 import ExportDlg from '@/components/Common/exportDlg/ExportDlg.vue'
 import ImportDlg from '@/components/Common/importDlg/importDlg.vue'
@@ -195,6 +196,7 @@ app.component('TableNonInventoryItem', TableNonInventoryItem)
 app.component('DocumentNoLink', DocumentNoLink)
 app.component('ComparisonInput', ComparisonInput)
 app.component('FileImport', FileImport)
+app.component('CustomDateTime', CustomDateTime)
 app.component('myUpload', myUpload)
 app.component('ExportDlg', ExportDlg)
 app.component('ImportDlg', ImportDlg)
