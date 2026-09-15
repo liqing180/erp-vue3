@@ -1,0 +1,89 @@
+name: ERP 非 views 批量迁移
+
+on:
+  push:
+    branches:
+      - develop
+
+permissions:
+  contents: write
+
+jobs:
+  migrate:
+    if: ${{ !contains(github.event.head_commit.message, '[migration-auto]') }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: 拉取 ERP-VUE3
+        uses: actions/checkout@v4
+        with:
+          ref: develop
+          path: target
+
+      - name: 拉取 ERP-VUE2
+        uses: actions/checkout@v4
+        with:
+          repository: liqing180/erp-vue2
+          ref: main
+          path: source
+
+      - name: 配置 Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: 安装 Yarn
+        run: npm install --global yarn@1.22.22
+
+      - name: 补齐 ERP 缺失 API
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import shutil
+
+          src_root = Path('source/src/api')
+          dst_root = Path('target/src/api')
+          copied = []
+          for source_file in src_root.rglob('*'):
+              if not source_file.is_file():
+                  continue
+              rel = source_file.relative_to(src_root)
+              target_file = dst_root / rel
+              if target_file.exists():
+                  continue
+              target_file.parent.mkdir(parents=True, exist_ok=True)
+              shutil.copy2(source_file, target_file)
+              copied.append(rel.as_posix())
+
+          print(f'COPIED_API_FILES={len(copied)}')
+          for path in copied:
+              print(path)
+          PY
+
+      - name: 安装依赖
+        working-directory: target
+        run: yarn install --non-interactive --network-timeout 100000
+
+      - name: 格式化新增 API
+        working-directory: target
+        run: yarn prettier --write src/api
+
+      - name: ESLint 检查
+        working-directory: target
+        run: yarn eslint src
+
+      - name: 生产构建
+        working-directory: target
+        run: yarn build:prod
+
+      - name: 提交迁移结果
+        working-directory: target
+        run: |
+          if git diff --quiet; then
+            echo "没有 API 缺口需要提交"
+            exit 0
+          fi
+          git config user.name "liqing180"
+          git config user.email "54855614+liqing180@users.noreply.github.com"
+          git add src/api
+          git commit -m "迁移：补齐 ERP 剩余 API [migration-auto]"
+          git push origin HEAD:develop
