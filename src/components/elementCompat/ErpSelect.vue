@@ -105,6 +105,32 @@ export default {
         this.$refs.selectRef?.blur?.()
       })
     },
+    // ERP-VUE2 CommonSelect 会在异步 options 返回后主动刷新已选项标签。
+    // 将 Element Plus 的兼容接缝集中在这一层，业务组件不再直接依赖内部实现。
+    setSelected() {
+      this.$refs.selectRef?.setSelected?.()
+    },
+    resetQuery() {
+      const select = this.$refs.selectRef
+      if (!select) return
+
+      if (select.states) {
+        select.states.inputValue = ''
+        select.states.previousQuery = null
+      }
+
+      const filterMethod = this.$attrs.filterMethod
+      if (typeof filterMethod === 'function') {
+        filterMethod('')
+      } else {
+        const remoteMethod = this.$attrs.remoteMethod
+        if (this.$attrs.remote && typeof remoteMethod === 'function') {
+          remoteMethod('')
+        }
+      }
+
+      select.setSelected?.()
+    },
     focus() {
       this.$refs.selectRef?.focus?.()
     },
