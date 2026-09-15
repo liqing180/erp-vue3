@@ -1,0 +1,176 @@
+name: Utils 迁移收口
+
+on:
+  push:
+    branches:
+      - develop
+    paths:
+      - '.github/workflows/utils-migration-once.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  migrate-utils:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 拉取 ERP-VUE3
+        uses: actions/checkout@v4
+        with:
+          ref: develop
+          fetch-depth: 0
+
+      - name: 拉取 ERP-VUE2 工具目录
+        uses: actions/checkout@v4
+        with:
+          repository: liqing180/erp-vue2
+          ref: main
+          path: erp-vue2
+
+      - name: 配置 Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: 安装 Yarn
+        run: npm install --global yarn@1.22.22
+
+      - name: 对齐 ERP 工具行为
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          utils_index = Path('src/utils/index.js')
+          text = utils_index.read_text(encoding='utf-8')
+          old = "return str.replace(/_[a-z]/g, str1 => str1.substr(-1).toUpperCase())"
+          new = "return str.replace(/-[a-z]/g, str1 => str1.substr(-1).toUpperCase())"
+          if old not in text and new not in text:
+              raise SystemExit('未找到 camelCase 实现，停止以避免误改')
+          utils_index.write_text(text.replace(old, new), encoding='utf-8')
+
+          ruoyi = Path('src/utils/ruoyi.js')
+          text = ruoyi.read_text(encoding='utf-8')
+
+          label_start = text.index('export function selectDictLabel(')
+          label_end = text.index('// 回显数据字典（字符串数组）', label_start)
+          label_impl = '''export function selectDictLabel(datas, value) {
+            if (value === undefined || value === null) return ''
+            const actions = []
+            Object.keys(datas || {}).some(key => {
+              if (datas[key].value == '' + value) {
+                actions.push(datas[key].label)
+                return true
+              }
+              return false
+            })
+            return actions.join('')
+          }
+
+          '''
+          text = text[:label_start] + label_impl + text[label_end:]
+
+          labels_start = text.index('export function selectDictLabels(')
+          labels_end = text.index('// 字符串格式化(%s )', labels_start)
+          labels_impl = '''export function selectDictLabels(datas, value, separator) {
+            if (value === undefined || value === null || value === '') return ''
+
+            const actions = []
+            const currentSeparator = separator === undefined ? ',' : separator
+            const values = Array.isArray(value) ? value : String(value).split(currentSeparator)
+
+            values.forEach(item => {
+              Object.keys(datas || {}).some(key => {
+                if (datas[key].value === '' + item) {
+                  actions.push(datas[key].label)
+                  return true
+                }
+                return false
+              })
+            })
+
+            return actions.join(currentSeparator)
+          }
+
+          '''
+          text = text[:labels_start] + labels_impl + text[labels_end:]
+          ruoyi.write_text(text, encoding='utf-8')
+          PY
+
+      - name: 清理确认无引用的迁移工具
+        run: |
+          if [ -f src/utils/gogocodeTransfer.js ]; then
+            if grep -R -n --exclude=gogocodeTransfer.js "gogocodeTransfer" src >/tmp/gogocode-refs.txt; then
+              echo "gogocodeTransfer 仍有引用，保留："
+              cat /tmp/gogocode-refs.txt
+            else
+              rm src/utils/gogocodeTransfer.js
+              echo "已删除无引用的 src/utils/gogocodeTransfer.js"
+            fi
+          fi
+
+      - name: 检查 ERP 源工具是否有遗漏
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          source = Path('erp-vue2/src/utils')
+          target = Path('src/utils')
+          source_files = {
+              p.relative_to(source).as_posix()
+              for p in source.rglob('*')
+              if p.is_file() and p.name != 'request copy.js'
+          }
+          target_files = {
+              p.relative_to(target).as_posix()
+              for p in target.rglob('*')
+              if p.is_file()
+          }
+          missing = sorted(source_files - target_files)
+          print(f'ERP_UTIL_SOURCE_FILES={len(source_files)}')
+          print(f'TARGET_UTIL_FILES={len(target_files)}')
+          print(f'MISSING_ERP_UTIL_FILES={len(missing)}')
+          for item in missing:
+              print(item)
+          if missing:
+              raise SystemExit('仍有 ERP utils 文件未迁移')
+          PY
+
+      - name: 检查 Vue2 和 Webpack 残留
+        run: |
+          set +e
+          grep -R -nE "process\.env\.(VUE_APP_|NODE_ENV)|import Vue from ['\"]vue['\"]|Vue\.set|\.prototype\.\$" src/utils --include='*.js' > /tmp/utils-vue2-residue.txt
+          status=$?
+          set -e
+          if [ $status -eq 0 ]; then
+            echo '发现 src/utils Vue2/Webpack 残留：'
+            cat /tmp/utils-vue2-residue.txt
+            exit 1
+          fi
+          echo 'src/utils 未发现目标 Vue2/Webpack 残留'
+
+      - name: 安装依赖
+        run: yarn install --non-interactive --network-timeout 100000
+
+      - name: 格式化工具代码
+        run: yarn prettier --write src/utils src/bootstrap/registerErpGlobals.js
+
+      - name: ESLint 检查
+        run: yarn eslint src/utils src/bootstrap/registerErpGlobals.js
+
+      - name: 生产构建
+        run: yarn build:prod
+
+      - name: 提交工具迁移结果并自清理
+        run: |
+          git config user.name 'liqing180'
+          git config user.email '54855614+liqing180@users.noreply.github.com'
+          rm -rf erp-vue2
+          git rm .github/workflows/utils-migration-once.yml
+          git add src/utils src/bootstrap/registerErpGlobals.js
+          if git diff --cached --quiet; then
+            echo '没有需要提交的工具变更'
+            exit 0
+          fi
+          git commit -m '迁移：收口 ERP 工具函数行为'
+          git pull --rebase origin develop
+          git push origin HEAD:develop
