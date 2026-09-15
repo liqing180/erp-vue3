@@ -1,0 +1,83 @@
+name: develop 分支验证
+
+on:
+  push:
+    branches:
+      - develop
+  workflow_dispatch:
+
+jobs:
+  verify:
+    name: Vue3 基线验证
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: 拉取代码
+        uses: actions/checkout@v4
+
+      - name: 配置 Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: 安装 Yarn
+        run: npm install --global yarn@1.22.22
+
+      - name: 安装依赖
+        run: yarn install --non-interactive --network-timeout 100000
+
+      - name: 创建验证日志目录
+        run: mkdir -p .ci-logs
+
+      - name: ESLint 检查
+        shell: bash
+        run: |
+          set -o pipefail
+          yarn lint 2>&1 | tee .ci-logs/lint.log
+
+      - name: 生产构建
+        shell: bash
+        run: |
+          set -o pipefail
+          yarn build:prod 2>&1 | tee .ci-logs/build.log
+
+      - name: yarn dev 启动冒烟验证
+        shell: bash
+        env:
+          CI: 'true'
+          VITE_APP_ENV: development
+          VITE_APP_BASE_API: /dev-api
+          VITE_APP_URL: http://127.0.0.1:65535
+          VITE_PORT: '8088'
+        run: |
+          set -euo pipefail
+          yarn dev --host 127.0.0.1 --port 8088 > .ci-logs/dev.log 2>&1 &
+          DEV_PID=$!
+          trap 'kill "$DEV_PID" 2>/dev/null || true' EXIT
+
+          for i in {1..30}; do
+            if ! kill -0 "$DEV_PID" 2>/dev/null; then
+              cat .ci-logs/dev.log
+              exit 1
+            fi
+
+            if curl --fail --silent http://127.0.0.1:8088/ > /dev/null; then
+              curl --fail --silent http://127.0.0.1:8088/src/main.js > /dev/null
+              cat .ci-logs/dev.log
+              exit 0
+            fi
+
+            sleep 1
+          done
+
+          cat .ci-logs/dev.log
+          exit 1
+
+      - name: 上传验证日志
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: develop-verify-logs
+          path: .ci-logs/
+          if-no-files-found: ignore
