@@ -1,0 +1,149 @@
+name: ERP 资源与缺失 API 迁移
+
+on:
+  push:
+    branches:
+      - develop
+
+permissions:
+  contents: write
+
+jobs:
+  migrate:
+    if: ${{ !contains(github.event.head_commit.message, '[migration-auto]') }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: 拉取 ERP-VUE3
+        uses: actions/checkout@v4
+        with:
+          ref: develop
+          path: target
+
+      - name: 拉取 ERP-VUE2 业务源
+        uses: actions/checkout@v4
+        with:
+          repository: liqing180/erp-vue2
+          ref: main
+          path: source
+
+      - name: 配置 Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: 安装 Yarn
+        run: npm install --global yarn@1.22.22
+
+      - name: 迁移 ERP 业务资源
+        working-directory: target
+        run: |
+          rm -rf src/api/salesReportManagement src/api/stockInManagement
+          cp -R ../source/src/api/salesReportManagement src/api/
+          cp -R ../source/src/api/stockInManagement src/api/
+
+          cp ../source/src/lang/en.js src/lang/en.js
+          cp ../source/src/lang/zh.js src/lang/zh.js
+          cp ../source/src/lang/enDateTimePicker.js src/lang/enDateTimePicker.js
+
+          cp ../source/src/assets/logo/logo.png src/assets/logo/logo.png
+          cp ../source/src/assets/logo/logo-01.png src/assets/logo/logo-01.png
+          cp ../source/src/assets/logo/logo_01.png src/assets/logo/logo_01.png
+
+          python3 - <<'PY'
+          from pathlib import Path
+
+          lang = Path('src/lang/index.js')
+          lang.write_text("""import { createI18n } from 'vue-i18n'
+import enLocale from './en'
+import zhLocale from './zh'
+import Cookies from 'js-cookie'
+import rightToolbar from './rightToolbar'
+import system from './system'
+import organization from './organization'
+import sales from './sales'
+import customer from './customer'
+import calendar from './calendar'
+import dashboard from './dashboard'
+
+const messages = {
+  en: {
+    ...rightToolbar.en,
+    ...system.en,
+    ...organization.en,
+    ...sales.en,
+    ...customer.en,
+    ...calendar.en,
+    ...dashboard.en,
+    ...enLocale
+  },
+  zh: {
+    ...rightToolbar.zh,
+    ...system.zh,
+    ...organization.zh,
+    ...sales.zh,
+    ...customer.zh,
+    ...calendar.zh,
+    ...dashboard.zh,
+    ...zhLocale
+  }
+}
+
+const i18n = createI18n({
+  legacy: false,
+  locale: Cookies.get('language') || 'en',
+  fallbackLocale: 'en',
+  messages,
+  fallbackWarn: false,
+  missingWarn: false
+})
+
+export default i18n
+""", encoding='utf-8')
+
+          logo = Path('src/layout/components/Sidebar/Logo.vue')
+          text = logo.read_text(encoding='utf-8')
+          text = text.replace("import logo from '@/assets/logo/logo.svg'", "import logo from '@/assets/logo/logo.png'")
+          logo.write_text(text, encoding='utf-8')
+          PY
+
+      - name: 安装依赖
+        working-directory: target
+        run: yarn install --non-interactive --network-timeout 100000
+
+      - name: 格式化迁移代码
+        working-directory: target
+        run: |
+          yarn prettier --write \
+            src/api/salesReportManagement \
+            src/api/stockInManagement \
+            src/lang/en.js \
+            src/lang/zh.js \
+            src/lang/enDateTimePicker.js \
+            src/lang/index.js \
+            src/layout/components/Sidebar/Logo.vue
+
+      - name: ESLint 检查
+        working-directory: target
+        run: yarn eslint src
+
+      - name: 生产构建
+        working-directory: target
+        run: yarn build:prod
+
+      - name: 提交迁移结果
+        working-directory: target
+        run: |
+          if git diff --quiet; then
+            echo "没有需要提交的迁移变化"
+            exit 0
+          fi
+          git config user.name "liqing180"
+          git config user.email "54855614+liqing180@users.noreply.github.com"
+          git add \
+            src/api/salesReportManagement \
+            src/api/stockInManagement \
+            src/lang \
+            src/assets/logo \
+            src/layout/components/Sidebar/Logo.vue
+          git commit -m "迁移：补齐 ERP 语言资源与缺失 API [migration-auto]"
+          git push origin HEAD:develop
