@@ -6,6 +6,10 @@ on:
       - develop
   workflow_dispatch:
 
+concurrency:
+  group: develop-verify-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   verify:
     name: Vue3 基线验证
@@ -24,11 +28,14 @@ jobs:
       - name: 安装 Yarn
         run: npm install --global yarn@1.22.22
 
-      - name: 安装依赖
-        run: yarn install --non-interactive --network-timeout 100000
-
       - name: 创建验证日志目录
         run: mkdir -p .ci-logs
+
+      - name: 安装依赖
+        shell: bash
+        run: |
+          set -o pipefail
+          yarn install --non-interactive --network-timeout 100000 2>&1 | tee .ci-logs/install.log
 
       - name: ESLint 检查
         shell: bash
