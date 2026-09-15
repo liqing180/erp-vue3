@@ -1,12 +1,13 @@
 <template>
   <div class="dashboard-header">
-    <div class="dashboard-row">
+    <div class="dashboard-layout flex">
       <div
         class="dashboard-card task-card"
         :style="{ height: `${isExpand ? 180 : 48}px` }"
       >
-        <div class="card-title task-title">
+        <div class="card-title task-card-title">
           <el-button
+            class="expand-button"
             link
             type="primary"
             size="small"
@@ -19,6 +20,7 @@
             {{ isExpand ? $t('ui.minimise') : $t('ui.expand') }}
           </el-button>
           <span class="ml20">{{ $t('DASHBOARD.taskCenter') }}</span>
+
           <div class="report-switcher">
             <span>{{ $t('DASHBOARD.reportSwitching') }}</span>
             <CommonSelectGroup
@@ -28,18 +30,22 @@
               label-key="reportName"
               :options="reportUrlList"
               :clearable="false"
-              style="width: 160px"
+              class="report-select"
               @change="reportUrlChange"
             />
           </div>
         </div>
 
-        <div v-if="isExpand" class="task-list">
-          <div v-for="item in taskItems" :key="item.key" class="task-item">
-            <div class="task-icon-wrap">
+        <div v-if="isExpand" class="task-list flexSa">
+          <div
+            v-for="item in taskItems"
+            :key="item.key"
+            class="task-item flex fs-0"
+          >
+            <div class="task-icon-box">
               <img class="card-img" :src="item.icon" :alt="item.label" />
             </div>
-            <div class="task-content">
+            <div class="task-data-box">
               <div>{{ item.label }}</div>
               <div
                 class="tab-num"
@@ -57,7 +63,7 @@
         class="dashboard-card today-card"
         :style="{ height: `${isExpand ? 180 : 48}px` }"
       >
-        <div class="card-title today-title">
+        <div class="card-title">
           {{ $t('DASHBOARD.todayTransactions') }}
           <el-select
             v-if="isExpand"
@@ -80,10 +86,10 @@
           <div
             v-for="(item, index) in comTodaysData"
             :key="`today-${index}`"
-            class="today-row"
+            class="today-row flexSa"
           >
             <div class="today-label">{{ item.label }}</div>
-            <div class="today-progress">
+            <div class="flex-1">
               <el-progress
                 :percentage="item.percentage"
                 :stroke-width="16"
@@ -113,10 +119,6 @@ export default {
     CaretTop
   },
   props: {
-    isShowFullScreen: {
-      type: Boolean,
-      default: false
-    },
     isExpand: {
       type: Boolean,
       default: true
@@ -138,13 +140,7 @@ export default {
       default: () => []
     }
   },
-  emits: [
-    'changeIsExpand',
-    'handleChangeUrl',
-    'handleChangeTodays',
-    'setMaskShow',
-    'toggleFullscreen'
-  ],
+  emits: ['changeIsExpand', 'handleChangeUrl', 'handleChangeTodays'],
   computed: {
     taskItems() {
       return [
@@ -248,8 +244,7 @@ export default {
   margin-bottom: 2px;
 }
 
-.dashboard-row {
-  display: flex;
+.dashboard-layout {
   padding: 0 20px;
 }
 
@@ -258,7 +253,6 @@ export default {
   background-color: #fff;
   border-radius: 8px;
   box-shadow: rgba(0, 0, 0, 0.13) 0 1px 3px 1px;
-  overflow: hidden;
 }
 
 .task-card {
@@ -279,8 +273,12 @@ export default {
   font-weight: 600;
 }
 
-.task-title {
+.task-card-title {
   padding: 0 20px;
+}
+
+.expand-button {
+  vertical-align: 1px;
 }
 
 .report-switcher {
@@ -292,26 +290,27 @@ export default {
   font-weight: 400;
 }
 
+.report-select {
+  width: 160px;
+}
+
 .task-list {
-  display: flex;
-  justify-content: space-around;
   width: 100%;
   height: 130px;
 }
 
 .task-item {
-  display: flex;
-  flex-shrink: 0;
   align-items: center;
   max-width: 20%;
 }
 
-.task-icon-wrap,
-.task-content {
+.task-icon-box,
+.task-data-box {
   width: 50%;
 }
 
 .card-img {
+  display: block;
   width: 60px;
   height: 60px;
 }
@@ -325,23 +324,12 @@ export default {
   user-select: none;
 }
 
-.pointer {
-  cursor: pointer;
-}
-
-.today-title {
-  position: relative;
-}
-
 .today-select {
   float: right;
   width: 140px;
 }
 
 .today-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-around;
   margin-top: 10px;
 }
 
@@ -350,10 +338,6 @@ export default {
   padding-right: 10px;
   text-align: right;
   font-size: 12px;
-}
-
-.today-progress {
-  flex: 1;
 }
 
 .today-value {
