@@ -18,7 +18,7 @@ import salesManagement from './salesManagement'
  * name:'router-name'               // 设定路由的名字，一定要填写不然使用<keep-alive>时会出现各种问题
  * query: '{"id": 1, "name": "ry"}' // 访问路由的默认传递参数
  * roles: ['admin', 'common']       // 访问路由的角色权限
- * permissions: ['a:a:a', 'b:b:b']  // 访问路由的菜单权限
+ * permissions: ['a:a:a', 'b:b:b'] // 访问路由的菜单权限
  * meta : {
     noCache: true                   // 如果设置为true，则不会被 <keep-alive> 缓存(默认 false)
     title: 'title'                  // 设置该路由在侧边栏和面包屑中展示的名字
@@ -44,6 +44,11 @@ export const constantRoutes = [
   {
     path: '/login',
     component: () => import('@/views/login'),
+    hidden: true
+  },
+  {
+    path: '/authLogin',
+    component: () => import('@/views/authLogin'),
     hidden: true
   },
   {

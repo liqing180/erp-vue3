@@ -1,20 +1,19 @@
 <template>
   <div class="login_container">
-    <!-- 头部 -->
     <div style="background: #fff; position: relative; z-index: 2">
       <div class="header">
         <div style="display: flex">
           <div class="logo_card">
             <img src="../assets/images/logo_01.png" alt="" class="logo" />
           </div>
-          <!-- <ul class="tab">
+          <ul class="tab">
             <li class="tab_item" :class="{ active: !type }" @click="goToERP">
               {{ $t('login.ERPEntry') }}
             </li>
-            <li class="tab_item" @click="goToWMS" v-if="wmsUrl">
+            <li v-if="wmsUrl" class="tab_item" @click="goToWMS">
               {{ $t('login.WMSEntry') }}
             </li>
-          </ul> -->
+          </ul>
         </div>
         <div>
           <LangSelect class="right-menu-item hover-effect" :loginFlag="true" />
@@ -22,20 +21,16 @@
       </div>
     </div>
 
-    <img src="../assets/images/login-pic-06.jpg" alt="" class="left_img" />
+    <img src="../assets/images/login-pic-07.jpeg" alt="" class="left_img" />
     <div class="img-mask"></div>
 
     <div style="display: flex; flex-direction: column; flex: 1">
-      <!-- 内容 -->
       <div class="content">
         <div class="content_container">
-          <!-- <div class="left">
-            <img src="../assets/images/login-pic-06.jpg" alt="" class="left_img" />
-          </div> -->
           <div class="right">
             <div class="login-form">
               <template v-if="!type">
-                <!-- <h3 class="title">{{ $t('login.ERPEntry') }}</h3> -->
+                <h3 class="title">{{ $t('login.ERPEntry') }}</h3>
                 <el-form
                   ref="loginForm"
                   :model="loginForm"
@@ -46,15 +41,16 @@
                     <el-input
                       v-model="loginForm.username"
                       type="text"
-                      auto-complete="off"
+                      autocomplete="off"
                       :placeholder="
                         $t('login.placeholder').replace(
                           '$1',
-                          this.$t('login.usernameInfo')
+                          $t('login.usernameInfo')
                         )
                       "
+                      @input="removeUsernameWhitespace"
                     >
-                      <template v-slot:prefix>
+                      <template #prefix>
                         <svg-icon
                           icon-class="user"
                           class="el-input__icon input-icon"
@@ -62,83 +58,85 @@
                       </template>
                     </el-input>
                   </el-form-item>
+
                   <el-form-item prop="password">
                     <el-input
                       v-model="loginForm.password"
+                      :type="passwordType ? 'text' : 'password'"
                       :placeholder="
                         $t('login.placeholder').replace(
                           '$1',
-                          this.$t('login.password')
+                          $t('login.password')
                         )
                       "
-                      auto-complete="off"
-                      @keyup.enter="handleLogin"
+                      autocomplete="off"
                       class="input"
-                      type="password"
-                      show-password
+                      @input="removePasswordWhitespace"
+                      @keyup.enter="handleLogin"
                     >
-                      <template v-slot:prefix>
+                      <template #prefix>
                         <svg-icon
                           icon-class="password"
                           class="el-input__icon input-icon"
                         />
                       </template>
+                      <template #suffix>
+                        <svg-icon
+                          :icon-class="passwordType ? 'psd-hide' : 'psd-show'"
+                          style="font-size: 20px; cursor: pointer"
+                          @click="passwordType = !passwordType"
+                        />
+                      </template>
                     </el-input>
                   </el-form-item>
-                  <el-form-item prop="code" v-if="captchaEnabled">
-                    <div
-                      style="
-                        width: 100%;
-                        font-size: 12px;
-                        line-height: 20px;
-                        color: #707070;
-                      "
-                    >
+
+                  <el-form-item v-if="captchaEnabled" prop="code">
+                    <div style="font-size: 12px; line-height: 20px; color: #707070">
                       {{ $t('login.pleaseEnter') }}
                     </div>
-                    <div class="flex">
-                      <el-input
-                        v-model="loginForm.code"
-                        auto-complete="off"
-                        :placeholder="
-                          $t('login.placeholder').replace(
-                            '$1',
-                            this.$t('login.captcha1')
-                          )
-                        "
-                        style="width: 190px"
-                        @keyup.enter="handleLogin"
-                      >
-                        <template v-slot:prefix>
-                          <svg-icon
-                            icon-class="validCode"
-                            class="el-input__icon input-icon"
-                          />
-                        </template>
-                      </el-input>
-                      <div class="login-code">
-                        <img
-                          :src="codeUrl"
-                          @click="getCode"
-                          class="login-code-img"
+                    <el-input
+                      v-model="loginForm.code"
+                      autocomplete="off"
+                      :placeholder="
+                        $t('login.placeholder').replace(
+                          '$1',
+                          $t('login.captcha1')
+                        )
+                      "
+                      style="width: 63%"
+                      @keyup.enter="handleLogin"
+                    >
+                      <template #prefix>
+                        <svg-icon
+                          icon-class="validCode"
+                          class="el-input__icon input-icon"
                         />
-                      </div>
+                      </template>
+                    </el-input>
+                    <div class="login-code">
+                      <img
+                        :src="codeUrl"
+                        class="login-code-img"
+                        @click="getCode"
+                      />
                     </div>
                   </el-form-item>
+
                   <div style="display: flex; justify-content: space-between">
                     <el-checkbox
                       v-model="loginForm.rememberMe"
-                      style="margin: 0px 0px 25px 0px"
-                      >{{ $t('login.rememberPassword') }}</el-checkbox
+                      style="margin: 0 0 25px 0"
                     >
+                      {{ $t('login.rememberPassword') }}
+                    </el-checkbox>
                     <div
                       style="color: #1890ff; font-size: 14px; cursor: pointer"
                       @click="navForgotPassword"
-                      v-if="!sysDockingSwitch"
                     >
                       {{ $t('login.forgotPassword') }}
                     </div>
                   </div>
+
                   <el-form-item style="width: 100%">
                     <el-button
                       :loading="loading"
@@ -149,17 +147,21 @@
                       <span v-if="!loading">{{ $t('login.logIn') }}</span>
                       <span v-else>{{ $t('login.LoggingIn') }}...</span>
                     </el-button>
+                    <div v-if="register" style="float: right">
+                      <router-link class="link-type" to="/register">
+                        立即注册
+                      </router-link>
+                    </div>
                   </el-form-item>
                 </el-form>
               </template>
 
-              <!-- 重置密码 -->
-              <ResetPassword ref="resetPassword" v-else></ResetPassword>
+              <ResetPassword v-else ref="resetPassword" />
             </div>
           </div>
         </div>
       </div>
-      <!--  底部  -->
+
       <div class="el-login-footer">
         <p>
           Address: 52 Senoko Road, Singapore 758116, Singapore&ensp;&ensp;Tel:
@@ -175,13 +177,13 @@
 </template>
 
 <script>
-import { getCodeImg, queryDomainName } from '@/api/login'
+import { getCodeImg, queryDomainName, exchange } from '@/api/login'
 import Cookies from 'js-cookie'
 import { encrypt, decrypt, encryptPassword } from '@/utils/jsencrypt'
-import { externalGetConfigKey } from '@/api/system/config'
-
 import LangSelect from '@/components/LangSelect'
 import ResetPassword from '@/views/homeOrderSearch/resetPassword'
+import { setToken } from '@/utils/auth'
+
 export default {
   name: 'Login',
   components: {
@@ -231,28 +233,24 @@ export default {
         ]
       },
       loading: false,
-      // 验证码开关
       captchaEnabled: false,
-      // 注册开关
       register: false,
       redirect: undefined,
       type: undefined,
       wmsUrl: '',
-      passwordType: false,
-      // 系统对接CDS true: 开 false: 关
-      sysDockingSwitch: true
+      passwordType: false
     }
   },
   watch: {
     $route: {
-      handler: function (route) {
+      handler(route) {
         this.redirect = route.query && route.query.redirect
-        const { type } = this.$route.query
+        const { type } = route.query
         this.type = type || ''
         sessionStorage.setItem('type', type)
         if (type === 'resetPassword') {
           this.$nextTick(() => {
-            this.$refs.resetPassword.init()
+            this.$refs.resetPassword?.init()
           })
         }
       },
@@ -260,13 +258,23 @@ export default {
     }
   },
   created() {
-    externalGetConfigKey('sys.docking.erp.switch').then(response => {
-      if (response.code === 200 && response.msg) {
-        this.sysDockingSwitch = response.msg === 'true'
-      }
-    })
     this.getCode()
     this.getCookie()
+    this.queryDomainName()
+
+    const { wmsToken } = this.$route.query
+    if (wmsToken) {
+      exchange({ token: wmsToken, tenantType: 1 }).then(res => {
+        const data = res.data || {}
+        if (data.access_token) {
+          setToken(data.access_token)
+          this.$store.commit('SET_TOKEN', data.access_token)
+          setTimeout(() => {
+            this.$router.push({ path: '/' }).catch(() => {})
+          }, 100)
+        }
+      })
+    }
   },
   methods: {
     queryDomainName() {
@@ -284,13 +292,8 @@ export default {
       this.$router.push({ path: '/login', query: { redirect: '/index' } })
     },
     copyInfoAboutYear() {
-      const y = new Date().getFullYear()
-
-      if (Number(y) <= 2019) {
-        return '2019'
-      } else {
-        return `2019 - ${y}`
-      }
+      const year = new Date().getFullYear()
+      return Number(year) <= 2019 ? '2019' : `2019 - ${year}`
     },
     navForgotPassword() {
       this.type = 'resetPassword'
@@ -303,7 +306,7 @@ export default {
     getCode() {
       getCodeImg().then(res => {
         this.captchaEnabled =
-          res.captchaOnOff === undefined ? true : res.captchaOnOff
+          res.captchaEnabled === undefined ? true : res.captchaEnabled
         if (this.captchaEnabled) {
           this.codeUrl = 'data:image/gif;base64,' + res.img
           this.loginForm.uuid = res.uuid
@@ -321,38 +324,44 @@ export default {
         rememberMe: rememberMe === undefined ? false : Boolean(rememberMe)
       }
     },
+    removeUsernameWhitespace(value) {
+      this.loginForm.username = value.replace(/\s+/g, '')
+    },
+    removePasswordWhitespace(value) {
+      this.loginForm.password = value.replace(/\s/g, '')
+    },
     handleLogin() {
       this.$refs.loginForm.validate(valid => {
-        if (valid) {
-          this.loading = true
-          if (this.loginForm.rememberMe) {
-            Cookies.set('username', this.loginForm.username, { expires: 30 })
-            Cookies.set('password', encrypt(this.loginForm.password), {
-              expires: 30
-            })
-            Cookies.set('rememberMe', this.loginForm.rememberMe, {
-              expires: 30
-            })
-          } else {
-            Cookies.remove('username')
-            Cookies.remove('password')
-            Cookies.remove('rememberMe')
-          }
-          this.loginForm.tenantType = 1
-          const param = { ...this.loginForm }
-          param.password = encryptPassword(param.password)
-          this.$store
-            .dispatch('Login', param)
-            .then(() => {
-              this.$router.push({ path: this.redirect || '/' }).catch(() => {})
-            })
-            .catch(() => {
-              this.loading = false
-              if (this.captchaEnabled) {
-                this.getCode()
-              }
-            })
+        if (!valid) return
+
+        this.loading = true
+        if (this.loginForm.rememberMe) {
+          Cookies.set('username', this.loginForm.username, { expires: 30 })
+          Cookies.set('password', encrypt(this.loginForm.password), {
+            expires: 30
+          })
+          Cookies.set('rememberMe', this.loginForm.rememberMe, { expires: 30 })
+        } else {
+          Cookies.remove('username')
+          Cookies.remove('password')
+          Cookies.remove('rememberMe')
         }
+
+        this.loginForm.tenantType = 1
+        const param = { ...this.loginForm }
+        param.password = encryptPassword(param.password)
+
+        this.$store
+          .dispatch('Login', param)
+          .then(() => {
+            this.$router.push({ path: this.redirect || '/' }).catch(() => {})
+          })
+          .catch(() => {
+            this.loading = false
+            if (this.captchaEnabled) {
+              this.getCode()
+            }
+          })
       })
     }
   }
@@ -373,11 +382,9 @@ export default {
   justify-content: center;
   align-items: center;
   height: 100%;
-  // background-image: url('../assets/images/login-background.jpg');
-  // background-size: cover;
 }
 .title {
-  margin: 0px auto 10px auto;
+  margin: 0 auto 10px auto;
   text-align: center;
   color: #707070;
 }
@@ -386,7 +393,6 @@ export default {
   position: relative;
   border-radius: 6px;
   background: #ffffff;
-  // width: 500px;
   padding: 25px 25px 5px 25px;
   .registration {
     position: absolute;
@@ -415,10 +421,9 @@ export default {
   color: #bfbfbf;
 }
 .login-code {
-  // width: 33%;
+  width: 33%;
   height: 38px;
   float: right;
-  margin-left: 16px;
   img {
     cursor: pointer;
     vertical-align: middle;
@@ -454,7 +459,6 @@ export default {
     flex-shrink: 0;
     height: 75px;
     width: 1200px;
-    // padding: 0 50px 0 100px;
     margin: 0 auto;
     background-color: #fff;
     .logo_card {
@@ -464,15 +468,13 @@ export default {
     .logo {
       width: 100%;
       height: 100%;
-      // margin-top: 9px;
     }
     .tab {
       display: flex;
       align-items: center;
       list-style: none;
       padding: 0;
-      margin: 0;
-      margin-left: 100px;
+      margin: 0 0 0 100px;
       .tab_item {
         user-select: none;
         font-size: 20px;
@@ -499,8 +501,6 @@ export default {
   .content {
     flex: 1;
     display: flex;
-    // background: linear-gradient(90deg, #40c2ff, #4084ff);
-    // background-color: #0481fa;
     .content_container {
       display: flex;
       justify-content: space-between;
@@ -511,8 +511,6 @@ export default {
     .left {
       flex: 1;
       color: #fff;
-      // padding-left: 150px;
-      // background-color: pink;
       h2,
       p {
         margin: 0;
@@ -523,7 +521,6 @@ export default {
       }
     }
     .right {
-      // flex-shrink: 0;
       position: absolute;
       top: 38vh;
       right: 250px;
@@ -566,11 +563,9 @@ export default {
   flex: 1;
   display: flex;
   flex-direction: column;
-  width: 100%;
   width: 1200px;
   height: 100%;
   margin: 0 auto;
-  // background-color: pink;
   .order_no {
     color: #fff;
     height: 50px;
@@ -600,12 +595,10 @@ export default {
       height: 8px;
       background-color: initial;
     }
-
     :deep(.el-tabs__content::-webkit-scrollbar-thumb) {
       border-radius: 4px;
       background-color: rgba(127, 135, 146, 0.5);
     }
-
     :deep(.el-tabs__content::-webkit-scrollbar-track) {
       width: 10px;
       box-shadow: none;

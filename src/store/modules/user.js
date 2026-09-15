@@ -159,7 +159,7 @@ const user = {
       return login(username, password, code, uuid, tenantCode, tenantType).then(
         res => {
           const data = res.data || {}
-          const token = data.access_token || data.token || res.token
+          const token = data.access_token
           setToken(token)
           queryAllPageList()
           initSystemConfig()
