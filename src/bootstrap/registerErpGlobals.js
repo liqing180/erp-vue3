@@ -65,7 +65,7 @@ import MapDrawingPolygon from '@/components/Common/MapDrawingPolygon'
 import ErpInputNumber from '@/components/Common/MyInputNumber/index.vue'
 import MyDatePicker from '@/components/Common/MyDatePicker/index.vue'
 import MyColorPicker from '@/components/color-picker/index.vue'
-import ElInput from '@/components/CommonInput/index.vue'
+import MyInput from '@/components/MyInput'
 import ErpSelect from '@/components/elementCompat/ErpSelect.vue'
 import ErpAutocomplete from '@/components/elementCompat/ErpAutocomplete.vue'
 import ErpCascader from '@/components/elementCompat/ErpCascader.vue'
@@ -107,6 +107,7 @@ const globalComponents = {
   MapDrawingPolygon,
   MyDatePicker,
   MyColorPicker,
+  MyInput,
   'svg-icon': SvgIcon,
   myUpload
 }
@@ -186,8 +187,7 @@ function registerGlobalComponents(app) {
   app.component('searchForm', SearchForm)
   app.component('commonProductAndPicture', CommonProductAndPicture)
 
-  // 必须在 Element Plus 安装后覆盖官方组件，承接 ERP 的历史交互行为。
-  app.component('ElInput', ElInput)
+  // ERP-VUE2 仅覆盖这些 Element UI 组件；普通 ElInput 仍使用 Element Plus 官方实现。
   app.component('ElInputNumber', ErpInputNumber)
   app.component('ElSelect', ErpSelect)
   app.component('ElAutocomplete', ErpAutocomplete)
