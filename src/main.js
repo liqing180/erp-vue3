@@ -68,6 +68,7 @@ import resultOfBoolean from '@/utils/resultOfBoolean/index'
 import FormPageLayout from '@/components/formPageLayout/index.vue'
 import FormCollapseItemTitle from '@/components/formCollapseItemTitle/index.vue'
 import FormPageLayoutTabs from '@/components/formPageLayoutTabs/index.vue'
+import FormSteps from '@/components/formSteps/index.vue'
 import SelectInput from '@/components/Common/SelectInput/SelectInput.vue'
 import CommonSelect from '@/components/Common/commonSelect'
 import CommonSelectGroup from '@/components/Common/commonSelect/commonSelectGroup.vue'
@@ -76,6 +77,8 @@ import CommonMultipleSelect from '@/components/Common/commonMultipleSelect'
 import ToolTipShowList from '@/components/Common/ToolTipShowList'
 import TablePropError from '@/components/Common/TablePropError'
 import TableNonInventoryItem from '@/components/Common/TableNonInventoryItem'
+import DocumentNoLink from '@/components/Common/documentNoLink'
+import ComparisonInput from '@/components/Common/comparisonInput'
 import myUpload from '@/components/Common/htz-image-upload/my-upload.vue'
 import ExportDlg from '@/components/Common/exportDlg/ExportDlg.vue'
 import ImportDlg from '@/components/Common/importDlg/importDlg.vue'
@@ -164,6 +167,7 @@ app.component('MobilePhoneInput', MobilePhoneInput)
 app.component('FormPageLayout', FormPageLayout)
 app.component('FormCollapseItemTitle', FormCollapseItemTitle)
 app.component('FormPageLayoutTabs', FormPageLayoutTabs)
+app.component('FormSteps', FormSteps)
 app.component('SelectInput', SelectInput)
 app.component('CommonSelect', CommonSelect)
 app.component('CommonSelectGroup', CommonSelectGroup)
@@ -172,6 +176,8 @@ app.component('CommonMultipleSelect', CommonMultipleSelect)
 app.component('ToolTipShowList', ToolTipShowList)
 app.component('TablePropError', TablePropError)
 app.component('TableNonInventoryItem', TableNonInventoryItem)
+app.component('DocumentNoLink', DocumentNoLink)
+app.component('ComparisonInput', ComparisonInput)
 app.component('myUpload', myUpload)
 app.component('ExportDlg', ExportDlg)
 app.component('ImportDlg', ImportDlg)
