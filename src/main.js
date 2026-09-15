@@ -18,6 +18,7 @@ import plugins from './plugins'
 import i18n from './lang'
 import lang from './lang/el'
 import registerErpGlobals from '@/bootstrap/registerErpGlobals'
+import erpRouteMixin from '@/bootstrap/erpRouteMixin'
 
 import 'virtual:svg-icons-register'
 import elementIcons from '@/components/SvgIcon/svgicon'
@@ -31,8 +32,13 @@ import { initSystemConfig } from '@/initSystemConfig/initSystemConfig.js'
 import { getToken } from '@/utils/auth'
 
 const app = createApp(App)
+const externalEntryPaths = new Set([
+  '/customerQuestionnaire',
+  '/externalPQ',
+  '/externalPQSuccess'
+])
 
-if (getToken()) {
+if (getToken() && !externalEntryPaths.has(window.location.pathname)) {
   queryAllPageList()
   initSystemConfig()
 }
@@ -57,6 +63,7 @@ app.use(ElementPlus, {
 
 // Element Plus 安装完成后再注册 ERP 覆盖组件与历史全局能力。
 registerErpGlobals(app, i18n)
+app.mixin(erpRouteMixin)
 directive(app)
 
 // 保留 ERP-VUE2 跨页签 token 同步行为。
