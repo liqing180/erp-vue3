@@ -2,18 +2,17 @@
   <div class="input-switch-box">
     <div class="con-left">
       <el-select
-        :key="selectVersion"
         ref="mySelect"
         :model-value="comShow"
         :title="title"
         :disabled="disabled"
+        placeholder=""
+        style="width: 100%"
         :loading="loading"
         :clearable="clearable"
         :filterable="filterable"
         :filter-method="filterMethod"
         :size="elementSize"
-        placeholder=""
-        style="width: 100%"
         default-first-option
         @change="change"
         @visible-change="visibleChange"
@@ -102,53 +101,57 @@ export default {
   emits: ['change', 'handleOpen', 'visible-change'],
   data() {
     return {
-      show: false,
-      selectVersion: 0
+      show: false
     }
   },
   computed: {
     elementSize() {
-      return this.size === 'mini' ? 'small' : this.size
+      if (this.size === 'mini') return 'small'
+      if (this.size === 'medium') return 'default'
+      return this.size
     },
     comShow() {
       const options = this.optionsAll || this.options
-      if (this.id && options.some(item => item[this.idKey] === this.id)) {
+      if (this.id && options.find(item => item[this.idKey] === this.id)) {
         return this.id
       }
       return this.label || this.id
     }
   },
   watch: {
-    options() {
-      this.refreshClosedSelect()
+    options: {
+      immediate: true,
+      handler() {
+        // ERP-VUE2 在自定义过滤且下拉正打开时不强制刷新 selected，
+        // 避免远程/动态 options 更新打断用户正在输入的筛选词。
+        if (this.show && this.filterMethod) return
+        this.refreshSelected()
+      }
     },
-    optionsAll() {
-      this.refreshClosedSelect()
+    optionsAll: {
+      immediate: true,
+      handler() {
+        this.refreshSelected()
+      }
     }
   },
   methods: {
+    refreshSelected() {
+      this.$nextTick(() => {
+        this.$refs.mySelect?.setSelected?.()
+      })
+    },
     change(value) {
-      const item = this.options.find(item => item[this.idKey] === value) || {}
+      const item = this.options.find(row => row[this.idKey] === value) || {}
       this.$emit('change', item)
     },
     visibleChange(value) {
       this.show = value
-      if (!value) {
-        // Vue2 版本通过修改 Element UI 私有 query/setSelected 状态清空筛选。
-        // Vue3 通过重建关闭后的 Select 达到同样目的，避免依赖 Element Plus 私有 API。
-        this.selectVersion += 1
-      }
+      this.$refs.mySelect?.resetQuery?.()
       this.$emit('visible-change', value)
     },
-    refreshClosedSelect() {
-      if (!this.show) {
-        this.$nextTick(() => {
-          this.selectVersion += 1
-        })
-      }
-    },
     handleBlur() {
-      this.$refs.mySelect?.blur()
+      this.$refs.mySelect?.blur?.()
     }
   }
 }
