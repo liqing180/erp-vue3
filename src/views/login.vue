@@ -91,7 +91,9 @@
                   </el-form-item>
 
                   <el-form-item v-if="captchaEnabled" prop="code">
-                    <div style="font-size: 12px; line-height: 20px; color: #707070">
+                    <div
+                      style="font-size: 12px; line-height: 20px; color: #707070"
+                    >
                       {{ $t('login.pleaseEnter') }}
                     </div>
                     <el-input
