@@ -2,7 +2,11 @@ import { numberStr, getSplitType } from '@/utils/numberTofixed/index.js'
 
 const formatNumStr = (num, params) => {
   const precision = params.precision || 0
-  num = numberStr(num, precision, true)
+  /* keepDec 是否保留小数后面的零 */
+  const keepDec = params.keepDec
+  const minPrecision = params.minPrecision
+
+  num = numberStr(num, precision, true, keepDec, minPrecision)
   return num
 }
 
