@@ -84,20 +84,16 @@ function toTimeDate(value) {
 
 function toDateValue(value) {
   if (value instanceof Date) return new Date(value)
-  if (
-    value === undefined ||
-    value === null ||
-    value === ''
-  ) {
-    return value
-  }
+  if (value === undefined || value === null || value === '') return value
   const date = new Date(value)
   return Number.isNaN(date.getTime()) ? value : date
 }
 
 function parseClock(value) {
   if (value instanceof Date) {
-    return value.getHours() * 3600 + value.getMinutes() * 60 + value.getSeconds()
+    return (
+      value.getHours() * 3600 + value.getMinutes() * 60 + value.getSeconds()
+    )
   }
   if (typeof value !== 'string') return null
   const [hours, minutes, seconds = '0'] = value.trim().split(':')
