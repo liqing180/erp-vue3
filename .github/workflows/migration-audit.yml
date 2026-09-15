@@ -1,0 +1,91 @@
+name: ERP 非 views 全量差异审计
+
+on:
+  push:
+    branches:
+      - develop
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 拉取 ERP-VUE3
+        uses: actions/checkout@v4
+        with:
+          ref: develop
+          path: target
+
+      - name: 拉取 ERP-VUE2
+        uses: actions/checkout@v4
+        with:
+          repository: liqing180/erp-vue2
+          ref: main
+          path: source
+
+      - name: 生成非 views 全量差异
+        run: |
+          python3 - <<'PY'
+          import hashlib
+          from pathlib import Path
+          from collections import Counter, defaultdict
+
+          source = Path('source')
+          target = Path('target')
+
+          def tracked_files(root):
+              result = {}
+              for path in root.rglob('*'):
+                  if not path.is_file():
+                      continue
+                  rel = path.relative_to(root).as_posix()
+                  if rel.startswith('.git/'):
+                      continue
+                  if rel.startswith('src/views/'):
+                      continue
+                  if rel in {'yarn.lock', 'package-lock.json'}:
+                      continue
+                  result[rel] = path
+              return result
+
+          def digest(path):
+              h = hashlib.sha256()
+              with path.open('rb') as f:
+                  for chunk in iter(lambda: f.read(1024 * 1024), b''):
+                      h.update(chunk)
+              return h.hexdigest()
+
+          src = tracked_files(source)
+          dst = tracked_files(target)
+          src_only = sorted(set(src) - set(dst))
+          dst_only = sorted(set(dst) - set(src))
+          common = sorted(set(src) & set(dst))
+          different = [p for p in common if digest(src[p]) != digest(dst[p])]
+          same = [p for p in common if digest(src[p]) == digest(dst[p])]
+
+          def area(path):
+              parts = path.split('/')
+              if parts[0] != 'src':
+                  return parts[0]
+              return '/'.join(parts[:2]) if len(parts) > 1 else 'src'
+
+          def print_group(title, paths):
+              print(f'\n===== {title}: {len(paths)} =====')
+              groups = defaultdict(list)
+              for p in paths:
+                  groups[area(p)].append(p)
+              for key in sorted(groups):
+                  print(f'\n## {key} ({len(groups[key])})')
+                  for p in groups[key]:
+                      print(p)
+
+          print('ERP NON-VIEWS AUDIT')
+          print(f'SOURCE_FILES={len(src)}')
+          print(f'TARGET_FILES={len(dst)}')
+          print(f'SAME={len(same)}')
+          print(f'DIFFERENT={len(different)}')
+          print(f'SOURCE_ONLY={len(src_only)}')
+          print(f'TARGET_ONLY={len(dst_only)}')
+          print_group('SOURCE_ONLY', src_only)
+          print_group('DIFFERENT_COMMON_PATH', different)
+          print_group('TARGET_ONLY', dst_only)
+          PY
