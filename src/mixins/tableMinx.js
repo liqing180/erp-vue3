@@ -1,87 +1,98 @@
 import { queryAllPage } from '@/api/system/behaviour.js'
 import cache from '@/plugins/cache'
-// import getTextWidth from 'text-width'
 import textSize from 'text-size'
+
+function getTableScrollWrapper(tableRef) {
+  const root = tableRef?.$el
+  if (!root?.querySelector) return undefined
+
+  return (
+    root.querySelector('.el-table__body-wrapper .el-scrollbar__wrap') ||
+    root.querySelector('.el-table__body-wrapper')
+  )
+}
+
+function setTableScrollTop(tableRef, value) {
+  if (typeof tableRef?.setScrollTop === 'function') {
+    tableRef.setScrollTop(value)
+    return
+  }
+
+  const wrapper = getTableScrollWrapper(tableRef)
+  if (wrapper) wrapper.scrollTop = value
+}
+
+function hideLastElement(selector) {
+  const list = document.querySelectorAll(selector)
+  const last = list[list.length - 1]
+  if (last) last.style.display = 'none'
+}
+
 export const queryAllPageList = () => {
   queryAllPage({})
     .then(res => {
-      if (res.code === 200) {
-        const results = res.data || []
-        const pageSizeData = {}
-        const tableCellHideData = {}
-        const tableCellFixedData = {}
-        const tableCellSortData = {}
-        const RefreshTimeData = {}
-        results.forEach(item => {
-          const key = `${item.path}${item.activity}`
-          const info = item.data ? JSON.parse(item.data) : {}
-          const tableCellHide = item.tableCellHide
-            ? JSON.parse(item.tableCellHide)
-            : []
-          const tableCellFixed = item.tableCellFixed
-            ? JSON.parse(item.tableCellFixed)
-            : null
-          const CellSortObj = item.cellSortObj
-            ? JSON.parse(item.cellSortObj)
-            : null
+      if (res.code !== 200) return
 
-          const pageSize = info.pageSize
-          tableCellHideData[key] = tableCellHide
-          tableCellFixedData[key] = tableCellFixed
-          tableCellSortData[key] = CellSortObj
-          pageSizeData[key] = pageSize
-          RefreshTimeData[key] = item.autoRefreshTime
-        })
-        cache.local.setJSON('pageSizeList', pageSizeData)
-        cache.local.setJSON('tableCellHideData', tableCellHideData)
-        cache.local.setJSON('tableCellFixedData', tableCellFixedData)
-        cache.local.setJSON('tableCellSortData', tableCellSortData)
-        cache.local.setJSON('autoRefreshTimeData', RefreshTimeData)
-      } else {
-        // vm.$message.error(data.message)
-      }
+      const results = res.data || []
+      const pageSizeData = {}
+      const tableCellHideData = {}
+      const tableCellFixedData = {}
+      const tableCellSortData = {}
+      const refreshTimeData = {}
+
+      results.forEach(item => {
+        const key = `${item.path}${item.activity}`
+        const info = item.data ? JSON.parse(item.data) : {}
+        const tableCellHide = item.tableCellHide
+          ? JSON.parse(item.tableCellHide)
+          : []
+        const tableCellFixed = item.tableCellFixed
+          ? JSON.parse(item.tableCellFixed)
+          : null
+        const cellSortObj = item.cellSortObj
+          ? JSON.parse(item.cellSortObj)
+          : null
+
+        tableCellHideData[key] = tableCellHide
+        tableCellFixedData[key] = tableCellFixed
+        tableCellSortData[key] = cellSortObj
+        pageSizeData[key] = info.pageSize
+        refreshTimeData[key] = item.autoRefreshTime
+      })
+
+      cache.local.setJSON('pageSizeList', pageSizeData)
+      cache.local.setJSON('tableCellHideData', tableCellHideData)
+      cache.local.setJSON('tableCellFixedData', tableCellFixedData)
+      cache.local.setJSON('tableCellSortData', tableCellSortData)
+      cache.local.setJSON('autoRefreshTimeData', refreshTimeData)
     })
-    .catch(err => {
-      window.console.error(err)
+    .catch(error => {
+      window.console.error(error)
     })
 }
+
 export default {
   data() {
     return {
       tipVisible: false,
       columns: [],
       colTextMaxWidth: 300,
-      tableMaxHeight: 390
+      tableMaxHeight: 390,
+      tableScrollTop: undefined,
+      tableKey: Date.now(),
+      resizeFn: undefined
     }
   },
   computed: {
     configColumn() {
-      const arr = [...this.columns]
-      function compare(value1, value2) {
-        if (value1.colSortIndex < value2.colSortIndex) {
-          return -1
-        } else if (value1.colSortIndex > value2.colSortIndex) {
-          return 1
-        } else {
-          return 0
-        }
-      }
-      arr.sort(compare)
-      return arr
+      return [...this.columns].sort(
+        (value1, value2) => value1.colSortIndex - value2.colSortIndex
+      )
     },
     visibleColumn() {
-      const arr = [...this.columns.filter(column => column.visible === true)]
-      function compare(value1, value2) {
-        if (value1.colSortIndex < value2.colSortIndex) {
-          return -1
-        } else if (value1.colSortIndex > value2.colSortIndex) {
-          return 1
-        } else {
-          return 0
-        }
-      }
-      arr.sort(compare)
-      return arr
+      return this.columns
+        .filter(column => column.visible === true)
+        .sort((value1, value2) => value1.colSortIndex - value2.colSortIndex)
     },
     size() {
       return this.$store.getters.size
@@ -114,47 +125,79 @@ export default {
     this.windowResizeSetTableMaxHeight()
     this.setTableMaxHeight()
   },
+  activated() {
+    if (this.$refs.tables && this.tableScrollTop !== undefined) {
+      setTableScrollTop(this.$refs.tables, this.tableScrollTop)
+    }
+  },
   deactivated() {
-    /* 引发操作：触发show-overflow-tooltip，然后切换页面，
-    原先触发的show-overflow-tooltip并未被销毁，
-    且未被display：none导致，未获取到位置，就定位到左上角 */
     setTimeout(() => {
-      const list = document.getElementsByClassName('el-tooltip__popper')
-      const list1 = document.getElementsByClassName('el-popover')
-      // console.log('🚀 ~ file: index.vue ~ line 309 ~ deactivated ~ list', list)
-      if (list.length > 0) {
-        list[list.length - 1].style.display = 'none'
-      }
-      if (list1.length > 0) {
-        list1[list1.length - 1].style.display = 'none'
-      }
+      hideLastElement('.el-tooltip__popper')
+      hideLastElement('.el-popover')
     }, 1000)
+
+    const wrapper = getTableScrollWrapper(this.$refs.tables)
+    if (wrapper) {
+      this.tableScrollTop = wrapper.scrollTop
+    }
+  },
+  beforeUnmount() {
+    if (this.resizeFn) {
+      window.removeEventListener('resize', this.resizeFn)
+    }
   },
   methods: {
-    // @closed="closedTooltip"
+    $$getSelectedIdList(selectedRows, rowIdKey) {
+      const ids = (selectedRows || [])
+        .map(item => {
+          if (item && typeof item === 'object') {
+            return item[rowIdKey]
+          }
+          return item
+        })
+        .filter(id => id !== undefined && id !== null && id !== '')
+
+      return [...new Set(ids)]
+    },
+    $$getFilteredSelectedList(response) {
+      const list = Array.isArray(response?.filteredSelectedList)
+        ? response.filteredSelectedList
+        : []
+      return list.filter(
+        item => item !== undefined && item !== null && item !== ''
+      )
+    },
+    $$getFilteredSelectedNum(
+      filteredSelectedList,
+      tableList,
+      selectedRows,
+      rowIdKey
+    ) {
+      const filterableIds = new Set([
+        ...this.$$getSelectedIdList(filteredSelectedList, rowIdKey),
+        ...this.$$getSelectedIdList(tableList, rowIdKey)
+      ])
+
+      return this.$$getSelectedIdList(selectedRows, rowIdKey).filter(id =>
+        filterableIds.has(id)
+      ).length
+    },
+    $$resetTableKey() {
+      this.$nextTick(() => {
+        this.tableKey += 1
+      })
+    },
     closedTooltip() {
       setTimeout(() => {
-        const list = document.getElementsByClassName('el-tooltip__popper')
-        const list1 = document.getElementsByClassName('el-popover')
-        // console.log('🚀 ~ file: index.vue ~ line 309 ~ deactivated ~ list', list)
-        if (list.length > 0) {
-          list[list.length - 1].style.display = 'none'
-        }
-        if (list1.length > 0) {
-          list1[list1.length - 1].style.display = 'none'
-        }
+        hideLastElement('.el-tooltip__popper')
+        hideLastElement('.el-popover')
       }, 500)
     },
     getCharWidth(text) {
       function getCharWidth(charCode) {
-        if (charCode > 13300) {
-          // 中文字符宽度设为 1.5
-          return 1.73
-        } else {
-          // 数字字母宽度设为 1
-          return 1
-        }
+        return charCode > 13300 ? 1.73 : 1
       }
+
       let width = 0
       const special = {
         1: 0.87,
@@ -164,20 +207,16 @@ export default {
         '.': 0.5,
         W: 1.7
       }
-      for (let i = 0; i < text.length; i++) {
-        if (special[text[i]]) {
-          width += special[text[i]]
-        } else {
-          const charCode = text.charCodeAt(text[i])
-          width += getCharWidth(charCode)
-        }
+
+      for (let index = 0; index < text.length; index += 1) {
+        const char = text[index]
+        width += special[char] || getCharWidth(text.charCodeAt(index))
       }
       return width
     },
     getMinWidth(column) {
-      if (column.fixedWidth) {
-        return column.fixedWidth
-      }
+      if (column.fixedWidth) return column.fixedWidth
+
       return Math.max(
         column.headerWidth || 0,
         column.colMinWidth || 0,
@@ -185,191 +224,222 @@ export default {
       )
     },
     $$initColumnHeaderWidth(columnData) {
-      columnData.forEach(item => {
-        /* if (item.fixedWidth || item.width) {
-          return
-        } */
+      const isInitialized = columnData.some(item =>
+        Object.prototype.hasOwnProperty.call(item, 'initVisible')
+      )
 
-        let width1 = textSize.getTextWidth({
-          text: item.label,
+      columnData.forEach(item => {
+        if (!isInitialized) {
+          item.initFixed = item.fixed
+          item.initVisible = item.visible
+        }
+
+        let width = textSize.getTextWidth({
+          text: item.label || '',
           fontSize: this.thFontSize + 2,
           fontName:
             'Helvetica Neue, Helvetica, PingFang SC, Hiragino Sans GB, Microsoft YaHei, Arial, sans-serif'
         })
-        /* let width1 = getTextWidth(item.label, {
-          family:
-            'Helvetica Neue, Helvetica, PingFang SC, Hiragino Sans GB, Microsoft YaHei, Arial, sans-serif',
-          size: this.thFontSize,
-          weight: 'normal'
-        }) */
 
-        width1 += 24 // 表头左右padding
-        if (item.sortable === 'custom') {
-          width1 += 24 // 排序按钮
-        }
-        item.headerWidth = width1
+        width += 24
+        if (item.sortable === 'custom') width += 24
+        if (item.required) width += 10
+        item.headerWidth = width
       })
     },
     $$getColumnContentMaxWidth(columnData, list) {
       columnData.forEach(item => {
-        if (item.fixedWidth || item.colMinWidth || item.width) {
+        if (item.fixedWidth || item.colMinWidth || item.width) return
+
+        if (!list.length) {
+          item.colWidth = undefined
           return
         }
-        let maxColWidth = 0
-        let maxStr = ''
-        let maxStrWidth = 0
-        if (list.length > 0) {
-          list.findIndex(row => {
-            const str = String(row[item.propBy || item.prop] || '')
-            if (str) {
-              const result = str.replace(/\s+/g, ' ').replace(/\n+/g, ' ')
-              if (result.length > 80) {
-                maxStr = result
-                return true
-              }
-              const resultStrWidth = this.getCharWidth(result)
-              if (resultStrWidth > maxStrWidth) {
-                maxStr = result
-                maxStrWidth = resultStrWidth
-                return false
-              }
-            }
-            return false
-          })
-          /* maxColWidth = getTextWidth(maxStr, {
-            family:
-                'Helvetica Neue, Helvetica, PingFang SC, Hiragino Sans GB, Microsoft YaHei, Arial, sans-serif',
-            size: this.cellFontSize
-          }) */
-          maxColWidth = textSize.getTextWidth({
-            text: maxStr,
+
+        let maxWidth = 0
+        let maxText = ''
+
+        list.some(row => {
+          const text = String(row[item.propBy || item.prop] || '')
+            .replace(/\s+/g, ' ')
+            .replace(/\n+/g, ' ')
+          if (!text) return false
+
+          const width = textSize.getTextWidth({
+            text,
             fontSize: this.cellFontSize + 2,
             fontName:
               'Helvetica Neue, Helvetica, PingFang SC, Hiragino Sans GB, Microsoft YaHei, Arial, sans-serif'
           })
 
-          // if (item.prop === 'remarks') {
-          //   console.log(maxColWidth, maxStr, maxStrWidth)
-          // }
-          maxColWidth += item.padding || 32 // 表头左右padding
-          /* if (item.prop === 'siteAddressShowStr') {
-            console.log(maxColWidth, item.maxWidth, this.colTextMaxWidth, maxStr, maxStrWidth)
-          } */
-          item.colWidth = Math.min(
-            maxColWidth,
-            item.maxWidth || this.colTextMaxWidth
-          )
-        } else {
-          item.colWidth = undefined
-        }
+          if (width > maxWidth) {
+            maxWidth = width
+            maxText = text
+          }
+          return text.length > 80
+        })
+
+        const measuredWidth = textSize.getTextWidth({
+          text: maxText,
+          fontSize: this.cellFontSize + 2,
+          fontName:
+            'Helvetica Neue, Helvetica, PingFang SC, Hiragino Sans GB, Microsoft YaHei, Arial, sans-serif'
+        })
+
+        item.colWidth = Math.min(
+          measuredWidth + (item.padding || 32),
+          item.maxWidth || this.colTextMaxWidth
+        )
       })
     },
-    /** 排序触发事件 */
     handleSortChange({ prop, order }) {
-      // if (!!prop && !!order && this.queryParams) {
-      //   order = order === 'ascending' ? 'asc' : order === 'descending' ? 'desc' : ''
-      //   this.queryParams.orderBy = `${prop.replace(/[A-Z]/g, (match) => {
-      //     return `_${match.toLowerCase()}`
-      //   })} ${order}`
-      // } else {
-      //   delete this.queryParams.orderBy
-      // }
       if (!order) {
-        this.queryParams.orderByColumn = this.queryParams.isAsc = undefined
+        this.queryParams.orderByColumn = undefined
+        this.queryParams.isAsc = undefined
       } else {
         this.queryParams.orderByColumn = prop
         this.queryParams.isAsc = order
       }
-      if (this.getList) {
-        this.getList()
-      }
+      this.getList?.()
     },
     $$initPageSize(saveKey, savePath) {
       const path = savePath || this.savePath || this.$route.name
-      const vm = this
-      const pageSizeList = vm.$cache.local.getJSON('pageSizeList') || {}
-
-      if (pageSizeList && pageSizeList[`${path}${saveKey}`]) {
-        return pageSizeList[`${path}${saveKey}`]
-        // vm.queryParams.pageSize =
-      } else {
-        return 25
-        // vm.queryParams.pageSize = 10
-        // vm.$$pageSizeSave(path, saveKey)
-      }
+      const pageSizeList = this.$cache.local.getJSON('pageSizeList') || {}
+      return pageSizeList[`${path}${saveKey}`] || 25
     },
     $$initColumnVisible(saveKey, columnData, savePath) {
       const path = savePath || this.savePath || this.$route.name
       this.$$initColumnHeaderWidth(columnData)
+
       const hideCell = this.$cache.local.getJSON('tableCellHideData') || {}
       const fixedCell = this.$cache.local.getJSON('tableCellFixedData') || {}
       const sortCell = this.$cache.local.getJSON('tableCellSortData') || {}
+      const cacheKey = `${path}${saveKey}`
 
-      const param = {
-        activity: saveKey, // ActivityPool['purchaseRequisite'][0]['activity'],
-        path: path // vm.$route.meta.srcPath
+      const savedSort = sortCell[cacheKey] || {}
+      if (Object.keys(savedSort).length > 0) {
+        columnData.forEach(item => {
+          item.visible = true
+        })
       }
-      if (hideCell && hideCell[`${param.path}${param.activity}`]) {
-        const hideCellList = hideCell[`${param.path}${param.activity}`]
-        // console.log('hideCell', hideCellList)
+
+      const hideCellList = hideCell[cacheKey]
+      if (hideCellList) {
         columnData.forEach(item => {
           if (hideCellList.includes(item.prop)) {
             item.visible = false
           }
         })
       }
-      if (fixedCell && fixedCell[`${param.path}${param.activity}`]) {
-        const fixedCellList = fixedCell[`${param.path}${param.activity}`]
+
+      const fixedCellList = fixedCell[cacheKey]
+      if (fixedCellList) {
         columnData.forEach(item => {
-          if (fixedCellList.includes(item.prop)) {
-            item.fixed = true
-          } else {
-            item.fixed = false
-          }
+          item.fixed = fixedCellList.includes(item.prop)
         })
       }
-      if (sortCell && sortCell[`${param.path}${param.activity}`]) {
-        const sortCellObj = sortCell[`${param.path}${param.activity}`]
+
+      const sortCellObj = sortCell[cacheKey]
+      if (sortCellObj) {
         columnData.forEach(item => {
           item.colSortIndex = sortCellObj[item.prop]
         })
       }
     },
-    /** 清空排序 */
     queryTable() {
-      this.queryParams.isAsc = this.queryParams.orderByColumn = undefined
-      this.$refs.tables && this.$refs.tables.clearSort()
-      if (this.getList) {
-        this.getList()
-      }
+      this.queryParams.isAsc = undefined
+      this.queryParams.orderByColumn = undefined
+      this.$refs.tables?.clearSort?.()
+      this.getList?.()
     },
-
-    /* 弹窗表格最大高度设置 */
+    paginationChange() {
+      if (this.$refs.tables) {
+        setTableScrollTop(this.$refs.tables, 0)
+      }
+      this.getList?.()
+    },
     JieLiu(fn, time) {
       let isRun = false
-      return function () {
+      return function throttled(...args) {
         if (isRun) return
         isRun = true
         setTimeout(() => {
           isRun = false
-          fn()
+          fn.apply(this, args)
         }, time)
       }
     },
     windowResizeSetTableMaxHeight() {
-      const vm = this
-      vm.resizeFn = vm.JieLiu(vm.setTableMaxHeight, 100)
-      window.addEventListener('resize', vm.resizeFn)
+      if (this.resizeFn) {
+        window.removeEventListener('resize', this.resizeFn)
+      }
+      this.resizeFn = this.JieLiu(this.setTableMaxHeight, 100)
+      window.addEventListener('resize', this.resizeFn)
     },
     setTableMaxHeight() {
       this.$nextTick(() => {
-        const height = window.innerHeight * 0.88 - 260
-        if (height >= 390) {
-          this.tableMaxHeight = height
-        } else {
-          this.tableMaxHeight = 390
-        }
+        this.tableMaxHeight = Math.max(window.innerHeight * 0.88 - 260, 390)
       })
+    },
+    scrollToErrorColumn() {
+      this.$nextTick(() => {
+        requestAnimationFrame(() => {
+          const tableEl = this.$refs.tables?.$el
+          const scrollWrapper = getTableScrollWrapper(this.$refs.tables)
+          if (!tableEl || !scrollWrapper) return
+
+          const wrapperRect = scrollWrapper.getBoundingClientRect()
+          const errorCells = [
+            ...tableEl.querySelectorAll('.is-required-table-cell')
+          ]
+          const errorCell = errorCells.find(cell => {
+            const rect = cell.getBoundingClientRect()
+            return (
+              rect.width > 0 &&
+              rect.height > 0 &&
+              rect.bottom > wrapperRect.top &&
+              rect.top < wrapperRect.bottom
+            )
+          })
+          if (!errorCell) return
+
+          const cellRect = errorCell.getBoundingClientRect()
+          const inVert =
+            cellRect.top >= wrapperRect.top &&
+            cellRect.bottom <= wrapperRect.bottom
+          const inHoriz =
+            cellRect.left >= wrapperRect.left &&
+            cellRect.right <= wrapperRect.right
+          if (inVert && inHoriz) return
+
+          const targetTop =
+            scrollWrapper.scrollTop +
+            cellRect.top -
+            wrapperRect.top -
+            (scrollWrapper.clientHeight - cellRect.height) / 2
+          const targetLeft =
+            scrollWrapper.scrollLeft +
+            cellRect.left -
+            wrapperRect.left -
+            (scrollWrapper.clientWidth - cellRect.width) / 2
+
+          const scrollOptions = {
+            top: Math.max(0, targetTop),
+            left: Math.max(0, targetLeft),
+            behavior: 'smooth'
+          }
+
+          if (typeof scrollWrapper.scrollTo === 'function') {
+            scrollWrapper.scrollTo(scrollOptions)
+          } else {
+            scrollWrapper.scrollTop = scrollOptions.top
+            scrollWrapper.scrollLeft = scrollOptions.left
+          }
+        })
+      })
+    },
+    scrollToErrorColumn1() {
+      this.scrollToErrorColumn()
     }
   }
 }
