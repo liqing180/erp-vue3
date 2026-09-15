@@ -87,7 +87,10 @@ export default {
       return this.options.flatMap(group => group.options || [])
     },
     comShow() {
-      if (this.id && this.optionList.find(item => item[this.idKey] === this.id)) {
+      if (
+        this.id &&
+        this.optionList.find(item => item[this.idKey] === this.id)
+      ) {
         return this.id
       }
       return this.label || this.id
