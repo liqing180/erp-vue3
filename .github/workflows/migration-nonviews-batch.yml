@@ -78,7 +78,7 @@ jobs:
       - name: 提交迁移结果
         working-directory: target
         run: |
-          if git diff --quiet; then
+          if [ -z "$(git status --porcelain src/api)" ]; then
             echo "没有 API 缺口需要提交"
             exit 0
           fi
