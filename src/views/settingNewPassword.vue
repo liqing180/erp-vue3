@@ -68,9 +68,7 @@
       </div>
     </div>
 
-    <div v-if="active === '0'" class="link-expired">
-      The link has expired.
-    </div>
+    <div v-if="active === '0'" class="link-expired">The link has expired.</div>
   </div>
 </template>
 
