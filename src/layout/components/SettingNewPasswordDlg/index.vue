@@ -45,9 +45,13 @@
             </template>
             <template #suffix>
               <svg-icon
-                :icon-class="form.confirmPasswordVisible ? 'psd-hide' : 'psd-show'"
+                :icon-class="
+                  form.confirmPasswordVisible ? 'psd-hide' : 'psd-show'
+                "
                 class="input-icon password-visible-icon"
-                @click="form.confirmPasswordVisible = !form.confirmPasswordVisible"
+                @click="
+                  form.confirmPasswordVisible = !form.confirmPasswordVisible
+                "
               />
             </template>
           </el-input>

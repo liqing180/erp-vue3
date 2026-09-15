@@ -23,10 +23,7 @@
             "
           />
           <template #title>
-            <span
-              class="menu-title"
-              :title="hasTitle(onlyOneChild.meta.title)"
-            >
+            <span class="menu-title" :title="hasTitle(onlyOneChild.meta.title)">
               {{ getMenuTitle(onlyOneChild.meta.title) }}
             </span>
             <el-badge

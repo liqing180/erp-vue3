@@ -19,7 +19,9 @@
       class="main-container"
       :style="{ marginLeft: operatingFloorFullScreen ? '0px' : '' }"
     >
-      <div :class="{ 'fixed-header': fixedHeader && !operatingFloorFullScreen }">
+      <div
+        :class="{ 'fixed-header': fixedHeader && !operatingFloorFullScreen }"
+      >
         <navbar v-show="!operatingFloorFullScreen" @setLayout="setLayout" />
         <tags-view v-if="needTagsView && !operatingFloorFullScreen" />
       </div>
