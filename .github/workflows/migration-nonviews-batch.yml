@@ -34,36 +34,134 @@ jobs:
       - name: 安装 Yarn
         run: npm install --global yarn@1.22.22
 
-      - name: 对齐 ERP API 契约并保留 Vue3 兼容导出
+      - name: 合并 ERP API 契约与 Vue3 扩展
         run: |
+          cp -R target/src/api target-api-original
           cp -R source/src/api/. target/src/api/
-
-          # Vue CLI 环境变量迁移到 Vite。
-          grep -RIl "process.env.VUE_APP_" target/src/api | while read -r file; do
-            sed -i 's/process\.env\.VUE_APP_BASE_API/import.meta.env.VITE_APP_BASE_API/g' "$file"
-            sed -i 's/process\.env\.VUE_APP_URL/import.meta.env.VITE_APP_URL/g' "$file"
-            sed -i 's/process\.env\.VUE_APP_ENV/import.meta.env.VITE_APP_ENV/g' "$file"
-          done
-
-          # Vue3 公共导入弹窗仍依赖此兼容导出；ERP 源没有同名接口，因此保留目标扩展。
-          if ! grep -q "export function downTemplate" target/src/api/basic/basic.js; then
-            cat >> target/src/api/basic/basic.js <<'EOF'
-
-          // Vue3 公共导入弹窗兼容：下载模板
-          export function downTemplate(url) {
-            return request({
-              url,
-              data: {},
-              method: 'post'
-            })
-          }
-          EOF
-          fi
 
           python3 - <<'PY'
           from pathlib import Path
+          import re
           import shutil
 
+          source_api = Path('source/src/api')
+          target_api = Path('target/src/api')
+          old_target_api = Path('target-api-original')
+
+          def skip_string_or_comment(text, i):
+              if text.startswith('//', i):
+                  j = text.find('\n', i + 2)
+                  return len(text) if j < 0 else j
+              if text.startswith('/*', i):
+                  j = text.find('*/', i + 2)
+                  return len(text) if j < 0 else j + 2
+              quote = text[i]
+              if quote not in "'\"`":
+                  return None
+              i += 1
+              while i < len(text):
+                  if text[i] == '\\':
+                      i += 2
+                      continue
+                  if text[i] == quote:
+                      return i + 1
+                  i += 1
+              return len(text)
+
+          def find_balanced_block(text, open_pos):
+              pairs = {'{': '}', '(': ')', '[': ']'}
+              stack = [pairs[text[open_pos]]]
+              i = open_pos + 1
+              while i < len(text) and stack:
+                  jump = skip_string_or_comment(text, i)
+                  if jump is not None:
+                      i = jump
+                      continue
+                  ch = text[i]
+                  if ch in pairs:
+                      stack.append(pairs[ch])
+                  elif stack and ch == stack[-1]:
+                      stack.pop()
+                  i += 1
+              return i
+
+          def extract_exports(text):
+              result = {}
+              pattern = re.compile(
+                  r'export\s+(?:async\s+)?function\s+([A-Za-z_$][\w$]*)\s*\('
+                  r'|export\s+const\s+([A-Za-z_$][\w$]*)\s*='
+              )
+              for match in pattern.finditer(text):
+                  name = match.group(1) or match.group(2)
+                  start = match.start()
+                  if match.group(1):
+                      open_pos = text.find('{', match.end())
+                      if open_pos < 0:
+                          continue
+                      end = find_balanced_block(text, open_pos)
+                      while end < len(text) and text[end] in '; \t':
+                          end += 1
+                  else:
+                      i = match.end()
+                      stack = []
+                      end = len(text)
+                      while i < len(text):
+                          jump = skip_string_or_comment(text, i)
+                          if jump is not None:
+                              i = jump
+                              continue
+                          ch = text[i]
+                          if ch in '({[':
+                              stack.append({'(': ')', '{': '}', '[': ']'}[ch])
+                          elif stack and ch == stack[-1]:
+                              stack.pop()
+                          elif ch == '\n' and not stack:
+                              end = i
+                              break
+                          elif ch == ';' and not stack:
+                              end = i + 1
+                              break
+                          i += 1
+                  result[name] = text[start:end].rstrip()
+              return result
+
+          preserved = []
+          for old_file in old_target_api.rglob('*.js'):
+              rel = old_file.relative_to(old_target_api)
+              new_file = target_api / rel
+              if not new_file.exists():
+                  # Vue3/CRM 独有 API 文件保留，不属于同路径业务契约冲突。
+                  new_file.parent.mkdir(parents=True, exist_ok=True)
+                  shutil.copy2(old_file, new_file)
+                  continue
+
+              source_text = new_file.read_text(encoding='utf-8')
+              old_text = old_file.read_text(encoding='utf-8')
+              source_exports = extract_exports(source_text)
+              old_exports = extract_exports(old_text)
+              extras = [
+                  declaration
+                  for name, declaration in old_exports.items()
+                  if name not in source_exports
+              ]
+              if extras:
+                  source_text = source_text.rstrip() + '\n\n' + '\n\n'.join(extras) + '\n'
+                  new_file.write_text(source_text, encoding='utf-8')
+                  preserved.append((rel.as_posix(), sorted(set(old_exports) - set(source_exports))))
+
+          # Vue CLI 环境变量统一迁移为 Vite。
+          for file in target_api.rglob('*.js'):
+              text = file.read_text(encoding='utf-8')
+              text = text.replace('process.env.VUE_APP_BASE_API', 'import.meta.env.VITE_APP_BASE_API')
+              text = text.replace('process.env.VUE_APP_URL', 'import.meta.env.VITE_APP_URL')
+              text = text.replace('process.env.VUE_APP_ENV', 'import.meta.env.VITE_APP_ENV')
+              file.write_text(text, encoding='utf-8')
+
+          print(f'PRESERVED_VUE3_API_FILES={len(preserved)}')
+          for path, names in preserved:
+              print(f'{path}: {", ".join(names)}')
+
+          # 补齐 ERP 业务图片与 SVG，不覆盖 Vue3 已有同名资源。
           pairs = [
               (Path('source/src/assets/icons/svg'), Path('target/src/assets/icons/svg')),
               (Path('source/src/assets/images'), Path('target/src/assets/images')),
@@ -82,8 +180,6 @@ jobs:
                   copied.append(target_file.as_posix())
 
           print(f'COPIED_ASSET_FILES={len(copied)}')
-          for path in copied:
-              print(path)
           PY
 
       - name: 安装依赖
