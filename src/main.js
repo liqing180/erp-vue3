@@ -74,14 +74,18 @@ import CommonSelect from '@/components/Common/commonSelect'
 import CommonSelectGroup from '@/components/Common/commonSelect/commonSelectGroup.vue'
 import CommonSelectAndList from '@/components/Common/commonSelect/CommonSelectAndList.vue'
 import CommonMultipleSelect from '@/components/Common/commonMultipleSelect'
+import CommonProductAndPicture from '@/components/Common/commonProductAndPicture'
 import ToolTipShowList from '@/components/Common/ToolTipShowList'
 import ToolTipShowCategory from '@/components/Common/ToolTipShowCategory'
 import ToolTipShowObj from '@/components/Common/ToolTipShowObj'
 import ToolTipPaymentTerm from '@/components/Common/ToolTipPaymentTerm'
+import DescriptionToolTipShow from '@/components/Common/descriptionToolTipShow/descriptionToolTipShow.vue'
+import DescriptionEditDlg from '@/components/Common/descriptionToolTipShow/descriptionEditDlg.vue'
 import TablePropError from '@/components/Common/TablePropError'
 import TableNonInventoryItem from '@/components/Common/TableNonInventoryItem'
 import DocumentNoLink from '@/components/Common/documentNoLink'
 import ComparisonInput from '@/components/Common/comparisonInput'
+import FileImport from '@/components/Common/fileImport/fileImport.vue'
 import myUpload from '@/components/Common/htz-image-upload/my-upload.vue'
 import ExportDlg from '@/components/Common/exportDlg/ExportDlg.vue'
 import ImportDlg from '@/components/Common/importDlg/importDlg.vue'
@@ -179,14 +183,18 @@ app.component('CommonSelect', CommonSelect)
 app.component('CommonSelectGroup', CommonSelectGroup)
 app.component('CommonSelectAndList', CommonSelectAndList)
 app.component('CommonMultipleSelect', CommonMultipleSelect)
+app.component('commonProductAndPicture', CommonProductAndPicture)
 app.component('ToolTipShowList', ToolTipShowList)
 app.component('ToolTipShowCategory', ToolTipShowCategory)
 app.component('ToolTipShowObj', ToolTipShowObj)
 app.component('ToolTipPaymentTerm', ToolTipPaymentTerm)
+app.component('DescriptionToolTipShow', DescriptionToolTipShow)
+app.component('DescriptionEditDlg', DescriptionEditDlg)
 app.component('TablePropError', TablePropError)
 app.component('TableNonInventoryItem', TableNonInventoryItem)
 app.component('DocumentNoLink', DocumentNoLink)
 app.component('ComparisonInput', ComparisonInput)
+app.component('FileImport', FileImport)
 app.component('myUpload', myUpload)
 app.component('ExportDlg', ExportDlg)
 app.component('ImportDlg', ImportDlg)
