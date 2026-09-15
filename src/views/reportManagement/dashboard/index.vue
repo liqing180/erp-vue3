@@ -297,7 +297,10 @@ export default {
       const element = this.$refs.fullScreenContainer
       if (!element) return
 
-      if (!document.fullscreenElement || element !== document.fullscreenElement) {
+      if (
+        !document.fullscreenElement ||
+        element !== document.fullscreenElement
+      ) {
         this.openFullscreen(element)
       } else {
         this.quitFullscreen()
