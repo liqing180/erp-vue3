@@ -44,6 +44,7 @@
     "js-beautify": "1.14.11",
     "js-cookie": "3.0.5",
     "jsencrypt": "3.3.2",
+    "lodash": "^4.17.21",
     "mitt": "3.0.1",
     "mpvue-calendar": "^3.0.1",
     "nprogress": "0.2.0",
