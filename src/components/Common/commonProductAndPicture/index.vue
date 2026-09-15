@@ -1,6 +1,8 @@
 <template>
   <div class="product-picture-row">
-    <div class="product-name" :title="row.productName">{{ row.productName }}</div>
+    <div class="product-name" :title="row.productName">
+      {{ row.productName }}
+    </div>
     <div v-if="row.defaultImageUrl" class="product-picture">
       <el-image
         class="product-image"
