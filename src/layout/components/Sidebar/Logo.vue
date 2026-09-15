@@ -19,7 +19,7 @@
 </template>
 
 <script setup>
-import logo from '@/assets/logo/logo.svg'
+import logo from '@/assets/logo/logo.png'
 import useSettingsStore from '@/Pinia/modules/settings'
 import variables from '@/assets/styles/variables.module.scss'
 

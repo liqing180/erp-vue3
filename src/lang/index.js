@@ -1,9 +1,6 @@
 import { createI18n } from 'vue-i18n'
 import enLocale from './en'
-// import enDateTimePicker from './enDateTimePicker'
 import zhLocale from './zh'
-// import elementEnLocale from 'element-plus/es/locale/lang/en' // element-ui lang
-// import elementZhLocale from 'element-plus/es/locale/lang/zh-cn' // element-ui lang
 import Cookies from 'js-cookie'
 import rightToolbar from './rightToolbar'
 import system from './system'
@@ -12,46 +9,37 @@ import sales from './sales'
 import customer from './customer'
 import calendar from './calendar'
 import dashboard from './dashboard'
-// 修改了datepicker的英文语言
-// elementEnLocale.el.datepicker = enDateTimePicker.datepicker
-// elementEnLocale.el.pagination = enDateTimePicker.pagination
 
 const messages = {
   en: {
-    ...enLocale,
     ...rightToolbar.en,
     ...system.en,
     ...organization.en,
     ...sales.en,
     ...customer.en,
     ...calendar.en,
-    ...dashboard.en
-
-    // ...elementEnLocale
+    ...dashboard.en,
+    ...enLocale
   },
   zh: {
-    ...zhLocale,
     ...rightToolbar.zh,
     ...system.zh,
     ...organization.zh,
     ...sales.zh,
     ...customer.zh,
     ...calendar.zh,
-    ...dashboard.zh
-    // ...elementZhLocale
+    ...dashboard.zh,
+    ...zhLocale
   }
 }
 
-const i18n = new createI18n({
-  // set locale
-  // 设置语言 选项 en | zh
+const i18n = createI18n({
   legacy: false,
   locale: Cookies.get('language') || 'en',
   fallbackLocale: 'en',
-  // set locale messages
   messages,
-  fallbackWarn: false, // 关闭后备语言警告
-  missingWarn: false // 关闭缺失键警告
+  fallbackWarn: false,
+  missingWarn: false
 })
 
 export default i18n
