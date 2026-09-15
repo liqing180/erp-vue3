@@ -21,6 +21,8 @@ const whiteList = [
   '/appH5/verification/signature',
   '/settingNewPassword',
   '/customerQuestionnaire',
+  '/externalPQ',
+  '/externalPQSuccess',
   '/authLogin'
 ]
 
