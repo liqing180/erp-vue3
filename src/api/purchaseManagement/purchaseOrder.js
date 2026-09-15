@@ -591,7 +591,9 @@ export function queryExchangeRateDesc(data) {
 }
 
 // purchase/purchaseOrder/queryASLPurchaseOrderCanSelectPurchaseRequisiteListForEGR
-export function queryASLPurchaseOrderCanSelectPurchaseRequisiteListForEGR(data) {
+export function queryASLPurchaseOrderCanSelectPurchaseRequisiteListForEGR(
+  data
+) {
   return request({
     url: '/purchase/purchaseOrder/queryASLPurchaseOrderCanSelectPurchaseRequisiteListForEGR',
     method: 'post',

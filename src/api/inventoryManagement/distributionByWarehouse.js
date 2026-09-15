@@ -43,7 +43,9 @@ export function queryInventoryCostProductWarehouseDocumentLogisticsList(data) {
   })
 }
 // 查询库存成本分析(产品仓库维度) 产品+单据+物流单+变更记录 列表: queryInventoryCostProductWarehouseDocumentLogisticsRevisedList
-export function queryInventoryCostProductWarehouseDocumentLogisticsRevisedList(data) {
+export function queryInventoryCostProductWarehouseDocumentLogisticsRevisedList(
+  data
+) {
   return request({
     url: '/inventory/inventoryCostProductWarehouse/queryInventoryCostProductWarehouseDocumentLogisticsRevisedList',
     method: 'post',

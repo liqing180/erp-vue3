@@ -27,7 +27,10 @@ export function querySearchList(data) {
 // BP具体单据查询: system/businessPartner/queryBusinessPartnerById/{businessPartnerMainId}
 export function queryBusinessPartnerById(id, taskId) {
   return request({
-    url: '/system/businessPartner/queryBusinessPartnerById/' + id + (taskId ? `/${taskId}` : ''),
+    url:
+      '/system/businessPartner/queryBusinessPartnerById/' +
+      id +
+      (taskId ? `/${taskId}` : ''),
     method: 'get'
   })
 }

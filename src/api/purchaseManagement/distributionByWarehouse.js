@@ -67,7 +67,9 @@ export function queryImageForProductDocumentLogistics(data) {
   })
 }
 // 查询采购成本分析(产品仓库维度) 产品+单据+物流单+变更记录 列表: queryPurchaseCostProductWarehouseDocumentLogisticsRevisedList
-export function queryPurchaseCostProductWarehouseDocumentLogisticsRevisedList(data) {
+export function queryPurchaseCostProductWarehouseDocumentLogisticsRevisedList(
+  data
+) {
   return request({
     url: '/inventory/purchaseCostProductWarehouse/queryPurchaseCostProductWarehouseDocumentLogisticsRevisedList',
     method: 'post',

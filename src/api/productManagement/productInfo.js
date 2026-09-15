@@ -16,7 +16,8 @@ export function queryProductList(data) {
 }
 export function queryProductById(id, taskId) {
   return request({
-    url: '/system/product/queryProductById/' + id + (taskId ? `/${taskId}` : ''),
+    url:
+      '/system/product/queryProductById/' + id + (taskId ? `/${taskId}` : ''),
     method: 'get'
   })
 }
