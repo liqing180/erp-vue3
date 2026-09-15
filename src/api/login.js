@@ -11,7 +11,7 @@ export function login(username, password, code, uuid, tenantCode, tenantType) {
     tenantType
   }
   return request({
-    url: '/login',
+    url: 'auth/login',
     method: 'post',
     headers: {
       isToken: false
@@ -55,7 +55,7 @@ export function getInfo() {
 // 退出方法
 export function logout() {
   return request({
-    url: '/logout',
+    url: 'auth/logout',
     method: 'post'
   })
 }
@@ -147,7 +147,7 @@ export function queryMapMsg(data) {
 // 忘记密码 第一步
 export function resetPasswordForSubmitForPC(data) {
   return request({
-    url: '/external/password/resetPasswordForStart',
+    url: '/system/external/password/resetPasswordForStart',
     headers: {
       isToken: false
     },
@@ -159,7 +159,7 @@ export function resetPasswordForSubmitForPC(data) {
 // 忘记密码 第二步
 export function resetPasswordForSendVC(data) {
   return request({
-    url: '/external/password/resetPasswordForSendVerificationCode',
+    url: '/system/external/password/resetPasswordForSendVerificationCode',
     headers: {
       isToken: false
     },
@@ -171,7 +171,7 @@ export function resetPasswordForSendVC(data) {
 // 提交验证码 第二步
 export function resetPasswordForSubmitVC(data) {
   return request({
-    url: '/external/password/resetPasswordForSubmitVerificationCode',
+    url: '/system/external/password/resetPasswordForSubmitVerificationCode',
     headers: {
       isToken: false
     },
@@ -183,7 +183,19 @@ export function resetPasswordForSubmitVC(data) {
 // 重置密码 第三步
 export function resetPasswordForSubmitPW(data) {
   return request({
-    url: '/external/password/resetPasswordForCompleted',
+    url: '/system/external/password/resetPasswordForCompleted',
+    headers: {
+      isToken: false
+    },
+    method: 'post',
+    data: data
+  })
+}
+
+// 验证重置密码链接是否有效
+export function resetPasswordForVerificationUuid(data) {
+  return request({
+    url: '/system/external/password/resetPasswordForVerificationUuid',
     headers: {
       isToken: false
     },
@@ -270,5 +282,109 @@ export function initPassword(data) {
     url: '/system/userNew/initPassword',
     method: 'post',
     data: data
+  })
+}
+
+// 查询具体采购报价
+export function queryPurchaseQuotationById(data) {
+  return request({
+    url: '/purchase/external/purchaseQuotation/queryPurchaseQuotationById',
+    method: 'post',
+    data: data
+  })
+}
+
+// 保存采购报价草稿
+export function saveDraftPurchaseQuotation(data) {
+  return request({
+    url: '/purchase/external/purchaseQuotation/saveDraftPurchaseQuotation',
+    method: 'post',
+    data: data
+  })
+}
+
+export function savePurchaseQuotation(data) {
+  return request({
+    url: '/purchase/external/purchaseQuotation/savePurchaseQuotation',
+    method: 'post',
+    data: data
+  })
+}
+
+export function revisePurchaseQuotation(data) {
+  return request({
+    url: '/purchase/external/purchaseQuotation/revisePurchaseQuotation',
+    method: 'post',
+    data: data
+  })
+}
+
+// ERP 互相跳转 token 转换：token, tenantType
+export function exchange(data) {
+  return request({
+    url: 'auth/exchange',
+    method: 'post',
+    data: data
+  })
+}
+
+export function queryIncotermList(data) {
+  return request({
+    url: '/system/external/common/queryIncotermList',
+    method: 'post',
+    data: data
+  })
+}
+
+export function queryCanSelectPortList(data) {
+  return request({
+    url: '/system/external/common/queryCanSelectPortList',
+    method: 'post',
+    data: data
+  })
+}
+
+export function getSystemSetup(data) {
+  return request({
+    url: '/system/external/common/getSystemSetup/' + data,
+    method: 'get'
+  })
+}
+
+export function externalCommonType(data) {
+  return request({
+    url: '/system/external/common/type/' + data,
+    method: 'get'
+  })
+}
+
+export function queryPositionList() {
+  return request({
+    url: '/system/external/common/queryPositionList',
+    method: 'get'
+  })
+}
+
+export function queryMobileCodeListExternal(data) {
+  return request({
+    url: '/system/external/common/queryMobileCodeList',
+    method: 'post',
+    data
+  })
+}
+
+export function calculate(data) {
+  return request({
+    url: '/purchase/external/purchaseQuotation/calculate',
+    method: 'post',
+    data
+  })
+}
+
+export function queryAllUomList(params) {
+  return request({
+    url: '/system/external/common/queryAllUomList',
+    method: 'get',
+    params
   })
 }
