@@ -4,6 +4,7 @@ import copyText from './common/copyText'
 import dialogDragWidth from './dialog/dragWidth'
 import dialogDragHeight from './dialog/dragHeight'
 import thousandSplit from './thousandSplit'
+import tenRowsHeight from './tenRowsHeight'
 import dragTree from './dragTree'
 import tableTab from './table-tab'
 
@@ -14,6 +15,7 @@ export default function directive(app) {
   app.directive('dialogDragWidth', dialogDragWidth)
   app.directive('dialogDragHeight', dialogDragHeight)
   app.directive('thousandSplit', thousandSplit)
+  app.directive('tenRowsHeight', tenRowsHeight)
   app.directive('dragTree', dragTree)
   app.directive('table-tab', tableTab)
 }
