@@ -59,9 +59,9 @@ function uniqueElements(elements) {
 function getFocusableElements(tableEl, config) {
   const bodyWrapper =
     tableEl.querySelector('.el-table__body-wrapper') || tableEl
-  const rows = Array.from(bodyWrapper.querySelectorAll('.el-table__row')).filter(
-    row => isElementVisible(row, config.strictVisibilityCheck)
-  )
+  const rows = Array.from(
+    bodyWrapper.querySelectorAll('.el-table__row')
+  ).filter(row => isElementVisible(row, config.strictVisibilityCheck))
 
   const result = []
 
