@@ -26,7 +26,8 @@ export function getSystemTodoTaskList(data) {
 
 export function getSkipOverNodeMsgList(id, taskId) {
   return request({
-    url: '/system/activiti/superAdmin/getSkipOverNodeMsgList/' + id + '/' + taskId,
+    url:
+      '/system/activiti/superAdmin/getSkipOverNodeMsgList/' + id + '/' + taskId,
     method: 'get'
   })
 }
@@ -229,7 +230,8 @@ export function getProcessImgByProcessInstance(id) {
 
 export function queryBizProcessManagementById(id) {
   return request({
-    url: '/system/activiti/processManagement/queryBizProcessManagementById/' + id,
+    url:
+      '/system/activiti/processManagement/queryBizProcessManagementById/' + id,
     method: 'get'
   })
 }
