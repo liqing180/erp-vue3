@@ -16,22 +16,21 @@
       :key="item[idKey]"
       :label="item[labelKey]"
       :value="item[idKey]"
-    ></el-option>
+      :disabled="item.disabled"
+    />
     <div
       v-if="options.length <= 0 && hideOptions.length > 0"
       style="text-align: center; color: #999; font-size: 14px; padding: 5px 0"
     >
       No Data
     </div>
-    <template>
-      <el-option
-        v-show="false"
-        v-for="item in hideOptions"
-        :key="item[idKey]"
-        :label="item[labelKey]"
-        :value="item[idKey]"
-      ></el-option>
-    </template>
+    <el-option
+      v-for="item in hideOptions"
+      v-show="false"
+      :key="item[idKey]"
+      :label="item[labelKey]"
+      :value="item[idKey]"
+    />
   </el-select>
 </template>
 
@@ -40,46 +39,38 @@ export default {
   props: {
     labels: {
       type: Array,
-      default() {
-        return []
-      }
+      default: () => []
     },
     ids: {
       type: Array,
-      default() {
-        return []
-      }
+      default: () => []
     },
     disabled: {
-      type: [Boolean],
+      type: Boolean,
       default: false
     },
     collapseTags: {
-      type: [Boolean],
+      type: Boolean,
       default: true
     },
     labelKey: {
-      type: [String],
+      type: String,
       default: 'label'
     },
     idKey: {
-      type: [String],
+      type: String,
       default: 'value'
     },
     options: {
-      type: [Array],
-      default() {
-        return []
-      }
+      type: Array,
+      default: () => []
     },
     showTitle: {
-      type: [Boolean],
+      type: Boolean,
       default: true
     }
   },
-  data() {
-    return {}
-  },
+  emits: ['change'],
   computed: {
     hideOptions() {
       const hideList = []
@@ -117,7 +108,6 @@ export default {
       })
       this.$emit('change', newIds, newLabels)
     }
-  },
-  emits: ['change']
+  }
 }
 </script>
