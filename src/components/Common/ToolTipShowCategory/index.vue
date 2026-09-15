@@ -12,7 +12,10 @@
           <table>
             <thead>
               <tr>
-                <th v-for="columnIndex in maxColumns" :key="`head_${columnIndex}`">
+                <th
+                  v-for="columnIndex in maxColumns"
+                  :key="`head_${columnIndex}`"
+                >
                   {{ columnIndex <= 6 ? layerLabel(columnIndex) : '' }}
                 </th>
               </tr>
@@ -23,8 +26,12 @@
                   v-for="columnIndex in maxColumns"
                   :key="`cell_${rowIndex}_${columnIndex}`"
                 >
-                  <span class="child-label">{{ item[columnIndex - 1] || '' }}</span>
-                  <span v-if="columnIndex < item.length" class="split-icon">›</span>
+                  <span class="child-label">
+                    {{ item[columnIndex - 1] || '' }}
+                  </span>
+                  <span v-if="columnIndex < item.length" class="split-icon">
+                    ›
+                  </span>
                 </td>
               </tr>
             </tbody>
