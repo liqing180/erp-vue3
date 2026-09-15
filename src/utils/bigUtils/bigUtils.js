@@ -141,8 +141,7 @@ function getMultiplyDecimalPlaces(num1, num2) {
     const product = bigNum1.times(bigNum2)
     const productStr = product.toString()
     const dotIndex = productStr.indexOf('.')
-    const decimalPlaces =
-      dotIndex === -1 ? 0 : productStr.length - dotIndex - 1
+    const decimalPlaces = dotIndex === -1 ? 0 : productStr.length - dotIndex - 1
     const fixedResult = decimalPlaces > 6 ? product.toFixed(6) : productStr
 
     return {
