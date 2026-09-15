@@ -7,14 +7,14 @@
       @toggleClick="toggleSideBar"
     />
     <breadcrumb
+      v-if="!settingsStore.topNav"
       id="breadcrumb-container"
       class="breadcrumb-container"
-      v-if="!settingsStore.topNav"
     />
     <top-nav
+      v-if="settingsStore.topNav"
       id="topmenu-container"
       class="topmenu-container"
-      v-if="settingsStore.topNav"
     />
 
     <div class="right-menu">
@@ -25,18 +25,11 @@
           <LegalEntity />
         </div>
 
+        <NavWMS class="right-menu-item" />
+
         <screenfull id="screenfull" class="right-menu-item hover-effect" />
 
-        <!-- <el-tooltip content="主题模式" effect="dark" placement="bottom">
-          <div
-            class="right-menu-item hover-effect theme-switch-wrapper"
-            @click="toggleTheme"
-          >
-            <svg-icon v-if="settingsStore.isDark" icon-class="sunny" />
-            <svg-icon v-if="!settingsStore.isDark" icon-class="moon" />
-          </div>
-        </el-tooltip> -->
-        <div class="right-menu-item hover-effect" v-if="false">
+        <div v-if="false" class="right-menu-item hover-effect">
           <QrCode />
         </div>
 
@@ -56,15 +49,16 @@
           <size-select id="size-select" class="right-menu-item hover-effect" />
         </el-tooltip>
       </div>
+
       <div class="avatar-container">
         <el-dropdown
-          @command="handleCommand"
           class="right-menu-item hover-effect"
           trigger="click"
+          @command="handleCommand"
         >
           <div class="avatar-wrapper">
-            <img :src="avatar" class="user-avatar" />
-            <span :title="userName" class="user-name ml5">{{ userName }}</span>
+            <el-avatar :size="34" fit="scale-down" :src="avatar" />
+            <span :title="nickName" class="user-name ml5">{{ nickName }}</span>
             <el-icon><caret-bottom /></el-icon>
           </div>
           <template #dropdown>
@@ -72,10 +66,7 @@
               <router-link to="/user/profile">
                 <el-dropdown-item>{{ $t('menu.userInfo') }}</el-dropdown-item>
               </router-link>
-              <el-dropdown-item
-                command="setLayout"
-                v-if="settingsStore.showSettings"
-              >
+              <el-dropdown-item command="setLayout">
                 <span>{{ $t('settings.layoutSetting') }}</span>
               </el-dropdown-item>
               <el-dropdown-item divided command="logout">
@@ -94,29 +85,31 @@ import { ElMessageBox } from 'element-plus'
 import Breadcrumb from '@/components/Breadcrumb'
 import TopNav from '@/components/TopNav'
 import Hamburger from '@/components/Hamburger'
-
 import Screenfull from '@/components/Screenfull'
 import LegalEntity from './LegalEntity'
-
+import NavWMS from './NavWMS'
 import LangSelect from '@/components/LangSelect'
 import smallBell from './notifications/smallBell'
-
 import SizeSelect from '@/components/SizeSelect'
 import HeaderSearch from '@/components/HeaderSearch'
 import useSettingsStore from '@/Pinia/modules/settings'
 import QrCode from './QrCode'
-
-import { useI18n } from 'vue-i18n' // 引入插件中的方法
-const i18n = useI18n()
-
+import { useI18n } from 'vue-i18n'
 import { useStore } from 'vuex'
+
+const i18n = useI18n()
 const store = useStore()
-const userName = computed(() => store.getters.name)
+const settingsStore = useSettingsStore()
+
+const nickName = computed(() => store.getters.nickName)
 const avatar = computed(() => store.getters.avatar)
 const sidebar = computed(() => store.getters.sidebar)
 const device = computed(() => store.getters.device)
 
-const settingsStore = useSettingsStore()
+store.dispatch('getBPMTaskCount')
+store.dispatch('getInventoryTaskCount')
+store.dispatch('getSalesTaskCount')
+store.dispatch('getPurchaseTaskCount')
 
 function toggleSideBar() {
   store.dispatch('app/toggleSideBar')
@@ -152,10 +145,6 @@ function logout() {
 const emits = defineEmits(['setLayout'])
 function setLayout() {
   emits('setLayout')
-}
-
-function toggleTheme() {
-  settingsStore.toggleTheme()
 }
 </script>
 
@@ -220,46 +209,35 @@ function toggleTheme() {
           background: rgba(0, 0, 0, 0.025);
         }
       }
-
-      &.theme-switch-wrapper {
-        display: flex;
-        align-items: center;
-
-        svg {
-          transition: transform 0.3s;
-
-          &:hover {
-            transform: scale(1.15);
-          }
-        }
-      }
     }
 
     .avatar-container {
       margin-right: 40px;
+
       .avatar-wrapper {
         line-height: 32px;
         margin-top: 8px;
         position: relative;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
 
-        .user-avatar {
-          cursor: pointer;
-          width: 32px;
-          height: 32px;
-          border-radius: 50%;
+        :deep(.el-avatar) {
+          background-color: #fff;
         }
+
         .user-name {
           display: inline-block;
           vertical-align: top;
           font-size: 14px;
-          min-width: 30px;
-          max-width: 120px;
+          min-width: 50px;
+          max-width: 200px;
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
         }
 
-        i {
+        .el-icon {
           cursor: pointer;
           position: absolute;
           right: -20px;
