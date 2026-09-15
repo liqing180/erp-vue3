@@ -9,11 +9,7 @@
     @update:visible="handleVisibleChange"
   >
     <div class="custom-date-time-panel">
-      <el-scrollbar
-        ref="dateScrollbar"
-        height="220px"
-        class="spinner-column"
-      >
+      <el-scrollbar ref="dateScrollbar" height="220px" class="spinner-column">
         <div
           v-for="row in dateOptions"
           :key="row.value"
@@ -25,11 +21,7 @@
         </div>
       </el-scrollbar>
 
-      <el-scrollbar
-        ref="timeScrollbar"
-        height="220px"
-        class="spinner-column"
-      >
+      <el-scrollbar ref="timeScrollbar" height="220px" class="spinner-column">
         <div
           v-for="row in timeOptions"
           :key="row.value"
