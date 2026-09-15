@@ -90,8 +90,8 @@ class FormDirty {
 
     return Boolean(
       pageItem.saveShow &&
-        !pageItem.isSaveSuccess &&
-        this.checkIsChange(pageItem)
+      !pageItem.isSaveSuccess &&
+      this.checkIsChange(pageItem)
     )
   }
 
