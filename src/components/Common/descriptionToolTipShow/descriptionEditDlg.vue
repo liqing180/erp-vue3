@@ -33,11 +33,7 @@
             <el-button size="small" @click="hidePop('cancel')">
               {{ $t('menu.cancel') }}
             </el-button>
-            <el-button
-              type="primary"
-              size="small"
-              @click="hidePop('confirm')"
-            >
+            <el-button type="primary" size="small" @click="hidePop('confirm')">
               {{ $t('uiBtn.confirm1') }}
             </el-button>
           </div>
