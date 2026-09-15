@@ -9,6 +9,7 @@
   >
     <element-plus-input
       ref="inputRef"
+      v-bind="$attrs"
       :model-value="displayValue"
       :placeholder="placeholder"
       :disabled="disabled"
