@@ -1,8 +1,5 @@
 <template>
-  <div
-    class="comparison-box"
-    :class="[sizeClass, comparisonType]"
-  >
+  <div class="comparison-box" :class="[sizeClass, comparisonType]">
     <div
       v-if="beforeValueShow || comparisonType === 'comp-add'"
       class="old-value"
