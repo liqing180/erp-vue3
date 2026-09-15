@@ -71,6 +71,7 @@ export default {
       type: String,
       default: ''
     },
+    // ERP-VUE2 固定隐藏 controls；保留此 prop 仅兼容历史调用参数。
     controlsPosition: {
       type: String,
       default: ''
@@ -132,6 +133,12 @@ export default {
       }
       return Math.max(this.getPrecision(this.currentValue), stepPrecision)
     },
+    minDisabled() {
+      return this._decrease(this.currentValue, this.step) < this.min
+    },
+    maxDisabled() {
+      return this._increase(this.currentValue, this.step) > this.max
+    },
     displayValue() {
       if (this.userInput !== null) {
         return this.userInput
@@ -169,20 +176,40 @@ export default {
     }
   },
   methods: {
+    emitValue(value, oldValue, emitChange = false) {
+      this.$emit('update:modelValue', value)
+      this.$emit('update:value', value)
+      this.$emit('input', value)
+      if (emitChange) {
+        this.$emit('change', value, oldValue)
+      }
+    },
     syncExternalValue(value) {
-      if (value === undefined || value === null || value === '') {
-        this.currentValue = value === '' ? undefined : value
+      if (value === undefined) {
+        this.currentValue = undefined
         this.userInput = null
         return
       }
 
+      // 保留 ERP-VUE2 行为：外部 null / '' / 数字字符串均先 Number 化。
       const numberValue = Number(value)
       if (Number.isNaN(numberValue)) return
 
-      this.currentValue = this.normalizeValue(numberValue)
+      const normalizedValue = this.normalizeValue(numberValue)
+      this.currentValue = normalizedValue
       this.userInput = null
+
+      // 旧组件会通过 input 将规范化后的值同步回父级。Vue3 仅在值确实
+      // 发生类型/范围/精度变化时回写，避免无意义的更新循环。
+      if (!Object.is(value, normalizedValue)) {
+        this.emitValue(normalizedValue)
+      }
     },
     normalizeValue(value) {
+      if (typeof value !== 'number' || Number.isNaN(value)) {
+        return undefined
+      }
+
       let nextValue = value
 
       if (this.stepStrictly) {
@@ -218,69 +245,84 @@ export default {
       const dotPosition = valueString.indexOf('.')
       return dotPosition === -1 ? 0 : valueString.length - dotPosition - 1
     },
-    increase() {
-      if (this.disabled) return
-      const value = Number(this.currentValue ?? 0)
+    _increase(value, step) {
+      if (typeof value !== 'number' || Number.isNaN(value)) {
+        return this.currentValue
+      }
       const precisionFactor = Math.pow(10, this.numPrecision)
-      const nextValue = this.toPrecision(
-        (precisionFactor * value + precisionFactor * this.step) /
-          precisionFactor
+      return this.toPrecision(
+        (precisionFactor * value + precisionFactor * step) / precisionFactor
       )
-      this.setCurrentValue(nextValue)
+    },
+    _decrease(value, step) {
+      if (typeof value !== 'number' || Number.isNaN(value)) {
+        return this.currentValue
+      }
+      const precisionFactor = Math.pow(10, this.numPrecision)
+      return this.toPrecision(
+        (precisionFactor * value - precisionFactor * step) / precisionFactor
+      )
+    },
+    increase() {
+      if (this.disabled || this.maxDisabled) return
+      const value = Number(this.currentValue ?? 0)
+      this.setCurrentValue(this._increase(value, this.step))
     },
     decrease() {
-      if (this.disabled) return
+      if (this.disabled || this.minDisabled) return
       const value = Number(this.currentValue ?? 0)
-      const precisionFactor = Math.pow(10, this.numPrecision)
-      const nextValue = this.toPrecision(
-        (precisionFactor * value - precisionFactor * this.step) /
-          precisionFactor
-      )
-      this.setCurrentValue(nextValue)
+      this.setCurrentValue(this._decrease(value, this.step))
     },
     setCurrentValue(value) {
       const oldValue = this.currentValue
-      const nextValue =
-        value === undefined || value === ''
-          ? undefined
-          : this.normalizeValue(Number(value))
 
-      if (oldValue === nextValue) {
+      let nextValue
+      if (value === undefined || value === '') {
+        nextValue = undefined
+      } else {
+        const numberValue = Number(value)
+        if (Number.isNaN(numberValue)) {
+          this.userInput = null
+          return
+        }
+        nextValue = this.normalizeValue(numberValue)
+      }
+
+      if (Object.is(oldValue, nextValue)) {
         this.userInput = null
         return
       }
 
       this.currentValue = nextValue
       this.userInput = null
-      this.$emit('update:modelValue', nextValue)
-      this.$emit('update:value', nextValue)
-      this.$emit('input', nextValue)
-      this.$emit('change', nextValue, oldValue)
+      this.emitValue(nextValue, oldValue, true)
     },
     handleInput(value) {
       this.userInput = value
     },
-    handleInputChange(value) {
+    parseInputValue(value) {
       let normalized = String(value ?? '')
-      const splitType = getSplitType()
 
-      if (splitType === '2') {
+      if (getSplitType() === '2') {
+        // 印尼：1.234,56 -> 1234.56
         normalized = normalized.replace(/\./g, '').replace(',', '.')
       } else {
+        // 默认：1,234.56 -> 1234.56
         normalized = normalized.replace(/,/g, '')
       }
 
-      if (normalized === '') {
-        this.setCurrentValue(undefined)
-        return
-      }
+      if (normalized === '') return undefined
 
       const numberValue = Number(normalized)
-      if (!Number.isNaN(numberValue)) {
-        this.setCurrentValue(numberValue)
-      } else {
+      return Number.isNaN(numberValue) ? null : numberValue
+    },
+    handleInputChange(value) {
+      const numberValue = this.parseInputValue(value)
+      if (numberValue === null) {
         this.userInput = null
+        return
       }
+      this.setCurrentValue(numberValue)
     },
     handleBlur(event) {
       this.userInput = null
