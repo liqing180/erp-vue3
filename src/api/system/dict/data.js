@@ -24,8 +24,7 @@ export function getDicts(dictType) {
     method: 'get'
   })
 }
-
-// 根据字典类型查询字典数据信息-返回法人对应语言的中英文
+// 根据字典类型查询字典数据信息-返回法人对于语言的中英文
 export function getDictsForLocalized(dictType) {
   return request({
     url: '/system/dict/data/type/localized/' + dictType,
@@ -38,7 +37,7 @@ export function addData(data) {
   return request({
     url: '/system/dict/data',
     method: 'post',
-    data
+    data: data
   })
 }
 
@@ -47,7 +46,7 @@ export function updateData(data) {
   return request({
     url: '/system/dict/data',
     method: 'put',
-    data
+    data: data
   })
 }
 

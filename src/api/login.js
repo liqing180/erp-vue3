@@ -285,7 +285,9 @@ export function initPassword(data) {
   })
 }
 
-// 查询具体采购报价
+// 查询具体采购报价: /purchase/external/purchaseQuotation/queryPurchaseQuotationById (purchaseQuotationId)
+// 额外信息对象: otherExternalMsg
+// 是否可以提交标识符: isCanSaveDraft
 export function queryPurchaseQuotationById(data) {
   return request({
     url: '/purchase/external/purchaseQuotation/queryPurchaseQuotationById',
@@ -294,7 +296,7 @@ export function queryPurchaseQuotationById(data) {
   })
 }
 
-// 保存采购报价草稿
+// 保存采购报价: /purchase/external/purchaseQuotation/saveDraftPurchaseQuotation
 export function saveDraftPurchaseQuotation(data) {
   return request({
     url: '/purchase/external/purchaseQuotation/saveDraftPurchaseQuotation',
@@ -319,7 +321,7 @@ export function revisePurchaseQuotation(data) {
   })
 }
 
-// ERP 互相跳转 token 转换：token, tenantType
+// EPR 互相跳转 token 转换： token, tenantType
 export function exchange(data) {
   return request({
     url: 'auth/exchange',
@@ -328,6 +330,7 @@ export function exchange(data) {
   })
 }
 
+// /system/external/common/queryIncotermList
 export function queryIncotermList(data) {
   return request({
     url: '/system/external/common/queryIncotermList',
@@ -336,6 +339,7 @@ export function queryIncotermList(data) {
   })
 }
 
+// /system/external/common/queryCanSelectPortList
 export function queryCanSelectPortList(data) {
   return request({
     url: '/system/external/common/queryCanSelectPortList',
@@ -344,6 +348,7 @@ export function queryCanSelectPortList(data) {
   })
 }
 
+// 新接口：/external/common/getSystemSetup/{legalEntityId}
 export function getSystemSetup(data) {
   return request({
     url: '/system/external/common/getSystemSetup/' + data,
@@ -351,6 +356,7 @@ export function getSystemSetup(data) {
   })
 }
 
+// /system/external/common/type/{dictType}
 export function externalCommonType(data) {
   return request({
     url: '/system/external/common/type/' + data,
@@ -373,6 +379,7 @@ export function queryMobileCodeListExternal(data) {
   })
 }
 
+// 外部用:PQ进行计算: purchase/external/purchaseQuotation/calculate
 export function calculate(data) {
   return request({
     url: '/purchase/external/purchaseQuotation/calculate',
@@ -381,6 +388,7 @@ export function calculate(data) {
   })
 }
 
+// system/external/common/queryAllUomList
 export function queryAllUomList(params) {
   return request({
     url: '/system/external/common/queryAllUomList',

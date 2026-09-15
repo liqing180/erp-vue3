@@ -5,6 +5,11 @@ import request from '@/utils/request'
 //   return axios.post(`${SYS}/behaviour/save`, param)
 // }
 
+// POST /behaviour/queryAllPage 保存/修改用户行为
+// export const queryAllPage = (param) => {
+//   return axios.post(`${SYS}/behaviour/queryAllPage`, param)
+// }
+
 // 新增参数配置
 export function save(data) {
   return request({

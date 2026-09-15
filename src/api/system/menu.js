@@ -32,7 +32,13 @@ export function roleMenuTreeselect(roleId) {
     method: 'get'
   })
 }
-
+// 根据模板ID查询菜单下拉树结构
+export function templateMenuTreeselect(roleId) {
+  return request({
+    url: '/system/menu/templateMenuTreeselect/' + roleId,
+    method: 'get'
+  })
+}
 // 新增菜单
 export function addMenu(data) {
   return request({

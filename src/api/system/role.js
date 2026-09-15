@@ -1,5 +1,12 @@
 import request from '@/utils/request'
-
+// 获取角色下拉列表
+export function queryRoleSearchList(query) {
+  return request({
+    url: '/system/role/queryRoleSearchList',
+    method: 'get',
+    params: query
+  })
+}
 // 查询角色列表
 export function listRole(query) {
   return request({
@@ -44,6 +51,19 @@ export function dataScope(data) {
   })
 }
 
+// 批量角色修改 status
+export function changeStatusList(roleIds, status) {
+  const data = {
+    roleIds,
+    status
+  }
+  return request({
+    url: '/system/role/changeStatusList',
+    method: 'post',
+    data: data
+  })
+}
+
 // 角色状态修改
 export function changeRoleStatus(roleId, status) {
   const data = {
@@ -62,6 +82,15 @@ export function delRole(roleId) {
   return request({
     url: '/system/role/' + roleId,
     method: 'delete'
+  })
+}
+
+// 导出角色
+export function exportRole(query) {
+  return request({
+    url: '/system/role/export',
+    method: 'get',
+    params: query
   })
 }
 
@@ -109,8 +138,14 @@ export function authUserSelectAll(data) {
     params: data
   })
 }
+// 下载角色导入模板
+export function importTemplate() {
+  return request({
+    url: '/system/role/importTemplate',
+    method: 'get'
+  })
+}
 
-// 根据角色ID查询部门树结构
 export function deptTreeSelect(roleId) {
   return request({
     url: '/system/role/deptTree/' + roleId,

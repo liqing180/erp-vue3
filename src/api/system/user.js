@@ -1,5 +1,5 @@
 import request from '@/utils/request'
-import { parseStrEmpty } from '@/utils/ruoyi'
+import { praseStrEmpty } from '@/utils/ruoyi'
 
 // 查询用户列表
 export function listUser(data) {
@@ -11,24 +11,9 @@ export function listUser(data) {
 }
 
 // 查询用户详细
-export function getAuthRole(userId) {
-  return request({
-    url: '/system/userNew/getAuthRole/' + parseStrEmpty(userId),
-    method: 'get'
-  })
-}
-// 查询用户详细
-export function updateAuthRole(userId) {
-  return request({
-    url: '/system/userNew/updateAuthRole/' + parseStrEmpty(userId),
-    method: 'get'
-  })
-}
-
-// 查询用户详细
 export function getUser(userId) {
   return request({
-    url: '/system/userNew/queryUserById/' + parseStrEmpty(userId),
+    url: '/system/userNew/queryUserById/' + praseStrEmpty(userId),
     method: 'get'
   })
 }
@@ -226,11 +211,34 @@ export function resetPassword(data) {
   })
 }
 
+// 查询法人所有单位数据: system/uom/querySystemAllUomList
+export function querySystemAllUomList(data) {
+  return request({
+    url: '/system/uom/querySystemAllUomList',
+    method: 'post',
+    data: data
+  })
+}
+
 // 获取用户可以分配的角色列表: system/roleNew/queryRoleListNoPage
 export function queryRoleListNoPage(data) {
   return request({
     url: '/system/roleNew/queryRoleListNoPage',
     method: 'post',
     data: data
+  })
+}
+
+export function getAuthRole(userId) {
+  return request({
+    url: '/system/userNew/getAuthRole/' + parseStrEmpty(userId),
+    method: 'get'
+  })
+}
+
+export function updateAuthRole(userId) {
+  return request({
+    url: '/system/userNew/updateAuthRole/' + parseStrEmpty(userId),
+    method: 'get'
   })
 }

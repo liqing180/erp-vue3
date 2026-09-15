@@ -86,6 +86,7 @@ export function updateUnitCost(data) {
   })
 }
 
+// 添加变体后增加变体详情的信息:
 /* export function addVariationMsgFromMixDesign(data) {
   return request({
     url: '/system/mixDesign/addVariationMsgFromMixDesign',
@@ -93,6 +94,7 @@ export function updateUnitCost(data) {
     data: data
   })
 } */
+// 重新报价:(mixDesignId ，variationMaterialIdList)
 export function reQuote(data) {
   return request({
     url: '/system/mixDesign/reQuote',
@@ -101,6 +103,7 @@ export function reQuote(data) {
   })
 }
 
+// 报价中修改变体：
 export function modifyVariationInTheQuotation(data) {
   return request({
     url: '/system/mixDesign/modifyVariationInTheQuotation',
@@ -109,6 +112,7 @@ export function modifyVariationInTheQuotation(data) {
   })
 }
 
+// 查询配合比已有的生产线列表: (mixDesignId)
 export function queryMixDesignProductionLineList(data) {
   return request({
     url: '/system/mixDesign/queryMixDesignProductionLineList',
@@ -117,6 +121,7 @@ export function queryMixDesignProductionLineList(data) {
   })
 }
 
+// 查询配合比可以添加的生产线列表: (zoneId)
 export function queryMixDesignCanAddProductionLineList(data) {
   return request({
     url: '/system/mixDesign/queryMixDesignCanAddProductionLineList',
@@ -124,6 +129,7 @@ export function queryMixDesignCanAddProductionLineList(data) {
     data: data
   })
 }
+// 增加生产线到配合比: (productionLineIdList, mixDesignIdList)
 export function addProductionLineToMixDesign(data) {
   return request({
     url: '/system/mixDesign/addProductionLineToMixDesign',
@@ -131,6 +137,7 @@ export function addProductionLineToMixDesign(data) {
     data: data
   })
 }
+// 从配合比移除生产线: (productionLineIdList, mixDesignId)
 export function deleteMixDesignProductionLine(data) {
   return request({
     url: '/system/mixDesign/deleteMixDesignProductionLine',
@@ -138,6 +145,7 @@ export function deleteMixDesignProductionLine(data) {
     data: data
   })
 }
+// 变体PDF预览
 export function preview(data) {
   return request({
     url: '/system/mixDesign/preview',

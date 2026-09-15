@@ -31,6 +31,14 @@ export function verifyToken(token) {
   })
 }
 
+// 获取系统对应的域名信息
+export function queryDomainName(query) {
+  return request({
+    url: '/external/common/queryDomainName',
+    method: 'get'
+  })
+}
+
 // 查询可以选择的Incoterm列表:
 export function queryIncotermList(data) {
   return request({
@@ -53,6 +61,15 @@ export function queryCanSelectPortList(data) {
 export function queryPortCountryList(data) {
   return request({
     url: '/system/common/queryPortCountryList',
+    method: 'post',
+    data: data
+  })
+}
+
+// 查询当前日期开始的N个工作日后的日期时间戳, 参数: workingDays （工作日天数，不包含今天）
+export function queryDateAfterWorkingDays(data) {
+  return request({
+    url: '/system/common/queryDateAfterWorkingDays',
     method: 'post',
     data: data
   })

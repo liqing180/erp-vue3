@@ -1,5 +1,6 @@
 import request from '@/utils/request'
 
+// 查询供应商
 export function querySupplierList(data) {
   return request({
     url: '/system/productSheet/querySupplierList',
@@ -7,6 +8,7 @@ export function querySupplierList(data) {
     data
   })
 }
+// 查询供应商-分页
 export function querySupplierListForPage(data) {
   return request({
     url: '/system/productSheet/querySupplierListForPage',
@@ -14,6 +16,8 @@ export function querySupplierListForPage(data) {
     data
   })
 }
+
+// 主列表搜索条件
 export function querySearchList(data) {
   return request({
     url: '/system/productSheet/querySearchList',
@@ -21,6 +25,8 @@ export function querySearchList(data) {
     data
   })
 }
+
+// 查询产品列表
 export function queryPurchaseCanSelectProductServiceList(data) {
   return request({
     url: '/system/product/queryPurchaseCanSelectProductList',
@@ -28,6 +34,8 @@ export function queryPurchaseCanSelectProductServiceList(data) {
     data
   })
 }
+/* 查询产品以配置过的信息 productId & businessPartnerId */
+//
 export function getProductSheetList(data) {
   return request({
     url: '/system/productSheet/getProductSheetList',
@@ -35,6 +43,8 @@ export function getProductSheetList(data) {
     data
   })
 }
+
+// 查询产品对应关系列表: productSheet/queryProductSheetList
 export function queryProductSheetList(data) {
   return request({
     url: '/system/productSheet/queryProductSheetList',
@@ -42,12 +52,16 @@ export function queryProductSheetList(data) {
     data
   })
 }
+
+// 根据id查询产品对应关系信息  productSheet/getById/{id}
 export function getById(id) {
   return request({
     url: '/system/productSheet/getById/' + id,
     method: 'get'
   })
 }
+
+// 批量编辑:  (productIdList)
 export function batchQueryProductSheet(data) {
   return request({
     url: '/system/productSheet/batchQueryProductSheet',
@@ -55,6 +69,8 @@ export function batchQueryProductSheet(data) {
     data
   })
 }
+
+// 保存产品对应： productSheet/save
 export function save(data) {
   return request({
     url: '/system/productSheet/save',
@@ -62,6 +78,8 @@ export function save(data) {
     data
   })
 }
+
+// 修改产品对应： productSheet/update
 export function update(data) {
   return request({
     url: '/system/productSheet/update',
@@ -69,6 +87,8 @@ export function update(data) {
     data
   })
 }
+
+// 修改产品对应关系状态：productSheet/updateActive
 export function updateActive(data) {
   return request({
     url: '/system/productSheet/updateActive',

@@ -38,7 +38,7 @@ export function updateZone(data) {
 // 获取法人下的全部的区域列表信息：/system/zone/getAllZoneList
 export function getAllZoneList() {
   return request({
-    url: '/zone/getAllZoneList',
+    url: 'system/zone/getAllZoneList',
     method: 'get'
   })
 }

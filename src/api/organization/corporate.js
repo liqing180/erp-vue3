@@ -1,10 +1,10 @@
 import request from '@/utils/request'
-import { parseStrEmpty } from '@/utils/ruoyi'
+import { praseStrEmpty } from '@/utils/ruoyi'
 
 // 查询用户详细
 export function getUser(id) {
   return request({
-    url: '/system/user/' + parseStrEmpty(id),
+    url: '/system/user/' + praseStrEmpty(id),
     method: 'get'
   })
 }
@@ -29,7 +29,7 @@ export function saveBusinessGroup(data) {
 // GET /corporate/queryBusinessGroupById/{id} 根据id查询集团组织
 export function queryBusinessGroupById(id) {
   return request({
-    url: '/system/corporate/queryBusinessGroupById/' + parseStrEmpty(id),
+    url: '/system/corporate/queryBusinessGroupById/' + praseStrEmpty(id),
     method: 'get'
   })
 }
@@ -64,7 +64,7 @@ export function saveLegalEntity(data) {
 // GET /corporate/queryLegalEntityById/{id} 根据id查询法人实体
 export function queryLegalEntityById(id) {
   return request({
-    url: '/system/corporate/queryLegalEntityById/' + parseStrEmpty(id),
+    url: '/system/corporate/queryLegalEntityById/' + praseStrEmpty(id),
     method: 'get'
   })
 }
@@ -98,7 +98,7 @@ export function saveOperatingUnit(data) {
 // GET /corporate/queryOperatingUnitById/{id} 根据id查询业务实体
 export function queryOperatingUnitById(id) {
   return request({
-    url: '/system/corporate/queryOperatingUnitById/' + parseStrEmpty(id),
+    url: '/system/corporate/queryOperatingUnitById/' + praseStrEmpty(id),
     method: 'get'
   })
 }
@@ -133,7 +133,7 @@ export function saveInventoryOrganization(data) {
 export function queryInventoryOrganizationById(id) {
   return request({
     url:
-      '/system/corporate/queryInventoryOrganizationById/' + parseStrEmpty(id),
+      '/system/corporate/queryInventoryOrganizationById/' + praseStrEmpty(id),
     method: 'get'
   })
 }
@@ -141,7 +141,7 @@ export function queryInventoryOrganizationById(id) {
 // GET /corporate/queryCorporateSummary/{id} 查询公司统计图
 export function queryCorporateSummary(id) {
   return request({
-    url: '/system/corporate/queryCorporateSummary/' + parseStrEmpty(id),
+    url: '/system/corporate/queryCorporateSummary/' + praseStrEmpty(id),
     method: 'get'
   })
 }
@@ -211,6 +211,14 @@ export function queryBusinessGroupList(id) {
 export function queryUsers(data) {
   return request({
     url: '/system/userNew/queryUsers',
+    method: 'post',
+    data: data
+  })
+}
+// POST /corporate/queryUsers 查询PIC用户接口-无分页
+export function queryUsersNoPage(data) {
+  return request({
+    url: '/system/userNew/queryUsersNoPage',
     method: 'post',
     data: data
   })

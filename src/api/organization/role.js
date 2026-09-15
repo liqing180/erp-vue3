@@ -1,10 +1,10 @@
 import request from '@/utils/request'
-import { parseStrEmpty } from '@/utils/ruoyi'
+import { praseStrEmpty } from '@/utils/ruoyi'
 
 // GET /role/getById/{id} 根据id查询角色信息
 export function getRoleInfoById(id) {
   return request({
-    url: '/system/role/getById/' + parseStrEmpty(id),
+    url: '/system/role/getById/' + praseStrEmpty(id),
     method: 'get'
   })
 }
@@ -20,7 +20,7 @@ export function queryUserList(id) {
 // GET /role/getUserAndResourceListByRoleId/{id} 查询用户和资源列表
 export function getUserAndResourceListByRoleId(id) {
   return request({
-    url: '/system/role/getUserAndResourceListByRoleId/' + parseStrEmpty(id),
+    url: '/system/role/getUserAndResourceListByRoleId/' + praseStrEmpty(id),
     method: 'get'
   })
 }
@@ -82,7 +82,7 @@ export function queryRoleTreeList(data) {
 // GET /role/queryOperatingUnitTreeList/{id} 查询业务实体树列表
 export function queryOperatingUnitTreeList(id) {
   return request({
-    url: '/system/role/queryOperatingUnitTreeList/' + parseStrEmpty(id),
+    url: '/system/role/queryOperatingUnitTreeList/' + praseStrEmpty(id),
     method: 'get'
   })
 }
@@ -243,5 +243,30 @@ export function getCanAssignUserList(data) {
     url: '/system/dataPermissions/getCanAssignUserList',
     method: 'post',
     data
+  })
+}
+
+// 查询可以添加的客户列表：system/dataPermissions/queryCanAddCustomerList
+export function queryCanAddCustomerList(data) {
+  return request({
+    url: '/system/dataPermissions/queryCanAddCustomerList',
+    method: 'post',
+    data
+  })
+}
+// 查询可以添加的付款条款列表：system/dataPermissions/queryCanAddPaymentTermList
+export function queryCanAddPaymentTermList(data) {
+  return request({
+    url: '/system/dataPermissions/queryCanAddPaymentTermList',
+    method: 'post',
+    data
+  })
+}
+
+// 查询法人下的分公司列表集合: system/dataPermissions/getBranchCompanyList
+export function getBranchCompanyList() {
+  return request({
+    url: '/system/dataPermissions/getBranchCompanyList',
+    method: 'get'
   })
 }

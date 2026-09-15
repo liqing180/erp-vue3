@@ -25,20 +25,12 @@ export function getConfigKey(configKey) {
   })
 }
 
-// 根据参数键名查询参数值(免登录)
-export function externalGetConfigKey(configKey) {
-  return request({
-    url: '/external/common/getConfig/' + configKey,
-    method: 'get'
-  })
-}
-
 // 新增参数配置
 export function addConfig(data) {
   return request({
     url: '/system/config',
     method: 'post',
-    data
+    data: data
   })
 }
 
@@ -47,7 +39,7 @@ export function updateConfig(data) {
   return request({
     url: '/system/config',
     method: 'put',
-    data
+    data: data
   })
 }
 
@@ -67,11 +59,18 @@ export function refreshCache() {
   })
 }
 
-// ERP 参数导出
+// 导出参数
 export function exportConfig(query) {
   return request({
     url: '/system/config/export',
     method: 'get',
     params: query
+  })
+}
+
+export function externalGetConfigKey(configKey) {
+  return request({
+    url: '/external/common/getConfig/' + configKey,
+    method: 'get'
   })
 }

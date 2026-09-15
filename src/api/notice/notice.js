@@ -1,4 +1,5 @@
 import request from '@/utils/request'
+
 const IS_DEV_ENV = process.env.NODE_ENV === 'development'
 const WS_BASE_URL = (() => {
   const { protocol, host } = window.location
@@ -9,13 +10,13 @@ const WS_BASE_URL = (() => {
     serv = `wss://${host}${import.meta.env.VITE_APP_BASE_API}`
   }
   return IS_DEV_ENV
-    ? import.meta.env.VITE_APP_WSURL
-    : import.meta.env.VITE_APP_WSURL || serv
+    ? process.env.VUE_APP_WSURL
+    : process.env.VUE_APP_WSURL || serv
 })()
 
 // 何时去取未读的消息 /websocket/notice/{userId}
 export const wsNotice = userId => {
-  return `${WS_BASE_URL}/websocket/notice/${userId}/1`
+  return `${WS_BASE_URL}/system/websocket/notice/${userId}/1`
 }
 // POST /notify/markRead 标记为已读状态
 export function markRead(data) {
@@ -56,6 +57,14 @@ export function unread(query) {
 export function queryMessageContent(data) {
   return request({
     url: '/system/notify/queryMessageContent',
+    method: 'post',
+    data: data
+  })
+}
+// messageIdList
+export function queryMessageContentBatch(data) {
+  return request({
+    url: '/system/notify/queryMessageContentBatch',
     method: 'post',
     data: data
   })

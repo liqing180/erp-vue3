@@ -3,7 +3,7 @@ import request from '@/utils/request'
 // POST /sysEmailTemplate/querySysEmailTemplateList 查询邮件模板列表
 export function querySysEmailTemplateList(data) {
   return request({
-    url: '/sysEmailTemplate/querySysEmailTemplateList',
+    url: '/system/sysEmailTemplate/querySysEmailTemplateList',
     method: 'post',
     data: data
   })
@@ -12,7 +12,7 @@ export function querySysEmailTemplateList(data) {
 // GET /sysEmailTemplate/queryUserTemplateFor 查询当前用户,当前业务实体,数据库中拥有的TemplateFor
 export function queryUserTemplateFor(id) {
   return request({
-    url: '/sysEmailTemplate/queryUserTemplateFor',
+    url: '/system/sysEmailTemplate/queryUserTemplateFor',
     method: 'get'
   })
 }
@@ -20,7 +20,7 @@ export function queryUserTemplateFor(id) {
 // GET /sysEmailTemplate/queryAllTemplateFor 查询出所有的TemplateFor
 export function queryAllTemplateFor(id) {
   return request({
-    url: '/sysEmailTemplate/queryAllTemplateFor',
+    url: '/system/sysEmailTemplate/queryAllTemplateFor',
     method: 'get'
   })
 }
@@ -28,7 +28,7 @@ export function queryAllTemplateFor(id) {
 // GET /sysEmailTemplate/queryUserCanCreateTemplateFor 查询当前用户可以创建的TemplateFor
 export function queryUserCanCreateTemplateFor(id) {
   return request({
-    url: '/sysEmailTemplate/queryUserCanCreateTemplateFor',
+    url: '/system/sysEmailTemplate/queryUserCanCreateTemplateFor',
     method: 'get'
   })
 }
@@ -36,7 +36,7 @@ export function queryUserCanCreateTemplateFor(id) {
 // POST /sysEmailTemplate/saveSysEmailTemplate 保存新的模板信息
 export function saveSysEmailTemplate(data) {
   return request({
-    url: '/sysEmailTemplate/saveSysEmailTemplate',
+    url: '/system/sysEmailTemplate/saveSysEmailTemplate',
     method: 'post',
     data: data
   })
@@ -45,7 +45,7 @@ export function saveSysEmailTemplate(data) {
 // POST /sysEmailTemplate/updateSysEmailTemplate 修改模板信息
 export function updateSysEmailTemplate(data) {
   return request({
-    url: '/sysEmailTemplate/updateSysEmailTemplate',
+    url: '/system/sysEmailTemplate/updateSysEmailTemplate',
     method: 'post',
     data: data
   })
@@ -54,7 +54,7 @@ export function updateSysEmailTemplate(data) {
 // GET /sysEmailTemplate/checkTemplateForIsHaveDefault 判断当前的TemplateFor是否已经有默认仓库
 export function checkTemplateForIsHaveDefault(id) {
   return request({
-    url: '/sysEmailTemplate/checkTemplateForIsHaveDefault/' + id,
+    url: '/system/sysEmailTemplate/checkTemplateForIsHaveDefault/' + id,
     method: 'get'
   })
 }
@@ -62,7 +62,7 @@ export function checkTemplateForIsHaveDefault(id) {
 // GET /sysEmailTemplate/getSysEmailTemplateById/{id} 根据主Id,查询对应的模板信息
 export function getSysEmailTemplateById(id) {
   return request({
-    url: '/sysEmailTemplate/getSysEmailTemplateById/' + id,
+    url: '/system/sysEmailTemplate/getSysEmailTemplateById/' + id,
     method: 'get'
   })
 }
@@ -70,7 +70,9 @@ export function getSysEmailTemplateById(id) {
 // GET /sysEmailTemplate/getDefaultSysEmailTemplateVoByTemplateFor/{templateFor} 获取当前的 templateFor 数据库中默认的对应的默认的 SysEmailTemplateVo
 export function getDefaultSysEmailTemplateVoByTemplateFor(id) {
   return request({
-    url: '/sysEmailTemplate/getDefaultSysEmailTemplateVoByTemplateFor/' + id,
+    url:
+      '/system/sysEmailTemplate/getDefaultSysEmailTemplateVoByTemplateFor/' +
+      id,
     method: 'get'
   })
 }
@@ -78,7 +80,7 @@ export function getDefaultSysEmailTemplateVoByTemplateFor(id) {
 // POST /sentEmailHistory/querySentEmailHistoryList 查询历史邮件记录. 根据业务实体&用户角色权限隔离
 export function querySentEmailHistoryList(data) {
   return request({
-    url: '/sentEmailHistory/querySentEmailHistoryList',
+    url: '/system/sentEmailHistory/querySentEmailHistoryList',
     method: 'post',
     data: data
   })
@@ -87,7 +89,7 @@ export function querySentEmailHistoryList(data) {
 // GET /sentEmailHistory/getSentEmailHistoryById/{id} 根据主Id,查询对应的历史邮件信息
 export function getSentEmailHistoryById(id) {
   return request({
-    url: '/sentEmailHistory/getSentEmailHistoryById/' + id,
+    url: '/system/sentEmailHistory/getSentEmailHistoryById/' + id,
     method: 'get'
   })
 }
@@ -95,7 +97,7 @@ export function getSentEmailHistoryById(id) {
 // GET /sentEmailHistory/queryUserTemplateFor 查询当前用户,当前业务实体,数据库中拥有已经发送的的TemplateFor
 export function queryHistoryUserTemplateFor(id) {
   return request({
-    url: '/sentEmailHistory/queryUserTemplateFor',
+    url: '/system/sentEmailHistory/queryUserTemplateFor',
     method: 'get'
   })
 }
@@ -103,7 +105,7 @@ export function queryHistoryUserTemplateFor(id) {
 // POST /pendingSendEmail/queryPendingSendEmailList 查询等待发送的邮件. 根据业务实体&用户角色权限隔离
 export function queryPendingSendEmailList(data) {
   return request({
-    url: '/pendingSendEmail/queryPendingSendEmailList',
+    url: '/system/pendingSendEmail/queryPendingSendEmailList',
     method: 'post',
     data: data
   })
@@ -112,7 +114,7 @@ export function queryPendingSendEmailList(data) {
 // POST /pendingSendEmail/sendEmail 确认发送邮件
 export function sendEmail(data) {
   return request({
-    url: '/pendingSendEmail/sendEmail',
+    url: '/system/pendingSendEmail/sendEmail',
     method: 'post',
     data: data
   })
@@ -120,7 +122,7 @@ export function sendEmail(data) {
 
 export function switchEmailForToTemplateNo(params) {
   return request({
-    url: '/pendingSendEmail/switchEmailForToTemplateNo',
+    url: '/system/pendingSendEmail/switchEmailForToTemplateNo',
     method: 'get',
     params: params
   })
@@ -129,7 +131,7 @@ export function switchEmailForToTemplateNo(params) {
 // GET /pendingSendEmail/queryUserTemplateFor 查询当前用户,当前业务实体,数据库中拥有等待发送的的TemplateFor
 export function queryPendingSendUserTemplateFor(id) {
   return request({
-    url: '/pendingSendEmail/queryUserTemplateFor',
+    url: '/system/pendingSendEmail/queryUserTemplateFor',
     method: 'get'
   })
 }
@@ -137,7 +139,7 @@ export function queryPendingSendUserTemplateFor(id) {
 // GET /pendingSendEmail/getPendingSendEmailById/{id} 根据主Id,查询对应的待发送邮件信息
 export function getPendingSendEmailById(id) {
   return request({
-    url: '/pendingSendEmail/getPendingSendEmailById/' + id,
+    url: '/system/pendingSendEmail/getPendingSendEmailById/' + id,
     method: 'get'
   })
 }
@@ -145,7 +147,7 @@ export function getPendingSendEmailById(id) {
 // GET /pendingSendEmail/getTemplateNoByTemplateFor/{templateFor} 根据邮件当前类型,当前的业务实体Id. 查询其他同类型同业务实体的数据的No号
 export function getTemplateNoByTemplateFor(id) {
   return request({
-    url: '/pendingSendEmail/getTemplateNoByTemplateFor/' + id,
+    url: '/system/pendingSendEmail/getTemplateNoByTemplateFor/' + id,
     method: 'get'
   })
 }
@@ -153,7 +155,9 @@ export function getTemplateNoByTemplateFor(id) {
 // GET /sysEmailTemplate/querySysEmailTemplateVariableByTemplateFor/{templateFor} 获取当前的 templateFor 数据库中对应的所拥变量数据
 export function querySysEmailTemplateVariableByTemplateFor(id) {
   return request({
-    url: '/sysEmailTemplate/querySysEmailTemplateVariableByTemplateFor/' + id,
+    url:
+      '/system/sysEmailTemplate/querySysEmailTemplateVariableByTemplateFor/' +
+      id,
     method: 'get'
   })
 }

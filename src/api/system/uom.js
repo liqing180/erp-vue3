@@ -53,10 +53,11 @@ export function queryUomById(id) {
 }
 
 // system/uom/queryAllUomList
-export function queryAllUomList() {
+export function queryAllUomList(params) {
   return request({
     url: '/system/uom/queryAllUomList',
-    method: 'get'
+    method: 'get',
+    params
   })
 }
 // system/uom/queryVolumeUomList

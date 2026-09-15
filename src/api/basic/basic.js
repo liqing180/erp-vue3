@@ -2,6 +2,9 @@ import request from '@/utils/request'
 
 const SYS = import.meta.env.VITE_APP_BASE_API
 
+// POST 上传印章特殊处理接口： 文件上传
+export const uploadCompanySeal = `${SYS}/system/corporate/uploadCompanySeal`
+
 // POST /oss/multiUpload 多个文件上传
 export const multiUpload = `${SYS}/system/oss/multiUpload`
 
@@ -12,7 +15,7 @@ export const multiFileUpload = `${SYS}/system/oss/multiFileUpload`
 export const downloadFile = `${SYS}/system/oss/downloadFile`
 
 // 首页注册上传 不需要token
-export const multiFileUpload2 = `${SYS}/external/app/waybill/multiFileUpload`
+export const multiFileUpload2 = `${SYS}/system/external/common/multiFileUpload`
 
 // 用户头像上传
 export function multiFileUploadFn(data) {
@@ -20,6 +23,16 @@ export function multiFileUploadFn(data) {
     url: '/system/oss/multiFileUpload',
     method: 'post',
     data: data
+  })
+}
+
+// 用户头像上传
+export function uploadCompanySealFn(data) {
+  return request({
+    url: '/system/corporate/uploadCompanySeal',
+    method: 'post',
+    data: data,
+    timeout: 1200000
   })
 }
 
@@ -44,7 +57,9 @@ export function downFile(url, data) {
     url,
     data,
     method: 'post',
-    responseType: 'blob'
+    responseType: 'blob',
+    // 导出数据改超时时间 15分钟
+    timeout: 900000
   })
 }
 
@@ -53,11 +68,12 @@ export function importData(url, data) {
   return request({
     url: url + '?updateSupport=0',
     data,
-    method: 'post'
+    method: 'post',
+    // 导入数据改超时时间 15分钟
+    timeout: 900000
   })
 }
 
-// 下载外部运单模板
 export function downTemplate(url) {
   return request({
     url: url,
