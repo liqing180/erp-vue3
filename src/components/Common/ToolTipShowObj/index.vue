@@ -6,11 +6,7 @@
     :show-after="400"
   >
     <div class="desc-tooltip">
-      <div
-        v-for="(item, index) in rows"
-        :key="index"
-        class="desc-tooltip-item"
-      >
+      <div v-for="(item, index) in rows" :key="index" class="desc-tooltip-item">
         <div class="item-title">{{ item.label }} :</div>
         <div class="item-content">
           {{ getDisplayValue(item) }}
