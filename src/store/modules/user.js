@@ -156,21 +156,16 @@ const user = {
       const username = userInfo.username.trim()
       const { password, code, uuid, tenantCode, tenantType } = userInfo
 
-      return login(
-        username,
-        password,
-        code,
-        uuid,
-        tenantCode,
-        tenantType
-      ).then(res => {
-        const data = res.data || {}
-        const token = data.access_token || data.token || res.token
-        setToken(token)
-        queryAllPageList()
-        initSystemConfig()
-        commit('SET_TOKEN', token)
-      })
+      return login(username, password, code, uuid, tenantCode, tenantType).then(
+        res => {
+          const data = res.data || {}
+          const token = data.access_token || data.token || res.token
+          setToken(token)
+          queryAllPageList()
+          initSystemConfig()
+          commit('SET_TOKEN', token)
+        }
+      )
     },
 
     GetInfo({ commit }) {
