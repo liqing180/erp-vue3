@@ -84,6 +84,7 @@ import ExportDlg from '@/components/Common/exportDlg/ExportDlg.vue'
 import ImportDlg from '@/components/Common/importDlg/importDlg.vue'
 import MapPointSelect from '@/components/Common/MapPointSelect'
 import MapDrawingPolygon from '@/components/Common/MapDrawingPolygon'
+import ErpInputNumber from '@/components/Common/MyInputNumber/index.vue'
 
 import SysNotifyClass from '@/layout/components/notifications/sysNotify/sysNotify.js'
 import { isEmail } from '@/utils/validate.js'
@@ -228,8 +229,9 @@ app.use(ElementPlus, {
   i18n: (key, value) => i18n.global.t(key, value)
 })
 
-// 必须在 Element Plus 安装完成后注册，确保 ERP 自定义输入框覆盖官方组件。
+// 必须在 Element Plus 安装完成后注册，确保 ERP 自定义组件覆盖官方组件。
 app.component('ElInput', ElInput)
+app.component('ElInputNumber', ErpInputNumber)
 
 // 保留 ERP-VUE2 跨页签 token 同步行为。
 window.addEventListener('visibilitychange', () => {
