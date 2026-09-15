@@ -4,51 +4,48 @@
  */
 import store from '@/store'
 
-// 日期格式化
+// 日期格式化；兼容 ERP-VUE2 的 yyyy/dd 与 Vue3 基线的 YYYY/DD。
 export function parseTime(time, pattern) {
   if (arguments.length === 0 || !time) {
     return null
   }
-  // 'YYYY/MM/DD HH:mm:ss'
+
   const formatData = {
     YYYY: '{y}',
+    yyyy: '{y}',
     MM: '{m}',
     DD: '{d}',
+    dd: '{d}',
     HH: '{h}',
     mm: '{i}',
     ss: '{s}'
   }
   let format = pattern || store.getters.fmtForYmdhms
-  // let formatStr
   let dateStr = ''
   let timerStr = ''
+
   format.split(' ').forEach(item => {
-    if (item === 'YYYY') {
+    if (item === 'YYYY' || item === 'yyyy') {
       dateStr = formatData[item]
     }
     if (item.indexOf('/') !== -1) {
       dateStr = item
         .split('/')
-        .map(dateItem => {
-          return formatData[dateItem]
-        })
+        .map(dateItem => formatData[dateItem])
         .join('/')
     } else if (item.indexOf('-') !== -1) {
       dateStr = item
         .split('-')
-        .map(dateItem => {
-          return formatData[dateItem]
-        })
+        .map(dateItem => formatData[dateItem])
         .join('-')
     } else if (item.indexOf(':') !== -1) {
       timerStr = item
         .split(':')
-        .map(dateItem => {
-          return formatData[dateItem]
-        })
+        .map(dateItem => formatData[dateItem])
         .join(':')
     }
   })
+
   format = dateStr + (timerStr ? ' ' + timerStr : '')
 
   let date
@@ -59,10 +56,8 @@ export function parseTime(time, pattern) {
       time = parseInt(time)
     } else if (typeof time === 'string') {
       time = time
-
         .replace(new RegExp(/-/gm), '/')
         .replace('T', ' ')
-
         .replace(new RegExp(/\.[\d]{3}/gm), '')
     }
     if (typeof time === 'number' && time.toString().length === 10) {
@@ -70,6 +65,7 @@ export function parseTime(time, pattern) {
     }
     date = new Date(time)
   }
+
   const formatObj = {
     y: date.getFullYear(),
     m: date.getMonth() + 1,
@@ -79,9 +75,9 @@ export function parseTime(time, pattern) {
     s: date.getSeconds(),
     a: date.getDay()
   }
-  const timeStr = format.replace(/{(y|m|d|h|i|s|a)+}/g, (result, key) => {
+
+  return format.replace(/{(y|m|d|h|i|s|a)+}/g, (result, key) => {
     let value = formatObj[key]
-    // Note: getDay() returns 0 on Sunday
     if (key === 'a') {
       return ['日', '一', '二', '三', '四', '五', '六'][value]
     }
@@ -90,7 +86,6 @@ export function parseTime(time, pattern) {
     }
     return value || 0
   })
-  return timeStr
 }
 
 /**
@@ -102,15 +97,11 @@ export function appointTime(timestamp, time = '00:00:00') {
   const date = new Date(timestamp)
   let month = parseInt(date.getMonth() + 1)
   let day = date.getDate()
-  if (month < 10) {
-    month = '0' + month
-  }
-  if (day < 10) {
-    day = '0' + day
-  }
-  const times = date.getFullYear() + '-' + month + '-' + day + ' ' + time
-  const timeStampA = new Date(times).getTime()
-  return timeStampA
+  if (month < 10) month = '0' + month
+  if (day < 10) day = '0' + day
+  return new Date(
+    date.getFullYear() + '-' + month + '-' + day + ' ' + time
+  ).getTime()
 }
 
 // 表单重置
@@ -122,7 +113,7 @@ export function resetForm(refName) {
 
 // 添加日期范围
 export function addDateRange(params, dateRange, propName) {
-  let search = params
+  const search = params
   search.params =
     typeof search.params === 'object' &&
     search.params !== null &&
@@ -131,8 +122,8 @@ export function addDateRange(params, dateRange, propName) {
       : {}
   dateRange = Array.isArray(dateRange) ? dateRange : []
   if (typeof propName === 'undefined') {
-    search.params['beginTime'] = dateRange[0]
-    search.params['endTime'] = dateRange[1]
+    search.params.beginTime = dateRange[0]
+    search.params.endTime = dateRange[1]
   } else {
     search.params['begin' + propName] = dateRange[0]
     search.params['end' + propName] = dateRange[1]
@@ -142,55 +133,49 @@ export function addDateRange(params, dateRange, propName) {
 
 // 回显数据字典
 export function selectDictLabel(datas, value) {
-  if (value === undefined) {
-    return ''
-  }
-  let actions = []
+  if (value === undefined) return ''
+  const actions = []
   Object.keys(datas).some(key => {
     if (datas[key].value == '' + value) {
       actions.push(datas[key].label)
       return true
     }
+    return false
   })
-  if (actions.length === 0) {
-    actions.push(value)
-  }
+  if (actions.length === 0) actions.push(value)
   return actions.join('')
 }
 
 // 回显数据字典（字符串数组）
 export function selectDictLabels(datas, value, separator) {
-  if (value === undefined || value.length === 0) {
-    return ''
-  }
-  if (Array.isArray(value)) {
-    value = value.join(',')
-  }
-  let actions = []
-  let currentSeparator = undefined === separator ? ',' : separator
-  let temp = value.split(currentSeparator)
-  Object.keys(value.split(currentSeparator)).some(val => {
+  if (value === undefined || value.length === 0) return ''
+  if (Array.isArray(value)) value = value.join(',')
+
+  const actions = []
+  const currentSeparator = separator === undefined ? ',' : separator
+  const temp = value.split(currentSeparator)
+
+  Object.keys(temp).forEach(index => {
     let match = false
-    Object.keys(datas).some(key => {
-      if (datas[key].value == '' + temp[val]) {
+    Object.keys(datas).forEach(key => {
+      if (datas[key].value == '' + temp[index]) {
         actions.push(datas[key].label + currentSeparator)
         match = true
       }
     })
-    if (!match) {
-      actions.push(temp[val] + currentSeparator)
-    }
+    if (!match) actions.push(temp[index] + currentSeparator)
   })
+
   return actions.join('').substring(0, actions.join('').length - 1)
 }
 
 // 字符串格式化(%s )
 export function sprintf(str) {
-  let args = arguments,
-    flag = true,
-    i = 1
+  const args = arguments
+  let flag = true
+  let i = 1
   str = str.replace(/%s/g, function () {
-    let arg = args[i++]
+    const arg = args[i++]
     if (typeof arg === 'undefined') {
       flag = false
       return ''
@@ -202,15 +187,16 @@ export function sprintf(str) {
 
 // 转换字符串，undefined,null等转化为""
 export function parseStrEmpty(str) {
-  if (!str || str == 'undefined' || str == 'null') {
-    return ''
-  }
+  if (!str || str == 'undefined' || str == 'null') return ''
   return str
 }
 
+// 兼容 ERP-VUE2 历史拼写。
+export const praseStrEmpty = parseStrEmpty
+
 // 数据合并
 export function mergeRecursive(source, target) {
-  for (let p in target) {
+  for (const p in target) {
     try {
       if (target[p].constructor == Object) {
         source[p] = mergeRecursive(source[p], target[p])
@@ -226,52 +212,40 @@ export function mergeRecursive(source, target) {
 
 /**
  * 构造树型结构数据
- * @param {*} data 数据源
- * @param {*} id id字段 默认 'id'
- * @param {*} parentId 父节点字段 默认 'parentId'
- * @param {*} children 孩子节点字段 默认 'children'
  */
 export function handleTree(data, id, parentId, children) {
-  let config = {
+  const config = {
     id: id || 'id',
     parentId: parentId || 'parentId',
     childrenList: children || 'children'
   }
+  const childrenListMap = {}
+  const nodeIds = {}
+  const tree = []
 
-  let childrenListMap = {}
-  let nodeIds = {}
-  let tree = []
-
-  for (let d of data) {
-    let parentId = d[config.parentId]
-    if (childrenListMap[parentId] == null) {
-      childrenListMap[parentId] = []
+  for (const item of data) {
+    const itemParentId = item[config.parentId]
+    if (childrenListMap[itemParentId] == null) {
+      childrenListMap[itemParentId] = []
     }
-    nodeIds[d[config.id]] = d
-    childrenListMap[parentId].push(d)
+    nodeIds[item[config.id]] = item
+    childrenListMap[itemParentId].push(item)
   }
 
-  for (let d of data) {
-    let parentId = d[config.parentId]
-    if (nodeIds[parentId] == null) {
-      tree.push(d)
+  for (const item of data) {
+    if (nodeIds[item[config.parentId]] == null) tree.push(item)
+  }
+
+  const adaptToChildrenList = item => {
+    if (childrenListMap[item[config.id]] != null) {
+      item[config.childrenList] = childrenListMap[item[config.id]]
+    }
+    if (item[config.childrenList]) {
+      item[config.childrenList].forEach(adaptToChildrenList)
     }
   }
 
-  for (let t of tree) {
-    adaptToChildrenList(t)
-  }
-
-  function adaptToChildrenList(o) {
-    if (childrenListMap[o[config.id]] !== null) {
-      o[config.childrenList] = childrenListMap[o[config.id]]
-    }
-    if (o[config.childrenList]) {
-      for (let c of o[config.childrenList]) {
-        adaptToChildrenList(c)
-      }
-    }
-  }
+  tree.forEach(adaptToChildrenList)
   return tree
 }
 
@@ -279,53 +253,70 @@ export function handleTree(data, id, parentId, children) {
 export function isContain(str, data) {
   if (!str) return true
   const text = str.toUpperCase()
-  const list = data.filter(x => x && x.trim())
-  return list.map(x => (x = x.toUpperCase())).some(k => k.indexOf(text) !== -1)
+  const list = data.filter(item => item && item.trim())
+  return list
+    .map(item => item.toUpperCase())
+    .some(item => item.indexOf(text) !== -1)
 }
 
 /**
  * 参数处理
- * @param {*} params  参数
  */
 export function tansParams(params) {
   let result = ''
   for (const propName of Object.keys(params)) {
     const value = params[propName]
-    let part = encodeURIComponent(propName) + '='
-    if (value !== null && value !== '' && typeof value !== 'undefined') {
-      if (typeof value === 'object') {
-        for (const key of Object.keys(value)) {
-          if (
-            value[key] !== null &&
-            value[key] !== '' &&
-            typeof value[key] !== 'undefined'
-          ) {
-            let params = propName + '[' + key + ']'
-            let subPart = encodeURIComponent(params) + '='
-            result += subPart + encodeURIComponent(value[key]) + '&'
-          }
+    const part = encodeURIComponent(propName) + '='
+
+    if (value === null || value === '' || typeof value === 'undefined') {
+      continue
+    }
+
+    // 保留 ERP-VUE2 下载逻辑：exportIdList 不在表单序列化阶段展开。
+    if (propName === 'exportIdList' && typeof value === 'object') {
+      continue
+    }
+
+    if (typeof value === 'object') {
+      for (const key of Object.keys(value)) {
+        if (
+          value[key] !== null &&
+          value[key] !== '' &&
+          typeof value[key] !== 'undefined'
+        ) {
+          const subParam = propName + '[' + key + ']'
+          result +=
+            encodeURIComponent(subParam) +
+            '=' +
+            encodeURIComponent(value[key]) +
+            '&'
         }
-      } else {
-        result += part + encodeURIComponent(value) + '&'
       }
+    } else {
+      result += part + encodeURIComponent(value) + '&'
     }
   }
   return result
 }
 
 // 返回项目路径
-export function getNormalPath(p) {
-  if (p.length === 0 || !p || p == 'undefined') {
-    return p
+export function getNormalPath(path) {
+  if (!path || path === 'undefined') return path
+  let result = path.replace('//', '/')
+  if (result[result.length - 1] === '/') {
+    result = result.slice(0, result.length - 1)
   }
-  let res = p.replace('//', '/')
-  if (res[res.length - 1] === '/') {
-    return res.slice(0, res.length - 1)
-  }
-  return res
+  return result
 }
 
 // 验证是否为blob格式
 export function blobValidate(data) {
   return data.type !== 'application/json'
+}
+
+// 回显 ERP 单位描述
+export function showUomLabel(value) {
+  const commonUomList = store.getters.commonUomList || []
+  const item = commonUomList.find(uom => uom.uomName === value)
+  return item?.description || ''
 }
