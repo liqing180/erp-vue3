@@ -141,7 +141,9 @@ export default {
       }
     },
     handleChange(value) {
-      const mobileNum = String(value ?? '').replace(/[^\d]/g, '').trim()
+      const mobileNum = String(value ?? '')
+        .replace(/[^\d]/g, '')
+        .trim()
       if (this.mobileCode && mobileNum) {
         this.init = true
       }
@@ -157,15 +159,19 @@ export default {
       })
     },
     changeMobileNo() {
-      if (this.mobileCode && this.mobileNum && this.mobileNum.trim()) {
+      const mobileNum = String(this.mobileNum ?? '').trim()
+      const mobileCode = this.mobileCode || ''
+
+      if (mobileCode && mobileNum) {
         this.init = true
-        this.$emit(
-          'update:mobileNo',
-          `${this.mobileCode} ${this.mobileNum.toString()}`
-        )
       } else if (!this.init) {
-        this.$emit('clearValidate')
+        this.$nextTick(() => {
+          this.$emit('clearValidate')
+        })
       }
+
+      // 保留 ERP-VUE2 行为：任一字段变化都同步组合值。
+      this.$emit('update:mobileNo', `${mobileCode} ${mobileNum}`)
     },
     visibleChange(show) {
       if (!show) {
@@ -175,7 +181,9 @@ export default {
       }
     },
     filterOption(value) {
-      const keyword = String(value ?? '').trim().toLocaleLowerCase()
+      const keyword = String(value ?? '')
+        .trim()
+        .toLocaleLowerCase()
       if (!keyword) {
         this.options = this.mobileCodeList
         return
