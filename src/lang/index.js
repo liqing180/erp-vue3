@@ -11,6 +11,7 @@ import organization from './organization'
 import sales from './sales'
 import customer from './customer'
 import calendar from './calendar'
+import dashboard from './dashboard'
 // 修改了datepicker的英文语言
 // elementEnLocale.el.datepicker = enDateTimePicker.datepicker
 // elementEnLocale.el.pagination = enDateTimePicker.pagination
@@ -23,7 +24,8 @@ const messages = {
     ...organization.en,
     ...sales.en,
     ...customer.en,
-    ...calendar.en
+    ...calendar.en,
+    ...dashboard.en
 
     // ...elementEnLocale
   },
@@ -34,7 +36,8 @@ const messages = {
     ...organization.zh,
     ...sales.zh,
     ...customer.zh,
-    ...calendar.zh
+    ...calendar.zh,
+    ...dashboard.zh
     // ...elementZhLocale
   }
 }
