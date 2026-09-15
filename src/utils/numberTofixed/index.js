@@ -1,5 +1,5 @@
 /**
- * 解决数字toFixed精度问题
+ * 解决数字 toFixed 精度问题
  */
 import Big from 'big.js/big.mjs'
 import TypeJudge from '@/utils/jsType/index'
@@ -8,89 +8,95 @@ import store from '@/store'
 /* 只有印度尼西亚国家使用类型2 */
 export const getSplitType = () => {
   const legalEntityInfo = store.state.user.legalEntityInfo || {}
-  const countryId = legalEntityInfo.countryId
-  if (countryId === '96') {
-    return '2'
-  }
-  return '1'
+  return legalEntityInfo.countryId === '96' ? '2' : '1'
 }
-export const getToFixedType = () => {
-  // 0:上舍入， 1：下舍入 4: 四舍五入
-  // 向上取整：Math.ceil(x)
-  // 向下取整：Math.floor(x)
-  const toFixedType = store.state.user.toFixedType
-  return toFixedType
-}
-export const numberStr = function (numData, toFixed, isShowStr) {
+
+export const getToFixedType = () => store.state.user.toFixedType
+
+export const numberStr = function (
+  numData,
+  toFixed,
+  isShowStr,
+  keepDec = true,
+  minPrecision
+) {
   if (TypeJudge.isNull(numData) || TypeJudge.isUndefined(numData)) {
     return ''
   }
-
-  if (Number.isNaN(numData) || Number.isNaN(Number(numData))) {
-    return ''
-  }
-  if (numData === '') {
+  if (Number.isNaN(numData) || Number.isNaN(Number(numData)) || numData === '') {
     return ''
   }
 
   const big = new Big(numData)
-
-  let rs = ''
   const toFixedType = getToFixedType()
+  let result = ''
+
   if (!toFixed) {
     if (toFixedType === '0') {
-      rs = Math.ceil(big.toNumber()).toString()
+      result = Math.ceil(big.toNumber()).toString()
     } else if (toFixedType === '1') {
-      rs = Math.floor(big.toNumber()).toString()
+      result = Math.floor(big.toNumber()).toString()
     } else {
-      rs = big.toFixed(0).toString()
+      result = big.toFixed(0).toString()
     }
   } else {
-    const num = Math.pow(10, toFixed)
-
+    const multiple = Math.pow(10, toFixed)
     if (toFixedType === '0') {
-      const value1 = Math.ceil(big.times(num)) / num
-      rs = new Big(value1).toFixed(toFixed).toString()
+      result = new Big(Math.ceil(big.times(multiple)) / multiple)
+        .toFixed(toFixed)
+        .toString()
     } else if (toFixedType === '1') {
-      const value2 = Math.floor(big.times(num)) / num
-      rs = new Big(value2).toFixed(toFixed).toString()
+      result = new Big(Math.floor(big.times(multiple)) / multiple)
+        .toFixed(toFixed)
+        .toString()
     } else {
-      rs = big.toFixed(toFixed).toString()
-    }
-  }
-  if (isShowStr) {
-    const splitType = getSplitType()
-    if (splitType === '2') {
-      rs = rs.replace('.', ',')
-      let [integerPart, decimalPart] = rs.split(',')
-      integerPart = integerPart.replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1.')
-      if (decimalPart) {
-        rs = integerPart + ',' + decimalPart
-      } else {
-        rs = integerPart
-      }
-    } else {
-      let [integerPart, decimalPart] = rs.split('.')
-      integerPart = integerPart.replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1,')
-      if (decimalPart) {
-        rs = integerPart + '.' + decimalPart
-      } else {
-        rs = integerPart
-      }
+      result = big.toFixed(toFixed).toString()
     }
   }
 
-  return rs
+  if (!keepDec) {
+    result = result.replace(/(\.[\d]*?)0+$/, '$1')
+  }
+
+  if (minPrecision !== undefined) {
+    const decimalIndex = result.indexOf('.')
+    const decimalLength = decimalIndex === -1 ? 0 : result.length - decimalIndex - 1
+    if (decimalLength < minPrecision) {
+      if (decimalIndex === -1) {
+        result += '.'
+      }
+      result += '0'.repeat(minPrecision - decimalLength)
+    }
+  }
+
+  if (!isShowStr) {
+    return result
+  }
+
+  if (getSplitType() === '2') {
+    result = result.replace('.', ',')
+    let [integerPart, decimalPart] = result.split(',')
+    integerPart = integerPart.replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1.')
+    return decimalPart ? `${integerPart},${decimalPart}` : integerPart
+  }
+
+  let [integerPart, decimalPart] = result.split('.')
+  integerPart = integerPart.replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1,')
+  return decimalPart ? `${integerPart}.${decimalPart}` : integerPart
 }
+
 export default {
-  install: function (vm) {
-    // 返回字符串
-    vm.config.globalProperties.$numberStr = function (numData, toFixed) {
-      return numberStr(numData, toFixed, true)
+  install(app) {
+    app.config.globalProperties.$numberStr = function (
+      numData,
+      toFixed,
+      keepDec,
+      minPrecision
+    ) {
+      return numberStr(numData, toFixed, true, keepDec, minPrecision)
     }
 
-    // 返回数值
-    vm.config.globalProperties.$num = function (numData, toFixed) {
+    app.config.globalProperties.$num = function (numData, toFixed) {
       return Number(numberStr(numData, toFixed))
     }
   }
