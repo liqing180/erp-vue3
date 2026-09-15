@@ -2,50 +2,53 @@ import { login, logout, getInfo } from '@/api/login'
 import { getToken, setToken, removeToken, removeJSESSIONID } from '@/utils/auth'
 import { queryAllPageList } from '@/mixins/tableMinx.js'
 import { initSystemConfig } from '@/initSystemConfig/initSystemConfig.js'
-import { queryTodoTaskCount } from '@/api/bpm/bpm'
+import {
+  queryTodoTaskCount,
+  getInventoryAllPendingCounts,
+  getSalesAllPendingCounts,
+  getPurchaseAllPendingCounts
+} from '@/api/bpm/bpm'
 import { getConfigKey } from '@/api/system/config'
 import profile from '@/assets/images/profile.jpg'
 import cache from '@/plugins/cache'
+
 const user = {
   state: {
     token: getToken(),
     name: '',
     nickName: '',
     corporateName: '',
-
     email: '',
     mobilePhone: '',
     mobileNum: '',
     mobileCode: '',
-
     userId: '',
     tenantType: '',
     avatar: '',
     roles: [],
     permissions: [],
-    // 只处理时间中的年月日部分
     fmtForTime: null,
-    // 文件大小
     sys_file_max_size: 300,
-    // 文件数量
     sys_file_max_count: 9,
     online_preview_url: '',
     unReadNum: 0,
     searchMapAddressMiniMum: 4,
-    // autoCode 1:自动生成编号 2:自动手动生成编号 3:手动生成编号
     autoCode: '2',
-    // 法人信息
     legalEntityInfo: {},
     isAlreadySetPassword: '',
-    // 0:上舍入， 1：下舍入 4: 四舍五入
     toFixedType: '4',
-    // 单位
     commonUomList: [],
     bpmTaskCountData: {},
+    inventoryCountData: {},
+    salesCountData: {},
+    purchaseCountData: {},
     bpmTaskCountTimer: undefined,
+    bpmTaskCountTimer2: undefined,
+    bpmTaskCountTimer3: undefined,
+    bpmTaskCountTimer4: undefined,
     legalEntityKey: 0,
-    // 系统对接CDS true: 开 false: 关
-    sysDockingSwitch: false
+    sysDockingSwitch: false,
+    sysDockingSwitchQC: false
   },
 
   mutations: {
@@ -113,134 +116,165 @@ const user = {
       state.bpmTaskCountData = value
     },
     SET_TASK_COUNT_TIMER(state, value) {
-      if (state.bpmTaskCountTimer) {
-        clearInterval(state.bpmTaskCountTimer)
-      }
+      if (state.bpmTaskCountTimer) clearInterval(state.bpmTaskCountTimer)
       state.bpmTaskCountTimer = value
     },
-    SET_LEGAL_ENTITY_KEY(state, value) {
-      state.legalEntityKey = +new Date()
+    setInventoryTaskCount(state, value) {
+      state.inventoryCountData = value
+    },
+    SET_TASK_COUNT_TIMER2(state, value) {
+      if (state.bpmTaskCountTimer2) clearInterval(state.bpmTaskCountTimer2)
+      state.bpmTaskCountTimer2 = value
+    },
+    setSalesTaskCount(state, value) {
+      state.salesCountData = value
+    },
+    SET_TASK_COUNT_TIMER3(state, value) {
+      if (state.bpmTaskCountTimer3) clearInterval(state.bpmTaskCountTimer3)
+      state.bpmTaskCountTimer3 = value
+    },
+    setPurchaseTaskCount(state, value) {
+      state.purchaseCountData = value
+    },
+    SET_TASK_COUNT_TIMER4(state, value) {
+      if (state.bpmTaskCountTimer4) clearInterval(state.bpmTaskCountTimer4)
+      state.bpmTaskCountTimer4 = value
+    },
+    SET_LEGAL_ENTITY_KEY(state) {
+      state.legalEntityKey = Date.now()
     },
     SET_DOCKING_SWITCH(state, value) {
       state.sysDockingSwitch = value
+    },
+    SET_DOCKING_SWITCH_QC(state, value) {
+      state.sysDockingSwitchQC = value
     }
   },
 
   actions: {
-    // 登录
     Login({ commit }, userInfo) {
       const username = userInfo.username.trim()
-      const password = userInfo.password
-      const code = userInfo.code
-      const uuid = userInfo.uuid
-      const tenantCode = userInfo.tenantCode
-      const tenantType = userInfo.tenantType
-      return new Promise((resolve, reject) => {
-        login(username, password, code, uuid, tenantCode, tenantType)
-          .then(res => {
-            const data = res || {}
-            setToken(data.token)
-            queryAllPageList()
-            initSystemConfig()
-            commit('SET_TOKEN', data.token)
-            resolve()
-          })
-          .catch(error => {
-            reject(error)
-          })
+      const { password, code, uuid, tenantCode, tenantType } = userInfo
+
+      return login(username, password, code, uuid, tenantCode, tenantType).then(res => {
+        const data = res.data || {}
+        const token = data.access_token || data.token || res.token
+        setToken(token)
+        queryAllPageList()
+        initSystemConfig()
+        commit('SET_TOKEN', token)
       })
     },
 
-    // 获取用户信息
-    GetInfo({ commit, state }) {
-      return new Promise((resolve, reject) => {
-        getInfo()
-          .then(res => {
-            const user = res.user || {}
-            const company = res.company || {}
-            const avatar = !user.avatar ? profile : user.avatar
-            if (res.roles && res.roles.length > 0) {
-              // 验证返回的roles是否是一个非空数组
-              commit('SET_ROLES', res.roles)
-            } else {
-              commit('SET_ROLES', ['ROLE_DEFAULT'])
-            }
-            commit('SET_PERMISSIONS', res.permissions || [])
-            commit('SET_NAME', user.userName)
-            commit('SET_User_Info', user)
-            commit('SET_NICK_NAME', user.nickName)
-            commit('SET_Corporate_Name', company.companyName)
-            commit('SET_USER_ID', user.userId)
-            commit('set_tenant_Type', user.tenantType)
-            commit('SET_AVATAR', avatar)
-            commit('SET_IS_ALREADY_SET_PASSWORD', user.isAlreadySetPassword)
-            getConfigKey('sys.docking.erp.switch').then(response => {
-              if (response.code === 200 && response.msg) {
-                const sysDockingSwitch = response.msg === 'true'
-                commit('SET_DOCKING_SWITCH', sysDockingSwitch)
-              }
-            })
-            resolve(res)
-          })
-          .catch(error => {
-            reject(error)
-          })
+    GetInfo({ commit }) {
+      return getInfo().then(res => {
+        const currentUser = res.user || {}
+        const company = res.company || {}
+        const avatar = currentUser.avatar || profile
+
+        commit(
+          'SET_ROLES',
+          res.roles && res.roles.length > 0 ? res.roles : ['ROLE_DEFAULT']
+        )
+        commit('SET_PERMISSIONS', res.permissions || [])
+        commit('SET_NAME', currentUser.userName)
+        commit('SET_User_Info', currentUser)
+        commit('SET_NICK_NAME', currentUser.nickName)
+        commit('SET_Corporate_Name', company.companyName)
+        commit('SET_USER_ID', currentUser.userId)
+        commit('set_tenant_Type', currentUser.tenantType)
+        commit('SET_AVATAR', avatar)
+        commit('SET_IS_ALREADY_SET_PASSWORD', currentUser.isAlreadySetPassword)
+
+        getConfigKey('sys.docking.cds.switch').then(response => {
+          if (response.code === 200 && response.msg) {
+            commit('SET_DOCKING_SWITCH', response.msg === 'true')
+          }
+        })
+
+        getConfigKey('sys.docking.qc.switch').then(response => {
+          if (response.code === 200 && response.msg) {
+            commit('SET_DOCKING_SWITCH_QC', response.msg === 'true')
+          }
+        })
+
+        return res
       })
     },
 
-    // 退出系统
     LogOut({ commit, state }) {
-      return new Promise((resolve, reject) => {
-        logout(state.token)
-          .then(() => {
-            commit('SET_TOKEN', '')
-            commit('SET_ROLES', [])
-            commit('SET_PERMISSIONS', [])
-            commit('SET_TASK_COUNT_TIMER', undefined)
-            removeToken()
-            removeJSESSIONID()
-            resolve()
-            cache.local.remove('pageSizeList')
-            cache.local.remove('tableCellHideData')
-          })
-          .catch(error => {
-            reject(error)
-          })
+      return logout(state.token).then(() => {
+        commit('SET_TOKEN', '')
+        commit('SET_ROLES', [])
+        commit('SET_PERMISSIONS', [])
+        commit('SET_TASK_COUNT_TIMER', undefined)
+        commit('SET_TASK_COUNT_TIMER2', undefined)
+        commit('SET_TASK_COUNT_TIMER3', undefined)
+        commit('SET_TASK_COUNT_TIMER4', undefined)
+        removeToken()
+        removeJSESSIONID()
+        cache.local.remove('pageSizeList')
+        cache.local.remove('tableCellHideData')
       })
     },
 
     getBPMTaskCount({ commit, state }) {
-      // (返回值: myTodoTaskCount, systemTodoTaskCount, allTodoTaskCount)
-      queryTodoTaskCount({}).then(res => {
-        const data = res.data || {}
-        commit('SET_TASK_COUNT', data)
-      })
-      if (state.bpmTaskCountTimer) {
-        clearInterval(state.bpmTaskCountTimer)
-      }
-
-      const timer = setInterval(() => {
+      const load = () => {
         queryTodoTaskCount({}).then(res => {
-          const data = res.data || {}
-          commit('SET_TASK_COUNT', data)
+          commit('SET_TASK_COUNT', res.data || {})
         })
-      }, 30000)
-      commit('SET_TASK_COUNT_TIMER', timer)
+      }
+      load()
+      if (state.bpmTaskCountTimer) clearInterval(state.bpmTaskCountTimer)
+      commit('SET_TASK_COUNT_TIMER', setInterval(load, 30000))
     },
 
-    // 前端 登出
+    getInventoryTaskCount({ commit, state }) {
+      const load = () => {
+        getInventoryAllPendingCounts({}).then(res => {
+          commit('setInventoryTaskCount', res.data || {})
+        })
+      }
+      load()
+      if (state.bpmTaskCountTimer2) clearInterval(state.bpmTaskCountTimer2)
+      commit('SET_TASK_COUNT_TIMER2', setInterval(load, 30000))
+    },
+
+    getSalesTaskCount({ commit, state }) {
+      const load = () => {
+        getSalesAllPendingCounts({}).then(res => {
+          commit('setSalesTaskCount', res.data || {})
+        })
+      }
+      load()
+      if (state.bpmTaskCountTimer3) clearInterval(state.bpmTaskCountTimer3)
+      commit('SET_TASK_COUNT_TIMER3', setInterval(load, 30000))
+    },
+
+    getPurchaseTaskCount({ commit, state }) {
+      const load = () => {
+        getPurchaseAllPendingCounts({}).then(res => {
+          commit('setPurchaseTaskCount', res.data || {})
+        })
+      }
+      load()
+      if (state.bpmTaskCountTimer4) clearInterval(state.bpmTaskCountTimer4)
+      commit('SET_TASK_COUNT_TIMER4', setInterval(load, 30000))
+    },
+
     FedLogOut({ commit }) {
-      return new Promise(resolve => {
-        commit('SET_TOKEN', '')
-        commit('SET_ROLES', [])
-        commit('SET_PERMISSIONS', [])
-        removeToken()
-        removeJSESSIONID()
-        resolve()
-        commit('SET_TASK_COUNT_TIMER', undefined)
-        cache.local.remove('pageSizeList')
-        cache.local.remove('tableCellHideData')
-      })
+      commit('SET_TOKEN', '')
+      commit('SET_ROLES', [])
+      commit('SET_PERMISSIONS', [])
+      commit('SET_TASK_COUNT_TIMER', undefined)
+      commit('SET_TASK_COUNT_TIMER2', undefined)
+      commit('SET_TASK_COUNT_TIMER3', undefined)
+      commit('SET_TASK_COUNT_TIMER4', undefined)
+      removeToken()
+      removeJSESSIONID()
+      cache.local.remove('pageSizeList')
+      cache.local.remove('tableCellHideData')
+      return Promise.resolve()
     }
   }
 }
