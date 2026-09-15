@@ -73,13 +73,24 @@ function toTimeDate(value) {
 
   const [hours = '0', minutes = '0', seconds = '0'] = value.split(':')
   const date = new Date(2000, 0, 1)
-  date.setHours(Number(hours) || 0, Number(minutes) || 0, Number(seconds) || 0, 0)
+  date.setHours(
+    Number(hours) || 0,
+    Number(minutes) || 0,
+    Number(seconds) || 0,
+    0
+  )
   return date
 }
 
 function toDateValue(value) {
   if (value instanceof Date) return new Date(value)
-  if (value === undefined || value === null || value === '') return value
+  if (
+    value === undefined ||
+    value === null ||
+    value === ''
+  ) {
+    return value
+  }
   const date = new Date(value)
   return Number.isNaN(date.getTime()) ? value : date
 }
@@ -93,7 +104,15 @@ function parseClock(value) {
   const h = Number(hours)
   const m = Number(minutes)
   const s = Number(seconds)
-  if ([h, m, s].some(Number.isNaN) || h < 0 || h > 23 || m < 0 || m > 59 || s < 0 || s > 59) {
+  if (
+    [h, m, s].some(Number.isNaN) ||
+    h < 0 ||
+    h > 23 ||
+    m < 0 ||
+    m > 59 ||
+    s < 0 ||
+    s > 59
+  ) {
     return null
   }
   return h * 3600 + m * 60 + s
@@ -101,7 +120,9 @@ function parseClock(value) {
 
 function parseSelectableRanges(selectableRange) {
   if (!selectableRange) return []
-  const ranges = Array.isArray(selectableRange) ? selectableRange : [selectableRange]
+  const ranges = Array.isArray(selectableRange)
+    ? selectableRange
+    : [selectableRange]
   return ranges
     .map(range => {
       if (Array.isArray(range) && range.length === 2) {
@@ -110,7 +131,7 @@ function parseSelectableRanges(selectableRange) {
         return start === null || end === null ? null : [start, end]
       }
       if (typeof range !== 'string') return null
-      const parts = range.split(/\s+-\s+/)
+      const parts = range.split(/\s*-\s*/)
       if (parts.length !== 2) return null
       const start = parseClock(parts[0])
       const end = parseClock(parts[1])
@@ -120,7 +141,15 @@ function parseSelectableRanges(selectableRange) {
 }
 
 function isSecondAllowed(ranges, secondOfDay) {
-  return ranges.some(([start, end]) => secondOfDay >= start && secondOfDay <= end)
+  return ranges.some(
+    ([start, end]) => secondOfDay >= start && secondOfDay <= end
+  )
+}
+
+function doesRangeOverlap(ranges, startOfPeriod, endOfPeriod) {
+  return ranges.some(
+    ([start, end]) => end >= startOfPeriod && start <= endOfPeriod
+  )
 }
 
 export default {
@@ -243,7 +272,10 @@ export default {
       return PLACEMENT_MAP[this.align] || PLACEMENT_MAP.left
     },
     shouldShowTimeSidecar() {
-      return !this.type.includes('range') && !['time', 'time-select'].includes(this.type)
+      return (
+        !this.type.includes('range') &&
+        !['time', 'time-select'].includes(this.type)
+      )
     },
     mergedPopperClass() {
       return [
@@ -278,25 +310,20 @@ export default {
         disabledHours: () => {
           const disabled = []
           for (let hour = 0; hour < 24; hour++) {
-            let allowed = false
-            for (let minute = 0; minute < 60 && !allowed; minute++) {
-              allowed = isSecondAllowed(this.selectableRanges, hour * 3600 + minute * 60)
+            const start = hour * 3600
+            if (!doesRangeOverlap(this.selectableRanges, start, start + 3599)) {
+              disabled.push(hour)
             }
-            if (!allowed) disabled.push(hour)
           }
           return disabled
         },
         disabledMinutes: hour => {
           const disabled = []
           for (let minute = 0; minute < 60; minute++) {
-            let allowed = false
-            for (let second = 0; second < 60 && !allowed; second++) {
-              allowed = isSecondAllowed(
-                this.selectableRanges,
-                hour * 3600 + minute * 60 + second
-              )
+            const start = hour * 3600 + minute * 60
+            if (!doesRangeOverlap(this.selectableRanges, start, start + 59)) {
+              disabled.push(minute)
             }
-            if (!allowed) disabled.push(minute)
           }
           return disabled
         },
@@ -319,7 +346,11 @@ export default {
     sourceDate() {
       if (Array.isArray(this.sourceValue)) return null
       if (this.sourceValue instanceof Date) return new Date(this.sourceValue)
-      if (this.sourceValue === undefined || this.sourceValue === null || this.sourceValue === '') {
+      if (
+        this.sourceValue === undefined ||
+        this.sourceValue === null ||
+        this.sourceValue === ''
+      ) {
         return null
       }
 
@@ -351,7 +382,11 @@ export default {
       this.$emit('input', value)
     },
     normalizeShortcut(shortcut) {
-      if (!shortcut || typeof shortcut !== 'object' || shortcut.value !== undefined) {
+      if (
+        !shortcut ||
+        typeof shortcut !== 'object' ||
+        shortcut.value !== undefined
+      ) {
         return shortcut
       }
       if (typeof shortcut.onClick !== 'function') return shortcut
@@ -413,7 +448,9 @@ export default {
     mountSidecarTarget() {
       clearTimeout(this.sidecarMountTimer)
       const popper = document.querySelector(`.${this.instanceClass}`)
-      const bodyWrapper = popper?.querySelector('.el-picker-panel__body-wrapper')
+      const bodyWrapper = popper?.querySelector(
+        '.el-picker-panel__body-wrapper'
+      )
 
       if (!bodyWrapper) {
         if (this.sidecarMountAttempts < 8) {
