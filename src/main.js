@@ -223,7 +223,8 @@ directive(app)
 
 app.use(ElementPlus, {
   locale: Cookies.get('language') === 'en' ? lang.en : lang.zhCn,
-  size: Cookies.get('size') === 'mini' ? 'small' : Cookies.get('size') || 'small',
+  size:
+    Cookies.get('size') === 'mini' ? 'small' : Cookies.get('size') || 'small',
   i18n: (key, value) => i18n.global.t(key, value)
 })
 
