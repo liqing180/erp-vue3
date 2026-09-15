@@ -248,10 +248,7 @@ export default {
               ? this.precision
               : Math.max(
                   Math.min(this.minPrecision, this.precision),
-                  Math.min(
-                    this.getPrecision(currentValue),
-                    this.precision
-                  )
+                  Math.min(this.getPrecision(currentValue), this.precision)
                 )
           currentValue = currentValue.toFixed(displayPrecision)
         }
