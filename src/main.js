@@ -183,7 +183,6 @@ app.component('ExportDlg', ExportDlg)
 app.component('ImportDlg', ImportDlg)
 app.component('MapPointSelect', MapPointSelect)
 app.component('MapDrawingPolygon', MapDrawingPolygon)
-app.component('ElInput', ElInput)
 app.component('svg-icon', SvgIcon)
 
 app.use(vue3TreeOrg)
@@ -227,6 +226,9 @@ app.use(ElementPlus, {
   size: Cookies.get('size') === 'mini' ? 'small' : Cookies.get('size') || 'small',
   i18n: (key, value) => i18n.global.t(key, value)
 })
+
+// 必须在 Element Plus 安装完成后注册，确保 ERP 自定义输入框覆盖官方组件。
+app.component('ElInput', ElInput)
 
 // 保留 ERP-VUE2 跨页签 token 同步行为。
 window.addEventListener('visibilitychange', () => {
