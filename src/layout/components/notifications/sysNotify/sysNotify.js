@@ -1,22 +1,66 @@
 import { h } from 'vue'
+import { ElButton, ElNotification } from 'element-plus'
 import i18n from '@/lang'
 import { markRead } from '@/api/notice/notice'
-import store from '@/store'
-import router from '@/router/index'
-import { ElNotification, ElButton } from 'element-plus'
+import { getToken } from '@/utils/auth'
 import { checkPermi } from '@/utils/permission'
+import eventBus from '@/utils/eventBus'
+import store from '@/store'
+import router from '@/router'
+import { browserNotify } from './browserNotify'
+
 class SysNotifyClass {
   constructor() {
     this.notifyComponent = {}
-    this.$vue = null
+
     this.pageAll = {
+      0: '/inventoryManagement/viewInventoryInitialization',
+      1: '/purchaseManagement/editPurchaseOrder',
+      2: '/purchaseManagement/editPurchaseRequisition',
+      3: '/purchaseManagement/editPurchaseQuotation',
+      4: '/purchaseManagement/viewRequestForQuotation',
+      10: '/salesManagement/editServiceOrder',
+      11: '/salesManagement/editSalesInquiry',
+      12: '/salesManagement/editSalesQuotation',
+      13: '/salesManagement/editSalesOrder',
+      14: '/salesManagement/editPreDeliveryNotice',
+      15: '/salesManagement/editSalesGoodsReturn',
+      16: '/purchaseManagement/editPurchaseReturnOrder',
+      17: '/salesManagement/editDeliveryOrder',
+      18: '/purchaseManagement/editAsl',
+      22: '/inventoryManagement/editTransferOrder',
+      23: '/projectManagement/editStoreIssueChit',
+      24: '/inventoryManagement/editInventoryAudit',
+      26: '/inventoryManagement/editInventoryAdjustment',
+      27: '/inventoryManagement/editEmergencyGoodsReceipt',
+      30: '/purchaseManagement/editConsignmentOrder',
+      36: '/projectManagement/editProjectTemplate',
+      37: '/projectManagement/editProjectProduction',
+      39: '/productManagement/editMixDesign',
       101: '/organization/updateLegalEntity',
       102: '/organization/editBranchCompany',
       103: '/organization/editDepartment',
       104: '/organization/editPost',
       105: '/organization/editRole',
       106: '/user/editUser',
-
+      107: '/businessPartner/editBusinessPartner',
+      108: '/organization/editZone',
+      109: '/productManagement/editProductCategory',
+      110: '/productManagement/editProductInfo',
+      111: '/productManagement/editBOMManagement',
+      112: '/system/editDriver',
+      113: '/system/editVehicle',
+      114: '/system/editTax',
+      115: '/system/editSeaport',
+      116: '/productManagement/editExtendedProductInfo',
+      117: '/productManagement/editProductRelationship',
+      118: '/productManagement/editSalesExpansionInformation',
+      119: '/salesManagement/editQuestionnaireTemplate',
+      120: '/salesManagement/editDeliveryOrder',
+      121: '/salesManagement/viewQuestionnaireTemplate',
+      122: '/salesManagement/editSalesPriceStrategy',
+      123: '/salesManagement/editServicePriceList',
+      126: '/system/editPaymentTerm',
       201: '/system/systemSetup/editSalesGroup',
       202: '/leads/viewLeads',
       203: '/customerManagement/viewCustomer',
@@ -26,6 +70,11 @@ class SysNotifyClass {
     }
 
     this.mainListPageAll = {
+      4: {
+        routeName: 'RequestForQuotation',
+        routePath: '/purchaseManagement/requestForQuotation',
+        authKey: 'purchaseManagement:requestForQuotation:pendInquiry'
+      },
       107: {
         routeName: 'BusinessPartner',
         routePath: '/businessPartnerManagement/businessPartner',
@@ -72,286 +121,291 @@ class SysNotifyClass {
         authKey: 'salesManagement:servicePriceList:list'
       }
     }
+  }
 
-    this.zoneList = []
+  getShowResolve(item) {
+    if (item.jumpType === 2) return false
 
-    this.testMsgShow = (params = {}) => {
-      /* 无内容体，过滤不显示 */
-      if (!params.content) return
+    if (item.jumpType === 1) {
+      const page = this.mainListPageAll[item.documentType]
+      return page ? checkPermi([page.authKey]) : false
+    }
 
-      const row = { ...params }
-      const notifyID = row.messageId
-      if (this.notifyComponent[notifyID]) {
-        this.notifyComponent[notifyID].close()
-        delete this.notifyComponent[notifyID]
-      }
+    return Boolean(this.pageAll[item.documentType])
+  }
 
-      row.showType = row.documentType
+  getResolveBtnText() {
+    return i18n.global.t('notification.detail')
+  }
 
-      row.showResolve = this.getShowResolve(row)
+  createActionButton(label, props, onClick) {
+    return h(
+      ElButton,
+      {
+        size: 'small',
+        style: 'margin-top: 6px',
+        ...props,
+        onClick
+      },
+      () => label
+    )
+  }
 
-      /* notification 会返回当前 Notification 的实例 */
-      const position = row.popupSettings || 'top-left' // top-right/top-left/bottom-right/bottom-left
-      const notifyItem = ElNotification({
-        showClose: false,
-        position: position,
-        customClass:
-          position === 'top-left' ? 'my-notification-left' : 'my-notification',
-        duration: 0,
-        offset: position.includes('top-') ? 70 : 0,
-        title: row.titleName,
-        onClose: () => {
-          this.closeNotify(notifyID)
-        },
-        message: () => {
-          return h(
-            'div',
-            {
-              style:
-                'color: #666;border-top: 1px solid #E4E7ED;margin-top: 10px;padding-top: 4px;'
-            },
-            [
-              h('div', this.createContent(row)),
-              h(
-                'div',
-                {
-                  style: 'text-align: right;margin-top: 6px'
-                },
-                [
-                  h(
-                    ElButton,
-                    {
-                      size: 'small',
-                      plain: true,
-                      style: 'margin-top: 6px',
-                      onClick: () => {
-                        this.clickHandler(row, 'read', notifyID)
-                      }
-                    },
-                    () => i18n.global.t('notification.read')
-                  ),
-                  row.showResolve
-                    ? h(
-                        ElButton,
-                        {
-                          size: 'small',
-                          type: 'primary',
-                          style: 'margin-top: 6px',
-                          onClick: () => {
-                            this.clickHandler(row, 'resolve', notifyID)
-                          }
-                        },
-                        () => this.getResolveBtnText(row)
-                      )
-                    : null
-                ]
-              )
-            ]
-          )
-        }
+  testMsgShow(params = {}) {
+    if (!params.content) return
+
+    const row = { ...params }
+    const notifyID = row.messageId
+    const oldNotify = this.notifyComponent[notifyID]
+    if (oldNotify) {
+      oldNotify.close()
+      delete this.notifyComponent[notifyID]
+    }
+    browserNotify.closeNotify(notifyID)
+
+    row.showType = row.documentType
+    row.showResolve = this.getShowResolve(row)
+
+    const position = row.popupSettings || 'top-left'
+    const notifyItem = ElNotification({
+      showClose: false,
+      position,
+      customClass:
+        position === 'top-left' ? 'my-notification-left' : 'my-notification',
+      duration: 0,
+      offset: position.includes('top-') ? 70 : 0,
+      title: row.titleName,
+      onClose: () => this.closeNotify(notifyID),
+      message: () =>
+        h(
+          'div',
+          {
+            style:
+              'color: #666;border-top: 1px solid #E4E7ED;margin-top: 10px;padding-top: 4px;'
+          },
+          [
+            h('div', this.createContent(row)),
+            h(
+              'div',
+              {
+                style: 'text-align: right;margin-top: 6px'
+              },
+              [
+                row.templateKey === 'DELIVERY_ORDER_Created'
+                  ? this.createActionButton(
+                      i18n.global.t('notification.printPDF'),
+                      { plain: true },
+                      () => this.clickHandler(row, 'printPDF', notifyID)
+                    )
+                  : null,
+                row.showResolve
+                  ? this.createActionButton(
+                      this.getResolveBtnText(row),
+                      { type: 'primary' },
+                      () => this.clickHandler(row, 'resolve', notifyID)
+                    )
+                  : null,
+                this.createActionButton(
+                  i18n.global.t('notification.read'),
+                  { plain: true },
+                  () => this.clickHandler(row, 'read', notifyID)
+                )
+              ]
+            )
+          ]
+        )
+    })
+
+    this.notifyComponent[notifyID] = notifyItem
+    browserNotify.showNotify({
+      notifyID,
+      title: row.titleName,
+      body: row.content
+    })
+  }
+
+  handleRead(param) {
+    markRead(param)
+      .then(res => {
+        store.commit('setUnReadNum', res.data)
       })
+      .catch(() => {})
 
-      this.notifyComponent[notifyID] = notifyItem
-      // console.log(this.notifyComponent)
+    const notify = this.notifyComponent[param.notifyID]
+    if (notify) {
+      notify.close()
+      delete this.notifyComponent[param.notifyID]
+    }
+    browserNotify.closeNotify(param.notifyID)
+  }
+
+  async clickHandler(item, clickType, notifyID) {
+    const param = {
+      ids: item.messageId,
+      notifyID: notifyID || item.messageId
     }
 
-    this.getShowResolve = item => {
-      // jumpType 0：跳详情 1：跳主列表 2：没有跳转按钮
-      if (item.jumpType === 2) return false
-      if (item.jumpType === 1) {
-        const page = this.mainListPageAll[item.documentType]
-        if (!page) {
-          return false
-        }
-        return checkPermi([page.authKey])
-      }
-      return !!this.pageAll[item.documentType]
+    if (clickType === 'read') {
+      this.handleRead(param)
+      return
     }
 
-    this.getResolveBtnText = item => {
-      return i18n.global.t('notification.detail')
+    if (clickType === 'printPDF') {
+      const token = getToken() || ''
+      const baseApi = import.meta.env.VITE_APP_BASE_API || '/dev-api'
+      const url = `${baseApi}/sales/deliveryOrder/preview/${item.documentId}?token=${encodeURIComponent(token)}`
+      window.open(url, 'print')
+      return
     }
 
-    this.handleRead = param => {
-      markRead(param)
-        .then(res => {
-          store.commit('setUnReadNum', res.data)
-        })
-        .catch(() => {})
-      if (this.notifyComponent[param.notifyID]) {
-        this.notifyComponent[param.notifyID].close()
-        delete this.notifyComponent[param.notifyID]
-      }
+    if (clickType !== 'resolve') return
+
+    if (item.status !== 1) {
+      this.handleRead(param)
     }
 
-    this.clickHandler = async (item, clickType, notifyID) => {
-      const param = {
-        ids: item.messageId,
-        notifyID: notifyID || item.messageId
-      }
-      if (clickType === 'read') {
-        this.handleRead(param)
-      }
-      if (clickType === 'resolve') {
-        if (item.status !== 1) {
-          this.handleRead(param)
-        }
-        const pushRoutePath = this.pageAll[item.documentType]
-        let queryData = {
-          timeId: Date.now(),
-          id: item.documentId
-        }
-        let params = {}
+    if (item.documentType === '121') {
+      eventBus.emit('taskNotificationOpenDlg', {
+        type: 'customerQuestionnaire',
+        customerQuestionnaireId: item.documentId
+      })
+      return
+    }
 
-        switch (item.documentType) {
-          case '103':
-            queryData = {
-              timeId: Date.now(),
-              departmentId: item.documentId
-            }
-            break
-          case '104':
-            queryData = {
-              timeId: Date.now(),
-              postId: item.documentId
-            }
-            break
-          case '105':
-            queryData = {
-              timeId: Date.now(),
-              roleId: item.documentId
-            }
-            break
-        }
-        if (item.jumpType === 0) {
-          queryData.backType = '2'
-        }
-        if (item.jumpType === 0) {
-          /* 多次跳转同一路由，需要特殊处理 */
-          const cur = router.currentRoute._value
-          const curName = cur.path
-          if (curName === pushRoutePath) {
-            router
-              .replace({
-                path: '/redirect' + pushRoutePath,
-                query: queryData
-              })
-              .catch()
-          } else {
-            router
-              .push({
-                path: pushRoutePath,
-                query: queryData
-              })
-              .catch()
+    let pushRoutePath = this.pageAll[item.documentType]
+    let query = {
+      timeId: Date.now(),
+      id: item.documentId
+    }
+
+    switch (item.documentType) {
+      case '103':
+        query = { timeId: Date.now(), departmentId: item.documentId }
+        break
+      case '104':
+        query = { timeId: Date.now(), postId: item.documentId }
+        break
+      case '105':
+        query = { timeId: Date.now(), roleId: item.documentId }
+        break
+    }
+
+    if (item.jumpType === 0) {
+      query.backType = '2'
+
+      if (item.documentType === '110' && item.documentJson) {
+        try {
+          const product = JSON.parse(item.documentJson)
+          if (product.productType === '2') {
+            pushRoutePath = '/productManagement/editService'
           }
-        } else if (item.jumpType === 1) {
-          /* 跳主列表 */
-          const page = this.mainListPageAll[item.documentType]
-          if (!page) return
-          const pushRouteName = page.routeName
-          queryData = {
-            timeId: Date.now()
-          }
-          params = {
+        } catch {
+          // 无效扩展 JSON 不影响默认产品详情跳转。
+        }
+      }
+
+      if (!pushRoutePath) return
+
+      const currentPath = router.currentRoute.value.path
+      const route =
+        currentPath === pushRoutePath
+          ? { path: `/redirect${pushRoutePath}`, query }
+          : { path: pushRoutePath, query }
+
+      router.push(route).catch(() => {})
+      return
+    }
+
+    if (item.jumpType === 1) {
+      const page = this.mainListPageAll[item.documentType]
+      if (!page) return
+
+      router
+        .push({
+          name: page.routeName,
+          query: { timeId: Date.now() },
+          params: {
             isGetList: true,
             ids: item.jumpToIds
           }
-          router
-            .push({
-              name: pushRouteName,
-              query: queryData,
-              params: params
-            })
-            .catch()
-        }
-      }
+        })
+        .catch(() => {})
     }
-    this.closeNotify = notifyID => {
-      if (this.notifyComponent[notifyID]) {
-        delete this.notifyComponent[notifyID]
-      }
-    }
+  }
 
-    this.closeNotifyAll = () => {
-      const data = this.notifyComponent
-      Object.keys(data).forEach(key => {
-        data[key].close()
-        delete data[key]
-      })
-    }
+  penaliseDriver(row) {
+    eventBus.emit('taskNotificationOpenDlg', {
+      type: 'PenaliseDriver',
+      driverId: row.driverId
+    })
+  }
 
-    this.createContent = (row, getEleList = true) => {
-      let rowList = []
-      switch (row.showType) {
-        case '1':
-          rowList = [
-            {
-              label: 'null',
-              value: row.content
-            }
-            /*  {
-              label: i18n.global.t('notification.plant'),
-              value: row.plantName
-            } */
-          ]
-          break
-        default:
-          rowList = [
-            {
-              label: 'null',
-              value: row.content
-            }
-          ]
-          break
-      }
+  closeNotify(notifyID) {
+    delete this.notifyComponent[notifyID]
+    browserNotify.closeNotify(notifyID)
+  }
 
-      if (getEleList) {
-        return this.createItemList(rowList)
-      } else {
-        return rowList
+  closeNotifyAll() {
+    Object.keys(this.notifyComponent).forEach(notifyID => {
+      this.notifyComponent[notifyID]?.close()
+      delete this.notifyComponent[notifyID]
+    })
+    browserNotify.closeNotifyAll()
+  }
+
+  formatText(text) {
+    return String(text || '').replace(/\n/g, '<br />')
+  }
+
+  createContent(row, getElementList = true) {
+    const rowList = [
+      {
+        label: 'null',
+        templateKey: row.templateKey,
+        value: row.content
       }
-    }
-    this.createItemList = rowList => {
-      return rowList.map(item => {
-        return h(
-          'div',
-          {
-            style: {
-              width: '300px',
-              'text-align': 'left'
-            }
-          },
-          [
-            item.label !== 'null'
-              ? h(
-                  'span',
-                  {
-                    class: 'm-label',
-                    style: {
-                      'font-weight': 'bold',
-                      color: '#444'
-                    },
-                    attrs: {
-                      title: item.label
-                    }
+    ]
+
+    return getElementList ? this.createItemList(rowList) : rowList
+  }
+
+  createItemList(rowList) {
+    return rowList.map(item =>
+      h(
+        'div',
+        {
+          style: {
+            width: '300px',
+            textAlign: 'left'
+          }
+        },
+        [
+          item.label !== 'null'
+            ? h(
+                'span',
+                {
+                  class: 'm-label',
+                  style: {
+                    fontWeight: 'bold',
+                    color: '#444'
                   },
-                  item.label + ' : '
-                )
-              : null,
-            item.value !== 'null'
-              ? h(
-                  'span',
-                  {
-                    class: 'm-value'
-                  },
-                  item.value
-                )
-              : null
-          ]
-        )
-      })
-    }
+                  title: item.label
+                },
+                `${item.label} : `
+              )
+            : null,
+          item.value !== 'null'
+            ? h(
+                'span',
+                {
+                  class: 'm-value'
+                },
+                item.value
+              )
+            : null
+        ]
+      )
+    )
   }
 }
 
