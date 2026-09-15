@@ -311,8 +311,9 @@
         </li>
         <li
           style="
-            font-family: NSimSun, 新宋体, SimSun, 宋体, SimSun-ExtB, 宋体-ExtB,
-              STSong, serif;
+            font-family:
+              NSimSun, 新宋体, SimSun, 宋体, SimSun-ExtB, 宋体-ExtB, STSong,
+              serif;
           "
           @click="fontItemClick($event)"
         >
