@@ -1,0 +1,104 @@
+<template>
+  <div style="border: 1px solid #ccc; min-width: 365px; max-width: 100%">
+    <Toolbar
+      style="border-bottom: 1px solid #ccc"
+      :editor="editorRef"
+      :defaultConfig="toolbarConfig"
+      :mode="mode"
+    />
+    <Editor
+      style="height: 400px; overflow-y: hidden"
+      v-model="content"
+      :defaultConfig="editorConfig"
+      :mode="mode"
+      @onCreated="handleCreated"
+    />
+  </div>
+</template>
+
+<script setup>
+import { ref, reactive, shallowRef, onBeforeUnmount, onMounted } from 'vue'
+import '@wangeditor/editor/dist/css/style.css'
+import { Editor, Toolbar } from '@wangeditor/editor-for-vue'
+const content = ref('')
+const mode = ref('default')
+// 编辑器实例，必须用 shallowRef
+const editorRef = shallowRef()
+
+// 工具栏配置
+const toolbarConfig = {
+  toolbarKeys: [
+    'headerSelect', // 标题选择
+    'bold', // 加粗
+    'italic', // 斜体
+    'through', // 删除线
+    'underline', // 下划线
+    'justifyCenter', // 居中对齐
+    'justifyJustify', // 两端对齐
+    'justifyLeft', // 左对齐
+    'justifyRight', // 右对齐
+    'bulletedList', // 无序列表
+    'numberedList', // 有序列表
+    'color', // 文字颜色
+    'insertLink', // 插入链接
+    'fontSize', // 字体大小
+    'lineHeight', // 行高
+    'delIndent', // 缩进
+    'indent', // 增进
+    'divider', // 分割线
+    // 'insertTable', // 插入表格
+    'undo', // 撤销
+    'redo', // 重做
+    'clearStyle', // 清除格式
+    // 'fullScreen', // 全屏
+    'blockquote', // 引用
+    'codeBlock', // 代码块
+    // 'insertImage', // 插入图片
+    // 'uploadImage', // 上传图片
+    // 'insertVideo' // 插入视频
+    'mySelect1'
+  ],
+  insertKeys: [
+    {
+      index: 5, // 插入的位置，基于当前的 toolbarKeys
+      keys: ['menu-key1', 'menu-key2']
+    }
+  ]
+}
+
+// 编辑器配置
+const editorConfig = {
+  placeholder: '请输入内容...',
+  MENU_CONF: {
+    uploadImage: {
+      server: 'https://.....', // 上传接口 URL
+      fieldName: 'file' // 图片字段名称
+      // meta: {
+      //   token: '您的认证token' // 如果需要的话
+      // },
+    }
+  }
+}
+
+// 组件销毁时，也及时销毁编辑器
+onBeforeUnmount(() => {
+  const editor = editorRef.value
+  if (editor == null) return
+  editor.destroy()
+})
+
+const handleCreated = editor => {
+  editorRef.value = editor // 记录 editor 实例，重要！
+}
+</script>
+
+<style lang="scss" scoped>
+button {
+  margin-top: 20px;
+  padding: 2px 5px;
+  background-color: #57a3ef;
+  border: none;
+  color: #fff;
+  border-radius: 2px;
+}
+</style>

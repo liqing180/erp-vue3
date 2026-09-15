@@ -1,0 +1,19 @@
+{
+  "singleQuote": true,
+  "semi": false,
+  "trailingComma": "none",
+  "arrowParens": "avoid",
+  "useTabs": false,
+  "tabWidth": 2,
+  "bracketSpacing": true,
+  "rangeStart": 0,
+  "htmlWhitespaceSensitivity": "css",
+  "proseWrap": "preserve",
+  "prettier/prettier": [
+    "error",
+    {
+      "singleQuote": true,
+      "parser": "flow"
+    }
+  ]
+}
