@@ -1,7 +1,6 @@
 import request from '@/utils/request'
 
-const IS_DEV_ENV = import.meta.env.DEV
-const WS_URL = import.meta.env.VITE_APP_WSURL
+const IS_DEV_ENV = process.env.NODE_ENV === 'development'
 const WS_BASE_URL = (() => {
   const { protocol, host } = window.location
   let serv = ''
@@ -10,7 +9,9 @@ const WS_BASE_URL = (() => {
   } else {
     serv = `wss://${host}${import.meta.env.VITE_APP_BASE_API}`
   }
-  return IS_DEV_ENV ? WS_URL : WS_URL || serv
+  return IS_DEV_ENV
+    ? process.env.VUE_APP_WSURL
+    : process.env.VUE_APP_WSURL || serv
 })()
 
 // 何时去取未读的消息 /websocket/notice/{userId}
