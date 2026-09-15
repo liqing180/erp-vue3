@@ -75,6 +75,9 @@ import CommonSelectGroup from '@/components/Common/commonSelect/commonSelectGrou
 import CommonSelectAndList from '@/components/Common/commonSelect/CommonSelectAndList.vue'
 import CommonMultipleSelect from '@/components/Common/commonMultipleSelect'
 import ToolTipShowList from '@/components/Common/ToolTipShowList'
+import ToolTipShowCategory from '@/components/Common/ToolTipShowCategory'
+import ToolTipShowObj from '@/components/Common/ToolTipShowObj'
+import ToolTipPaymentTerm from '@/components/Common/ToolTipPaymentTerm'
 import TablePropError from '@/components/Common/TablePropError'
 import TableNonInventoryItem from '@/components/Common/TableNonInventoryItem'
 import DocumentNoLink from '@/components/Common/documentNoLink'
@@ -165,6 +168,7 @@ app.component('ImagePreview', ImagePreview)
 app.component('RightToolbar', RightToolbar)
 app.component('Editor', Editor)
 app.component('SearchForm', SearchForm)
+app.component('searchForm', SearchForm)
 app.component('MobilePhoneInput', MobilePhoneInput)
 app.component('FormPageLayout', FormPageLayout)
 app.component('FormCollapseItemTitle', FormCollapseItemTitle)
@@ -176,6 +180,9 @@ app.component('CommonSelectGroup', CommonSelectGroup)
 app.component('CommonSelectAndList', CommonSelectAndList)
 app.component('CommonMultipleSelect', CommonMultipleSelect)
 app.component('ToolTipShowList', ToolTipShowList)
+app.component('ToolTipShowCategory', ToolTipShowCategory)
+app.component('ToolTipShowObj', ToolTipShowObj)
+app.component('ToolTipPaymentTerm', ToolTipPaymentTerm)
 app.component('TablePropError', TablePropError)
 app.component('TableNonInventoryItem', TableNonInventoryItem)
 app.component('DocumentNoLink', DocumentNoLink)
