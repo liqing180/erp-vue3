@@ -49,62 +49,55 @@ jobs:
           cp ../source/src/assets/logo/logo-01.png src/assets/logo/logo-01.png
           cp ../source/src/assets/logo/logo_01.png src/assets/logo/logo_01.png
 
-          python3 - <<'PY'
-          from pathlib import Path
+          cat > src/lang/index.js <<'EOF'
+          import { createI18n } from 'vue-i18n'
+          import enLocale from './en'
+          import zhLocale from './zh'
+          import Cookies from 'js-cookie'
+          import rightToolbar from './rightToolbar'
+          import system from './system'
+          import organization from './organization'
+          import sales from './sales'
+          import customer from './customer'
+          import calendar from './calendar'
+          import dashboard from './dashboard'
 
-          lang = Path('src/lang/index.js')
-          lang.write_text("""import { createI18n } from 'vue-i18n'
-import enLocale from './en'
-import zhLocale from './zh'
-import Cookies from 'js-cookie'
-import rightToolbar from './rightToolbar'
-import system from './system'
-import organization from './organization'
-import sales from './sales'
-import customer from './customer'
-import calendar from './calendar'
-import dashboard from './dashboard'
+          const messages = {
+            en: {
+              ...rightToolbar.en,
+              ...system.en,
+              ...organization.en,
+              ...sales.en,
+              ...customer.en,
+              ...calendar.en,
+              ...dashboard.en,
+              ...enLocale
+            },
+            zh: {
+              ...rightToolbar.zh,
+              ...system.zh,
+              ...organization.zh,
+              ...sales.zh,
+              ...customer.zh,
+              ...calendar.zh,
+              ...dashboard.zh,
+              ...zhLocale
+            }
+          }
 
-const messages = {
-  en: {
-    ...rightToolbar.en,
-    ...system.en,
-    ...organization.en,
-    ...sales.en,
-    ...customer.en,
-    ...calendar.en,
-    ...dashboard.en,
-    ...enLocale
-  },
-  zh: {
-    ...rightToolbar.zh,
-    ...system.zh,
-    ...organization.zh,
-    ...sales.zh,
-    ...customer.zh,
-    ...calendar.zh,
-    ...dashboard.zh,
-    ...zhLocale
-  }
-}
+          const i18n = createI18n({
+            legacy: false,
+            locale: Cookies.get('language') || 'en',
+            fallbackLocale: 'en',
+            messages,
+            fallbackWarn: false,
+            missingWarn: false
+          })
 
-const i18n = createI18n({
-  legacy: false,
-  locale: Cookies.get('language') || 'en',
-  fallbackLocale: 'en',
-  messages,
-  fallbackWarn: false,
-  missingWarn: false
-})
+          export default i18n
+          EOF
 
-export default i18n
-""", encoding='utf-8')
-
-          logo = Path('src/layout/components/Sidebar/Logo.vue')
-          text = logo.read_text(encoding='utf-8')
-          text = text.replace("import logo from '@/assets/logo/logo.svg'", "import logo from '@/assets/logo/logo.png'")
-          logo.write_text(text, encoding='utf-8')
-          PY
+          sed -i "s|import logo from '@/assets/logo/logo.svg'|import logo from '@/assets/logo/logo.png'|" src/layout/components/Sidebar/Logo.vue
 
       - name: 安装依赖
         working-directory: target
