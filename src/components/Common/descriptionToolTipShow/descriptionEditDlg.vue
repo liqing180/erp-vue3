@@ -33,7 +33,11 @@
             <el-button size="small" @click="hidePop('cancel')">
               {{ $t('menu.cancel') }}
             </el-button>
-            <el-button type="primary" size="small" @click="hidePop('confirm')">
+            <el-button
+              type="primary"
+              size="small"
+              @click="hidePop('confirm')"
+            >
               {{ $t('uiBtn.confirm1') }}
             </el-button>
           </div>
@@ -43,7 +47,9 @@
               <div v-if="!disabled" class="editable-row" @click="showPop">
                 <div class="primary-pointer tooltip-row flex-value">
                   <span v-if="sourceText.trim()">{{ sourceText }}</span>
-                  <span v-else class="transparent-placeholder">-------------</span>
+                  <span v-else class="transparent-placeholder">
+                    -------------
+                  </span>
                 </div>
                 <el-icon class="edit-icon"><Edit /></el-icon>
               </div>
@@ -100,7 +106,9 @@ export default {
       return String(this.sourceValue ?? '')
     },
     normalizedMaxlength() {
-      if (this.maxlength === undefined || this.maxlength === '') return undefined
+      if (this.maxlength === undefined || this.maxlength === '') {
+        return undefined
+      }
       return Number(this.maxlength)
     }
   },
