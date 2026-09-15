@@ -2,7 +2,7 @@
   <div style="vertical-align: top">
     <div v-if="hasWmsPermission && wmsUrl" @click="navToWms">
       <div class="my-nav-btn">
-        <el-icon><Menu /></el-icon>
+        <el-icon><MenuIcon /></el-icon>
         {{ $t('ui.wmsWarehouse') }}
       </div>
     </div>
@@ -10,7 +10,7 @@
 </template>
 
 <script>
-import { Menu } from '@element-plus/icons-vue'
+import { Menu as MenuIcon } from '@element-plus/icons-vue'
 import { queryDomainName, exchange } from '@/api/login'
 import { getToken } from '@/utils/auth'
 import { checkPermi } from '@/utils/permission'
@@ -18,7 +18,7 @@ import { checkPermi } from '@/utils/permission'
 export default {
   name: 'NavWMS',
   components: {
-    Menu
+    MenuIcon
   },
   data() {
     return {
