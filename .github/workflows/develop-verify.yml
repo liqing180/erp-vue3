@@ -41,8 +41,7 @@ jobs:
         shell: bash
         run: |
           set -o pipefail
-          # 该文件存在 CRM Vue3 基线遗留的纯 Prettier 格式问题，不属于 Phase 0 迁移变更。
-          yarn eslint src --ignore-pattern src/views/system/emailManagement/editor/btns/BtnFontNameList.vue 2>&1 | tee ci-logs/lint.log
+          yarn eslint src 2>&1 | tee ci-logs/lint.log
 
       - name: 生产构建
         shell: bash
