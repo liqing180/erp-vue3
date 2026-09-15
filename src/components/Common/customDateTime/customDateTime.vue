@@ -9,7 +9,11 @@
     @update:visible="handleVisibleChange"
   >
     <div class="custom-date-time-panel">
-      <el-scrollbar ref="dateScrollbar" height="220px" class="spinner-column">
+      <el-scrollbar
+        ref="dateScrollbar"
+        height="220px"
+        class="spinner-column"
+      >
         <div
           v-for="row in dateOptions"
           :key="row.value"
@@ -21,7 +25,11 @@
         </div>
       </el-scrollbar>
 
-      <el-scrollbar ref="timeScrollbar" height="220px" class="spinner-column">
+      <el-scrollbar
+        ref="timeScrollbar"
+        height="220px"
+        class="spinner-column"
+      >
         <div
           v-for="row in timeOptions"
           :key="row.value"
@@ -60,10 +68,18 @@
         </el-input>
 
         <div v-if="!disabled && controls" class="minute-controls">
-          <button type="button" class="minute-button minute-up" @click.stop="minutesIncrease">
+          <button
+            type="button"
+            class="minute-button minute-up"
+            @click.stop="minutesIncrease"
+          >
             <el-icon><ArrowUp /></el-icon>
           </button>
-          <button type="button" class="minute-button minute-down" @click.stop="minutesDecrease">
+          <button
+            type="button"
+            class="minute-button minute-down"
+            @click.stop="minutesDecrease"
+          >
             <el-icon><ArrowDown /></el-icon>
           </button>
         </div>
@@ -73,12 +89,7 @@
 </template>
 
 <script>
-import {
-  ArrowDown,
-  ArrowUp,
-  CircleClose,
-  Clock
-} from '@element-plus/icons-vue'
+import { ArrowDown, ArrowUp, CircleClose, Clock } from '@element-plus/icons-vue'
 
 export default {
   name: 'CustomDateTime',
@@ -236,11 +247,15 @@ export default {
       return date.getTime()
     },
     minutesDecrease() {
-      const value = this.sourceValue ? Number(this.sourceValue) - 60000 : Date.now()
+      const value = this.sourceValue
+        ? Number(this.sourceValue) - 60000
+        : Date.now()
       this.emitValue(value)
     },
     minutesIncrease() {
-      const value = this.sourceValue ? Number(this.sourceValue) + 60000 : Date.now()
+      const value = this.sourceValue
+        ? Number(this.sourceValue) + 60000
+        : Date.now()
       this.emitValue(value)
     },
     buildDateOptions() {
@@ -272,13 +287,17 @@ export default {
     adjustSpinners() {
       const dateIndex = this.monthDateStr
         ? this.dateOptions.findIndex(
-            item => this.parseTime(item.value, this.fmtForMd) === this.monthDateStr
+            item =>
+              this.parseTime(item.value, this.fmtForMd) === this.monthDateStr
           )
         : 0
       const timeIndex = this.hoursMinutesStr
-        ? this.timeOptions.findIndex(item => item.label === this.hoursMinutesStr)
+        ? this.timeOptions.findIndex(
+            item => item.label === this.hoursMinutesStr
+          )
         : this.timeOptions.findIndex(
-            item => item.label === this.parseTime(this.getNearestTime(), 'HH:mm')
+            item =>
+              item.label === this.parseTime(this.getNearestTime(), 'HH:mm')
           )
 
       this.$refs.dateScrollbar?.setScrollTop?.(Math.max(0, dateIndex) * 32)
