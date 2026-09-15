@@ -91,7 +91,11 @@ export default {
       }
     },
     showDefault() {
-      if (this.curValue !== undefined && this.curValue !== null && this.curValue !== '') {
+      if (
+        this.curValue !== undefined &&
+        this.curValue !== null &&
+        this.curValue !== ''
+      ) {
         const current = new Date(Number(this.curValue))
         if (!Number.isNaN(current.getTime())) {
           this.clickHour(current.getHours(), false)
@@ -148,7 +152,11 @@ export default {
     },
     emitPick() {
       // ERP-VUE2 原组件只在已有 curValue 时更新时间，保持相同语义。
-      if (this.curValue === undefined || this.curValue === null || this.curValue === '') {
+      if (
+        this.curValue === undefined ||
+        this.curValue === null ||
+        this.curValue === ''
+      ) {
         return
       }
       const date = new Date(Number(this.curValue))
