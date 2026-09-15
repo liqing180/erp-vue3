@@ -1,0 +1,62 @@
+name: 迁移文件一次性格式化
+
+on:
+  push:
+    branches:
+      - develop
+
+permissions:
+  contents: write
+
+jobs:
+  prettier:
+    if: ${{ !contains(github.event.head_commit.message, '[prettier-auto]') }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: 拉取代码
+        uses: actions/checkout@v4
+        with:
+          ref: develop
+
+      - name: 配置 Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: 安装 Yarn
+        run: npm install --global yarn@1.22.22
+
+      - name: 安装依赖
+        run: yarn install --non-interactive --network-timeout 100000
+
+      - name: 格式化本轮迁移文件
+        run: |
+          yarn prettier --write \
+            src/api/businessPartner/businessPartner.js \
+            src/api/inventoryManagement/distributionByWarehouse.js \
+            src/api/productManagement/productInfo.js \
+            src/api/purchaseManagement/distributionByWarehouse.js \
+            src/api/purchaseManagement/purchaseOrder.js \
+            src/layout/components/Sidebar/SidebarItem.vue \
+            src/layout/components/SettingNewPasswordDlg/index.vue \
+            src/layout/index.vue
+
+      - name: 提交格式化结果
+        run: |
+          if git diff --quiet; then
+            echo "没有需要提交的格式变化"
+            exit 0
+          fi
+          git config user.name "liqing180"
+          git config user.email "54855614+liqing180@users.noreply.github.com"
+          git add \
+            src/api/businessPartner/businessPartner.js \
+            src/api/inventoryManagement/distributionByWarehouse.js \
+            src/api/productManagement/productInfo.js \
+            src/api/purchaseManagement/distributionByWarehouse.js \
+            src/api/purchaseManagement/purchaseOrder.js \
+            src/layout/components/Sidebar/SidebarItem.vue \
+            src/layout/components/SettingNewPasswordDlg/index.vue \
+            src/layout/index.vue
+          git commit -m "修复：格式化迁移文件 [prettier-auto]"
+          git push origin HEAD:develop
