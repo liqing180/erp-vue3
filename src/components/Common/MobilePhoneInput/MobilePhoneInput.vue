@@ -3,20 +3,23 @@
     :disabled="disabled"
     :model-value="mobileNum"
     :maxlength="maxlength"
-    @input="handleChange"
     :class="{ 'input-with-select': !disabled }"
+    :size="elementSize"
     class="form-wd"
+    @input="handleChange"
   >
-    <template v-slot:prepend>
+    <template #prepend>
       <el-select
-        :disabled="disabled || mobile_code_list.length === 0"
+        :disabled="disabled || mobileCodeList.length === 0"
         :model-value="mobileCode"
-        @change="selectChange"
-        @visible-change="visibleChange"
+        :clearable="clearableCode"
+        :size="elementSize"
+        :filter-method="filterOption"
         placeholder=""
         filterable
-        :filter-method="filterOption"
         style="width: 84px; color: #606266"
+        @change="selectChange"
+        @visible-change="visibleChange"
       >
         <el-option
           v-for="item in options"
@@ -33,6 +36,8 @@
 
 <script>
 import { queryMobileCodeList } from '@/api/system/parameterConfiguration'
+import { queryMobileCodeListExternal } from '@/api/login'
+
 export default {
   props: {
     disabled: {
@@ -54,6 +59,27 @@ export default {
     maxlength: {
       type: Number,
       default: 20
+    },
+    clearableCode: {
+      type: Boolean,
+      default: false
+    },
+    isDefaultSelect: {
+      type: Boolean,
+      default: false
+    },
+    size: {
+      type: String,
+      default: undefined
+    },
+    // 外链模式不依赖登录 token。
+    isToken: {
+      type: Boolean,
+      default: true
+    },
+    legalEntityId: {
+      type: [Number, String],
+      default: ''
     }
   },
   emits: [
@@ -62,45 +88,64 @@ export default {
     'update:mobileNo',
     'clearValidate'
   ],
+  data() {
+    return {
+      init: false,
+      mobileCodeList: [],
+      options: []
+    }
+  },
+  computed: {
+    elementSize() {
+      return this.size === 'mini' ? 'small' : this.size
+    }
+  },
   watch: {
     mobileCode: {
       handler() {
-        if (!this.mobileCode && !(this.mobileNum && this.mobileNum.trim())) {
-          this.init = false
-        }
+        this.resetInitState()
       },
       immediate: true
     },
     mobileNum: {
       handler() {
-        if (!this.mobileCode && !(this.mobileNum && this.mobileNum.trim())) {
-          this.init = false
-        }
+        this.resetInitState()
       },
       immediate: true
     }
   },
-  data() {
-    return {
-      init: false,
-      mobile_code_list: [],
-      options: []
-    }
-  },
-  computed: {},
   created() {
-    queryMobileCodeList().then(res => {
-      this.mobile_code_list = res.data || []
-      this.options = this.mobile_code_list
-    })
+    this.loadMobileCodeList()
   },
   methods: {
+    loadMobileCodeList() {
+      const request = this.isToken
+        ? queryMobileCodeList()
+        : queryMobileCodeListExternal({ legalEntityId: this.legalEntityId })
+
+      request.then(res => {
+        this.mobileCodeList = res.data || []
+        this.options = this.mobileCodeList
+
+        if (this.isDefaultSelect && this.options.length > 0) {
+          this.$emit('update:mobileCode', this.options[0].mobileCode)
+          this.$nextTick(() => {
+            this.$emit('clearValidate')
+          })
+        }
+      })
+    },
+    resetInitState() {
+      if (!this.mobileCode && !(this.mobileNum && this.mobileNum.trim())) {
+        this.init = false
+      }
+    },
     handleChange(value) {
-      value = value.replace(/[^\d]/g, '')
-      if (this.mobileCode && this.mobileNum && this.mobileNum.trim()) {
+      const mobileNum = String(value ?? '').replace(/[^\d]/g, '').trim()
+      if (this.mobileCode && mobileNum) {
         this.init = true
       }
-      this.$emit('update:mobileNum', value.trim())
+      this.$emit('update:mobileNum', mobileNum)
       this.$nextTick(() => {
         this.changeMobileNo()
       })
@@ -118,48 +163,29 @@ export default {
           'update:mobileNo',
           `${this.mobileCode} ${this.mobileNum.toString()}`
         )
-      } else {
-        if (!this.init) {
-          this.$nextTick(() => {
-            this.$emit('clearValidate')
-          })
-        }
-        this.$emit(
-          'update:mobileNo',
-          `${this.mobileCode} ${this.mobileNum.toString()}`
-        )
-        // this.$emit('update:mobileNo', '')
+      } else if (!this.init) {
+        this.$emit('clearValidate')
       }
     },
     visibleChange(show) {
-      if (show === false) {
+      if (!show) {
         setTimeout(() => {
-          this.options = this.mobile_code_list
+          this.options = this.mobileCodeList
         }, 100)
       }
     },
-    filterOption(str) {
-      if ((str + '').trim() !== '') {
-        const res = []
-        this.mobile_code_list.forEach(item => {
-          if (
-            item.mobileCode
-              .toLocaleLowerCase()
-              .indexOf(str.trim().toLocaleLowerCase()) >= 0
-          ) {
-            res.push(item)
-          } else if (
-            item.description
-              .toLocaleLowerCase()
-              .indexOf(str.trim().toLocaleLowerCase()) >= 0
-          ) {
-            res.push(item)
-          }
-        })
-        this.options = res
-      } else {
-        this.options = this.mobile_code_list
+    filterOption(value) {
+      const keyword = String(value ?? '').trim().toLocaleLowerCase()
+      if (!keyword) {
+        this.options = this.mobileCodeList
+        return
       }
+
+      this.options = this.mobileCodeList.filter(item => {
+        const mobileCode = String(item.mobileCode ?? '').toLocaleLowerCase()
+        const description = String(item.description ?? '').toLocaleLowerCase()
+        return mobileCode.includes(keyword) || description.includes(keyword)
+      })
     }
   }
 }
