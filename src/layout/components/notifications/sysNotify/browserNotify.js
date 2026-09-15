@@ -1,7 +1,9 @@
 class BrowserNotify {
   constructor() {
     this.permission =
-      typeof Notification === 'undefined' ? 'unsupported' : Notification.permission
+      typeof Notification === 'undefined'
+        ? 'unsupported'
+        : Notification.permission
     this.notifyComponent = {}
   }
 
