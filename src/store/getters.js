@@ -20,68 +20,50 @@ const getters = {
   sidebarRouters: state => state.permission.sidebarRouters,
   language: state => state.app.language,
   bpmTaskCountData: state => state.user.bpmTaskCountData,
+  inventoryCountData: state => state.user.inventoryCountData,
+  salesCountData: state => state.user.salesCountData,
+  purchaseCountData: state => state.user.purchaseCountData,
   legalEntityInfo: state => state.user.legalEntityInfo,
   commonUomList: state => state.user.commonUomList,
   isAlreadySetPassword: state => state.user.isAlreadySetPassword,
   sysDockingSwitch: state => state.user.sysDockingSwitch,
+  sysDockingSwitchQC: state => state.user.sysDockingSwitchQC,
+
   fmtForYmdhms(state) {
     const fmtForTime = state.user.fmtForTime
-    let tmpFmt = ''
-
-    if (!fmtForTime) {
-      tmpFmt = 'YYYY/MM/DD HH:mm:ss'
-    } else {
-      tmpFmt = `${fmtForTime} HH:mm:ss`
-    }
-    return tmpFmt
+    return fmtForTime ? `${fmtForTime} HH:mm:ss` : 'YYYY/MM/DD HH:mm:ss'
   },
 
   fmtForYmdhm(state) {
     const fmtForTime = state.user.fmtForTime
-    let tmpFmt = ''
-
-    if (!fmtForTime) {
-      tmpFmt = 'YYYY/MM/DD HH:mm'
-    } else {
-      tmpFmt = `${fmtForTime} HH:mm`
-    }
-    return tmpFmt
+    return fmtForTime ? `${fmtForTime} HH:mm` : 'YYYY/MM/DD HH:mm'
   },
+
   fmtForMdhm(state) {
     let fmtForTime = state.user.fmtForTime
-    let tmpFmt = ''
-
-    if (!fmtForTime) {
-      tmpFmt = 'MM/DD HH:mm'
-    } else {
-      fmtForTime = fmtForTime.replace('YYYY/', '').replace('/YYYY', '')
-      tmpFmt = `${fmtForTime} HH:mm`
-    }
-    return tmpFmt
+    if (!fmtForTime) return 'MM/DD HH:mm'
+    fmtForTime = fmtForTime
+      .replace('YYYY/', '')
+      .replace('/YYYY', '')
+      .replace('yyyy/', '')
+      .replace('/yyyy', '')
+    return `${fmtForTime} HH:mm`
   },
+
   fmtForMd(state) {
     let fmtForTime = state.user.fmtForTime
-    let tmpFmt = ''
-
-    if (!fmtForTime) {
-      tmpFmt = 'MM/DD'
-    } else {
-      fmtForTime = fmtForTime.replace('YYYY/', '').replace('/YYYY', '')
-      tmpFmt = `${fmtForTime}`
-    }
-    return tmpFmt
+    if (!fmtForTime) return 'MM/DD'
+    fmtForTime = fmtForTime
+      .replace('YYYY/', '')
+      .replace('/YYYY', '')
+      .replace('yyyy/', '')
+      .replace('/yyyy', '')
+    return fmtForTime
   },
 
   fmtForYmd(state) {
-    const fmtForTime = state.user.fmtForTime
-    let tmpFmt = ''
-
-    if (!fmtForTime) {
-      tmpFmt = 'YYYY/MM/DD'
-    } else {
-      tmpFmt = `${fmtForTime}`
-    }
-    return tmpFmt
+    return state.user.fmtForTime || 'YYYY/MM/DD'
   }
 }
+
 export default getters
