@@ -6,6 +6,7 @@ import { getConfigKey } from '@/api/system/config'
 import { getDicts } from '@/api/system/dict/data'
 import { useDict } from '@/utils/dict'
 import MyDictDataClass from '@/utils/dict/myDictDataClass'
+import optionsDictCompat from '@/utils/dict/optionsCompat'
 import TypeJudge from '@/utils/jsType/index'
 import bigUtils from '@/utils/bigUtils'
 import delEmptyParam from '@/utils/delEmptyParam'
@@ -196,6 +197,7 @@ function registerGlobalComponents(app) {
 export default function registerErpGlobals(app, i18n) {
   app.use(bigUtils)
   app.use(delEmptyParam)
+  app.use(optionsDictCompat)
   registerGlobalMethods(app, i18n)
   registerGlobalComponents(app)
 }
