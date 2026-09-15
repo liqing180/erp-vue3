@@ -25,7 +25,7 @@
         </div>
       </el-scrollbar>
     </div>
-    <template v-slot:reference>
+    <template #reference>
       <div class="w100">
         <div v-if="$slots.default" class="w100">
           <slot></slot>
@@ -61,20 +61,14 @@ export default {
       return this.list || []
     },
     labelJoinStr() {
-      const str = this.comList.map(item => item[this.showLabel]).join(', ')
-      return str
-    }
-  },
-  data() {
-    return {
-      timeout: null
+      return this.comList
+        .map(item => (this.showLabel ? item?.[this.showLabel] : item))
+        .join(', ')
     }
   },
   methods: {
     hide() {
-      if (this.$refs.scrollbarRef) {
-        this.$refs.scrollbarRef.moveY = 0
-      }
+      this.$refs.scrollbarRef?.setScrollTop?.(0)
     }
   }
 }
@@ -95,7 +89,7 @@ export default {
 .pp-title {
   padding: 1px 5px;
   line-height: 28px;
-  vertical-align: middle; /*// color: #000000;*/
+  vertical-align: middle;
   text-align: left;
   font-weight: bold;
   border-bottom: 1px solid #efefef;
