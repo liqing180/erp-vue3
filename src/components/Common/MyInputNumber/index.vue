@@ -1,25 +1,52 @@
 <template>
   <div
-    class="erp-input-number el-input-number is-without-controls"
-    :class="[
-      inputSize ? `el-input-number--${inputSize}` : '',
-      { 'is-disabled': disabled }
-    ]"
     @dragstart.prevent
+    :class="[
+      'w100',
+      'el-input-number',
+      inputNumberSize ? 'el-input-number--' + inputNumberSize : '',
+      { 'is-disabled': inputNumberDisabled },
+      { 'is-without-controls': !controls },
+      { 'is-controls-right': controlsAtRight }
+    ]"
   >
+    <span
+      v-if="controls"
+      v-repeat-click="decrease"
+      class="el-input-number__decrease"
+      role="button"
+      :class="{ 'is-disabled': minDisabled }"
+      @keydown.enter="decrease"
+    >
+      <element-plus-icon>
+        <ArrowDown v-if="controlsAtRight" />
+        <Minus v-else />
+      </element-plus-icon>
+    </span>
+    <span
+      v-if="controls"
+      v-repeat-click="increase"
+      class="el-input-number__increase"
+      role="button"
+      :class="{ 'is-disabled': maxDisabled }"
+      @keydown.enter="increase"
+    >
+      <element-plus-icon>
+        <ArrowUp v-if="controlsAtRight" />
+        <Plus v-else />
+      </element-plus-icon>
+    </span>
     <element-plus-input
-      ref="inputRef"
+      ref="input"
       v-bind="$attrs"
       :model-value="displayValue"
       :placeholder="placeholder"
-      :disabled="disabled"
-      :size="inputSize"
+      :disabled="inputNumberDisabled"
+      :size="inputNumberSize"
+      :max="max"
+      :min="min"
       :name="name"
       :aria-label="label"
-      role="spinbutton"
-      :aria-valuemax="max"
-      :aria-valuemin="min"
-      :aria-valuenow="currentValue"
       @keydown.up.prevent="increase"
       @keydown.down.prevent="decrease"
       @blur="handleBlur"
@@ -31,25 +58,31 @@
 </template>
 
 <script>
-import { ElInput as ElementPlusInput } from 'element-plus'
+import {
+  ElIcon as ElementPlusIcon,
+  ElInput as ElementPlusInput,
+  useFormDisabled,
+  useFormSize,
+  vRepeatClick
+} from 'element-plus'
+import { ArrowDown, ArrowUp, Minus, Plus } from '@element-plus/icons-vue'
 import { getSplitType, numberStr } from '@/utils/numberTofixed/index.js'
 
 export default {
-  name: 'ErpInputNumber',
+  name: 'ElInputNumber',
   components: {
-    ElementPlusInput
+    ElementPlusInput,
+    ElementPlusIcon,
+    ArrowDown,
+    ArrowUp,
+    Minus,
+    Plus
+  },
+  directives: {
+    repeatClick: vRepeatClick
   },
   inheritAttrs: false,
   props: {
-    modelValue: {
-      type: [Number, String],
-      default: undefined
-    },
-    // 兼容迁移过程中仍使用 value / v-model:value 的页面。
-    value: {
-      type: [Number, String],
-      default: undefined
-    },
     step: {
       type: Number,
       default: 1
@@ -66,40 +99,34 @@ export default {
       type: Number,
       default: -Infinity
     },
-    disabled: Boolean,
-    size: {
-      type: String,
-      default: ''
+    modelValue: {
+      default: undefined
     },
-    // ERP-VUE2 固定隐藏 controls；保留此 prop 仅兼容历史调用参数。
+    // ERP-VUE2 历史 value/input 调用兼容。
+    value: {
+      default: undefined
+    },
+    disabled: Boolean,
+    size: String,
+    // ERP-VUE2 中 controls prop 已被移除，组件固定不显示加减按钮；
+    // 保留 controlsPosition 仅保持原组件 API 形状。
     controlsPosition: {
       type: String,
       default: ''
     },
-    name: {
-      type: String,
-      default: ''
-    },
-    label: {
-      type: String,
-      default: ''
-    },
-    placeholder: {
-      type: String,
-      default: ''
-    },
+    name: String,
+    label: String,
+    placeholder: String,
     precision: {
       type: Number,
-      default: undefined,
-      validator(value) {
-        return value >= 0 && value === parseInt(value, 10)
+      validator(val) {
+        return val >= 0 && val === parseInt(val, 10)
       }
     },
     minPrecision: {
       type: Number,
-      default: undefined,
-      validator(value) {
-        return value >= 0 && value === parseInt(value, 10)
+      validator(val) {
+        return val >= 0 && val === parseInt(val, 10)
       }
     }
   },
@@ -111,245 +138,246 @@ export default {
     'blur',
     'focus'
   ],
-  data() {
+  setup() {
+    // 对应 ERP-VUE2 的 elForm / elFormItem / $ELEMENT size、disabled 注入。
+    // 使用 Element Plus 2.9.2 对外导出的表单 hooks，避免依赖私有实例。
+    const formSize = useFormSize()
+    const formDisabled = useFormDisabled()
     return {
-      currentValue: undefined,
-      userInput: null
+      formSize,
+      formDisabled
     }
   },
-  computed: {
-    sourceValue() {
-      return this.modelValue !== undefined ? this.modelValue : this.value
-    },
-    inputSize() {
-      if (this.size === 'mini') return 'small'
-      if (this.size === 'medium') return 'default'
-      return this.size
-    },
-    numPrecision() {
-      const stepPrecision = this.getPrecision(this.step)
-      if (this.precision !== undefined) {
-        return this.precision
-      }
-      return Math.max(this.getPrecision(this.currentValue), stepPrecision)
-    },
-    minDisabled() {
-      return this._decrease(this.currentValue, this.step) < this.min
-    },
-    maxDisabled() {
-      return this._increase(this.currentValue, this.step) > this.max
-    },
-    displayValue() {
-      if (this.userInput !== null) {
-        return this.userInput
-      }
-
-      let value = this.currentValue
-      if (value === undefined || value === null || value === '') {
-        return ''
-      }
-
-      if (this.stepStrictly) {
-        value = this.normalizeStep(value)
-      }
-
-      if (this.precision !== undefined) {
-        const displayPrecision =
-          this.minPrecision === undefined
-            ? this.precision
-            : Math.max(
-                Math.min(this.minPrecision, this.precision),
-                Math.min(this.getPrecision(value), this.precision)
-              )
-        return Number(value).toFixed(displayPrecision)
-      }
-
-      return value
+  data() {
+    return {
+      currentValue: 0,
+      userInput: null,
+      // ERP-VUE2 原组件固定关闭 controls。
+      controls: false
     }
   },
   watch: {
     sourceValue: {
       immediate: true,
       handler(value) {
-        this.syncExternalValue(value)
+        let newVal = value === undefined ? value : Number(value)
+        if (newVal !== undefined) {
+          if (isNaN(newVal)) {
+            return
+          }
+
+          if (this.stepStrictly) {
+            const stepPrecision = this.getPrecision(this.step)
+            const precisionFactor = Math.pow(10, stepPrecision)
+            newVal =
+              (Math.round(newVal / this.step) * precisionFactor * this.step) /
+              precisionFactor
+          }
+
+          if (this.precision !== undefined) {
+            newVal = this.toPrecision(newVal, this.precision)
+          }
+        }
+        if (newVal >= this.max) newVal = this.max
+        if (newVal <= this.min) newVal = this.min
+        this.currentValue = newVal
+        this.userInput = null
+        this.emitInput(newVal)
       }
     }
   },
+  computed: {
+    sourceValue() {
+      return this.modelValue !== undefined ? this.modelValue : this.value
+    },
+    minDisabled() {
+      return this._decrease(this.sourceValue, this.step) < this.min
+    },
+    maxDisabled() {
+      return this._increase(this.sourceValue, this.step) > this.max
+    },
+    numPrecision() {
+      const value = this.sourceValue
+      const { step, getPrecision, precision } = this
+      const stepPrecision = getPrecision(step)
+      if (precision !== undefined) {
+        if (stepPrecision > precision) {
+          console.warn(
+            '[Element Warn][InputNumber]precision should not be less than the decimal places of step'
+          )
+        }
+        return precision
+      }
+      return Math.max(getPrecision(value), stepPrecision)
+    },
+    controlsAtRight() {
+      return this.controls && this.controlsPosition === 'right'
+    },
+    inputNumberSize() {
+      // Element UI 的 mini / medium 映射到 Element Plus 对应尺寸；
+      // 其他值以及 Form/FormItem/全局尺寸由 useFormSize 保留。
+      const size = this.formSize
+      if (size === 'mini') return 'small'
+      if (size === 'medium') return 'default'
+      return size
+    },
+    inputNumberDisabled() {
+      return this.formDisabled
+    },
+    displayValue() {
+      if (this.userInput !== null) {
+        return this.userInput
+      }
+
+      let currentValue = this.currentValue
+
+      if (typeof currentValue === 'number') {
+        if (this.stepStrictly) {
+          const stepPrecision = this.getPrecision(this.step)
+          const precisionFactor = Math.pow(10, stepPrecision)
+          currentValue =
+            (Math.round(currentValue / this.step) *
+              precisionFactor *
+              this.step) /
+            precisionFactor
+        }
+
+        if (this.precision !== undefined) {
+          const displayPrecision =
+            this.minPrecision === undefined
+              ? this.precision
+              : Math.max(
+                  Math.min(this.minPrecision, this.precision),
+                  Math.min(
+                    this.getPrecision(currentValue),
+                    this.precision
+                  )
+                )
+          currentValue = currentValue.toFixed(displayPrecision)
+        }
+      }
+
+      return currentValue
+    }
+  },
   methods: {
-    emitValue(value, oldValue, emitChange = false) {
+    emitInput(value) {
+      // input 保留 ERP-VUE2 事件；两个 update 事件承接 Vue3 v-model。
       this.$emit('update:modelValue', value)
       this.$emit('update:value', value)
       this.$emit('input', value)
-      if (emitChange) {
-        this.$emit('change', value, oldValue)
-      }
     },
-    syncExternalValue(value) {
-      if (value === undefined) {
-        this.currentValue = undefined
-        this.userInput = null
-        return
-      }
-
-      // 保留 ERP-VUE2 行为：外部 null / '' / 数字字符串均先 Number 化。
-      const numberValue = Number(value)
-      if (Number.isNaN(numberValue)) return
-
-      const normalizedValue = this.normalizeValue(numberValue)
-      this.currentValue = normalizedValue
-      this.userInput = null
-
-      // 旧组件会通过 input 将规范化后的值同步回父级。Vue3 仅在值确实
-      // 发生类型/范围/精度变化时回写，避免无意义的更新循环。
-      if (!Object.is(value, normalizedValue)) {
-        this.emitValue(normalizedValue)
-      }
-    },
-    normalizeValue(value) {
-      if (typeof value !== 'number' || Number.isNaN(value)) {
-        return undefined
-      }
-
-      let nextValue = value
-
-      if (this.stepStrictly) {
-        nextValue = this.normalizeStep(nextValue)
-      }
-
-      if (this.precision !== undefined) {
-        nextValue = this.toPrecision(nextValue, this.precision)
-      }
-
-      if (nextValue >= this.max) nextValue = this.max
-      if (nextValue <= this.min) nextValue = this.min
-      return nextValue
-    },
-    normalizeStep(value) {
-      const stepPrecision = this.getPrecision(this.step)
-      const precisionFactor = Math.pow(10, stepPrecision)
-      return (
-        (Math.round(value / this.step) * precisionFactor * this.step) /
-        precisionFactor
-      )
-    },
-    toPrecision(num, precision = this.numPrecision) {
+    toPrecision(num, precision) {
+      if (precision === undefined) precision = this.numPrecision
       if (this.minPrecision !== undefined) {
         return Number(numberStr(num, precision, false))
       }
-      const factor = Math.pow(10, precision)
-      return parseFloat(Math.round(num * factor) / factor)
-    },
-    getPrecision(value) {
-      if (value === undefined || value === null || value === '') return 0
-      const valueString = value.toString()
-      const dotPosition = valueString.indexOf('.')
-      return dotPosition === -1 ? 0 : valueString.length - dotPosition - 1
-    },
-    _increase(value, step) {
-      if (typeof value !== 'number' || Number.isNaN(value)) {
-        return this.currentValue
-      }
-      const precisionFactor = Math.pow(10, this.numPrecision)
-      return this.toPrecision(
-        (precisionFactor * value + precisionFactor * step) / precisionFactor
+      return parseFloat(
+        Math.round(num * Math.pow(10, precision)) / Math.pow(10, precision)
       )
     },
-    _decrease(value, step) {
-      if (typeof value !== 'number' || Number.isNaN(value)) {
+    getPrecision(value) {
+      if (value === undefined) return 0
+      const valueString = value.toString()
+      const dotPosition = valueString.indexOf('.')
+      let precision = 0
+      if (dotPosition !== -1) {
+        precision = valueString.length - dotPosition - 1
+      }
+      return precision
+    },
+    _increase(val, step) {
+      if (typeof val !== 'number' && val !== undefined) {
         return this.currentValue
       }
+
       const precisionFactor = Math.pow(10, this.numPrecision)
       return this.toPrecision(
-        (precisionFactor * value - precisionFactor * step) / precisionFactor
+        (precisionFactor * val + precisionFactor * step) / precisionFactor
+      )
+    },
+    _decrease(val, step) {
+      if (typeof val !== 'number' && val !== undefined) {
+        return this.currentValue
+      }
+
+      const precisionFactor = Math.pow(10, this.numPrecision)
+      return this.toPrecision(
+        (precisionFactor * val - precisionFactor * step) / precisionFactor
       )
     },
     increase() {
-      if (this.disabled || this.maxDisabled) return
-      const value = Number(this.currentValue ?? 0)
-      this.setCurrentValue(this._increase(value, this.step))
+      if (this.inputNumberDisabled || this.maxDisabled) return
+      const value = this.sourceValue || 0
+      const newVal = this._increase(value, this.step)
+      this.setCurrentValue(newVal)
     },
     decrease() {
-      if (this.disabled || this.minDisabled) return
-      const value = Number(this.currentValue ?? 0)
-      this.setCurrentValue(this._decrease(value, this.step))
-    },
-    setCurrentValue(value) {
-      const oldValue = this.currentValue
-
-      let nextValue
-      if (value === undefined || value === '') {
-        nextValue = undefined
-      } else {
-        const numberValue = Number(value)
-        if (Number.isNaN(numberValue)) {
-          this.userInput = null
-          return
-        }
-        nextValue = this.normalizeValue(numberValue)
-      }
-
-      if (Object.is(oldValue, nextValue)) {
-        this.userInput = null
-        return
-      }
-
-      this.currentValue = nextValue
-      this.userInput = null
-      this.emitValue(nextValue, oldValue, true)
-    },
-    handleInput(value) {
-      this.userInput = value
-    },
-    parseInputValue(value) {
-      let normalized = String(value ?? '')
-
-      if (getSplitType() === '2') {
-        // 印尼：1.234,56 -> 1234.56
-        normalized = normalized.replace(/\./g, '').replace(',', '.')
-      } else {
-        // 默认：1,234.56 -> 1234.56
-        normalized = normalized.replace(/,/g, '')
-      }
-
-      if (normalized === '') return undefined
-
-      const numberValue = Number(normalized)
-      return Number.isNaN(numberValue) ? null : numberValue
-    },
-    handleInputChange(value) {
-      const numberValue = this.parseInputValue(value)
-      if (numberValue === null) {
-        this.userInput = null
-        return
-      }
-      this.setCurrentValue(numberValue)
+      if (this.inputNumberDisabled || this.minDisabled) return
+      const value = this.sourceValue || 0
+      const newVal = this._decrease(value, this.step)
+      this.setCurrentValue(newVal)
     },
     handleBlur(event) {
-      this.userInput = null
       this.$emit('blur', event)
     },
     handleFocus(event) {
       this.$emit('focus', event)
     },
+    setCurrentValue(newVal) {
+      const oldVal = this.currentValue
+      if (typeof newVal === 'number' && this.precision !== undefined) {
+        newVal = this.toPrecision(newVal, this.precision)
+      }
+      if (newVal >= this.max) newVal = this.max
+      if (newVal <= this.min) newVal = this.min
+      if (oldVal === newVal) return
+      this.userInput = null
+      this.emitInput(newVal)
+      this.$emit('change', newVal, oldVal)
+      this.currentValue = newVal
+    },
+    handleInput(value) {
+      this.userInput = value
+    },
+    handleInputChange(value) {
+      const splitType = getSplitType()
+      if (splitType === '2') {
+        value = value.replace(/\./g, '')
+        value = value.replace(',', '.')
+      } else {
+        value = value.replace(/,/g, '')
+      }
+      const newVal = value === '' ? undefined : Number(value)
+      if (!isNaN(newVal) || value === '') {
+        this.setCurrentValue(newVal)
+      }
+      this.userInput = null
+    },
     focus() {
-      this.$refs.inputRef?.focus()
+      this.$refs.input?.focus()
     },
     blur() {
-      this.$refs.inputRef?.blur()
+      this.$refs.input?.blur()
     },
     select() {
-      this.$refs.inputRef?.select()
+      this.$refs.input?.select()
+    },
+    syncAria() {
+      const innerInput = this.$refs.input?.input
+      if (!innerInput) return
+      innerInput.setAttribute('role', 'spinbutton')
+      innerInput.setAttribute('aria-valuemax', this.max)
+      innerInput.setAttribute('aria-valuemin', this.min)
+      innerInput.setAttribute('aria-valuenow', this.currentValue)
+      innerInput.setAttribute('aria-disabled', this.inputNumberDisabled)
     }
+  },
+  mounted() {
+    this.syncAria()
+  },
+  updated() {
+    this.syncAria()
   }
 }
 </script>
-
-<style scoped>
-.erp-input-number {
-  width: 100%;
-}
-
-.erp-input-number :deep(.el-input) {
-  width: 100%;
-}
-</style>
