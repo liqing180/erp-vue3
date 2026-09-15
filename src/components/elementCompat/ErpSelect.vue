@@ -88,8 +88,7 @@ export default {
       const options = [
         ...dropdown.querySelectorAll('.el-select-dropdown__item')
       ].filter(
-        option =>
-          isVisible(option) && !option.classList.contains('is-disabled')
+        option => isVisible(option) && !option.classList.contains('is-disabled')
       )
       if (!options.length) return
 
