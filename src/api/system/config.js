@@ -38,7 +38,7 @@ export function addConfig(data) {
   return request({
     url: '/system/config',
     method: 'post',
-    data: data
+    data
   })
 }
 
@@ -47,7 +47,7 @@ export function updateConfig(data) {
   return request({
     url: '/system/config',
     method: 'put',
-    data: data
+    data
   })
 }
 
@@ -64,5 +64,14 @@ export function refreshCache() {
   return request({
     url: '/system/config/refreshCache',
     method: 'delete'
+  })
+}
+
+// ERP 参数导出
+export function exportConfig(query) {
+  return request({
+    url: '/system/config/export',
+    method: 'get',
+    params: query
   })
 }
