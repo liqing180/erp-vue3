@@ -37,16 +37,8 @@ function normalizeMeta(meta) {
 }
 
 function convertDictData(data, meta) {
-  const labelField = determineField(
-    data,
-    meta.labelField,
-    DEFAULT_LABEL_FIELDS
-  )
-  const valueField = determineField(
-    data,
-    meta.valueField,
-    DEFAULT_VALUE_FIELDS
-  )
+  const labelField = determineField(data, meta.labelField, DEFAULT_LABEL_FIELDS)
+  const valueField = determineField(data, meta.valueField, DEFAULT_VALUE_FIELDS)
 
   return new DictData(data[labelField], data[valueField], data)
 }
