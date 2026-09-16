@@ -1,15 +1,21 @@
 <template>
   <el-popover
     ref="pop1"
-    trigger="hover"
+    :visible="visible"
+    :virtual-ref="virtualRef"
+    virtual-triggering
     placement="top"
-    :close-delay="0"
-    :visible-arrow="true"
+    :show-arrow="true"
     popper-class="pop-warp"
     :offset="-30"
+    persistent
   >
-    <div @mouseenter="mouseenterCur($event)" class="pop-box">
-      <div class="pp-title ellipsis-text" v-if="params.popoverTitle">
+    <div
+      class="pop-box"
+      @mouseenter="cancelHide"
+      @mouseleave="scheduleHide"
+    >
+      <div v-if="params.popoverTitle" class="pp-title ellipsis-text">
         <span>{{ params.popoverTitle }}</span>
       </div>
       <el-scrollbar ref="scrollbarRef">
@@ -21,10 +27,11 @@
             :class="[params.itemClass, item.itemClass]"
           >
             <span
-              @click="clickItem(item)"
               :title="params.labelKey ? item[params.labelKey] : item"
-              >{{ params.labelKey ? item[params.labelKey] : item }}</span
+              @click="clickItem(item)"
             >
+              {{ params.labelKey ? item[params.labelKey] : item }}
+            </span>
           </div>
         </div>
       </el-scrollbar>
@@ -34,12 +41,12 @@
 
 <script>
 export default {
-  props: {},
-  computed: {},
+  emits: ['clickItem'],
   data() {
     return {
-      timeout: null,
-      popoverData: {},
+      visible: false,
+      virtualRef: undefined,
+      hideTimer: undefined,
       params: {
         popoverTitle: '',
         labelKey: '',
@@ -48,33 +55,43 @@ export default {
       }
     }
   },
-
+  beforeUnmount() {
+    this.clearHideTimer()
+  },
   methods: {
-    showPop(e, params) {
-      this.params = params || {}
-      this.popoverData['hide'] = false
-      console.log(this.$refs.pop1)
+    showPop(event, params) {
+      const target = event.currentTarget || event.target
+      if (!(target instanceof HTMLElement)) return
 
-      this.$refs.pop1.popBy(e.target)
-      if (this.$refs.scrollbarRef) {
-        this.$refs.scrollbarRef.moveY = 0
-      }
+      this.clearHideTimer()
+      this.params = params || {}
+      this.virtualRef = target
+      this.visible = true
+
+      this.$nextTick(() => {
+        this.$refs.scrollbarRef?.setScrollTop?.(0)
+      })
     },
-    hidePop(e) {
-      if (this.popoverData) {
-        this.popoverData.hide = true
-      }
-      setTimeout(() => {
-        this.popoverData.hide && this.$refs.pop1.close()
+    hidePop() {
+      this.scheduleHide()
+    },
+    scheduleHide() {
+      this.clearHideTimer()
+      this.hideTimer = window.setTimeout(() => {
+        this.visible = false
       }, 300)
     },
-    mouseenterCur() {
-      if (this.popoverData) {
-        this.popoverData.hide = false
+    cancelHide() {
+      this.clearHideTimer()
+    },
+    clearHideTimer() {
+      if (this.hideTimer !== undefined) {
+        window.clearTimeout(this.hideTimer)
+        this.hideTimer = undefined
       }
     },
     clickItem(item) {
-      this.$emit(this, 'clickItem', item)
+      this.$emit('clickItem', item)
     }
   }
 }
@@ -85,29 +102,34 @@ export default {
   border: 1px solid #efefef;
   border-radius: 4px;
 }
+
 .pp-title {
   padding: 1px 5px;
   line-height: 28px;
-  vertical-align: middle; /*// color: #000000;*/
+  vertical-align: middle;
   text-align: left;
   font-weight: bold;
   border-bottom: 1px solid #efefef;
   font-size: 14px;
 }
+
 .pp-item-warp {
   max-height: 294px;
 }
+
 .pp-item {
   padding: 1px 5px;
   line-height: 28px;
   vertical-align: middle;
-  font-size: 12px; /*// color: #000000;*/
+  font-size: 12px;
   text-align: left;
   border-bottom: 1px solid #efefef;
 }
+
 .pp-item:last-child {
   border-bottom: 0;
 }
+
 .ellipsis-text {
   max-width: 400px;
   overflow: hidden;
