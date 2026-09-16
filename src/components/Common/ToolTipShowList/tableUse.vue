@@ -10,11 +10,7 @@
     :offset="-30"
     persistent
   >
-    <div
-      class="pop-box"
-      @mouseenter="cancelHide"
-      @mouseleave="scheduleHide"
-    >
+    <div class="pop-box" @mouseenter="cancelHide" @mouseleave="scheduleHide">
       <div v-if="params.popoverTitle" class="pp-title ellipsis-text">
         <span>{{ params.popoverTitle }}</span>
       </div>
