@@ -284,95 +284,7 @@ export default {
   components: { ToolTipShowListForFN },
   mixins: [pageMixin],
   data() {
-    const columns = [
-      this.column(
-        'purchaseRequisiteNo',
-        this.$t('PURCHASE.purchaseRequisitionNo'),
-        200,
-        true,
-        true
-      ),
-      this.column(
-        'requiredType',
-        this.$t('PURCHASE.requiredFrom'),
-        180,
-        true,
-        true,
-        'requiredTypeStr'
-      ),
-      this.column('documentNo', this.$t('PURCHASE.DocNo'), 160, true, true),
-      this.column(
-        'requiredBy',
-        this.$t('PURCHASE.requiredBy'),
-        160,
-        true,
-        true
-      ),
-      this.column(
-        'costProjectCode',
-        this.$t('PURCHASE.projectCode'),
-        170,
-        true,
-        false
-      ),
-      this.column(
-        'branchCompanyDeptName',
-        this.$t('PURCHASE.department'),
-        190,
-        true,
-        false
-      ),
-      this.column(
-        'purchaseRequisiteStatusShowStr',
-        this.$t('ui.status'),
-        150,
-        true,
-        true
-      ),
-      this.column(
-        'approvedStatus',
-        this.$t('ui.processStatus'),
-        150,
-        true,
-        true,
-        'approvedStatusStr'
-      ),
-      this.column(
-        'productName',
-        this.$t('PURCHASE.productName'),
-        180,
-        false,
-        false
-      ),
-      this.column(
-        'deliveryDate',
-        this.$t('PURCHASE.requestedReceiptDate'),
-        160,
-        false,
-        true
-      ),
-      this.column(
-        'receiveAddressName',
-        this.$t('PURCHASE.deliveryAddress'),
-        180,
-        true,
-        true
-      ),
-      this.column(
-        'dropShipping',
-        this.$t('PURCHASE.dropShipping'),
-        130,
-        true,
-        true
-      ),
-      this.column('createdBy', this.$t('ui.createdBy'), 150, true, true),
-      this.column('createdTime', this.$t('ui.createdTime'), 170, true, true),
-      this.column('modifiedBy', this.$t('ui.modifiedBy'), 150, true, true),
-      this.column('modifiedTime', this.$t('ui.modifiedTime'), 170, true, true),
-      this.column('approvedBy', this.$t('ui.approvedBy'), 150, true, true),
-      this.column('approvedTime', this.$t('ui.approvedTime'), 170, true, true)
-    ]
-
+    const vm = this
     return {
       saveKey: '1',
       loading: false,
@@ -432,7 +344,152 @@ export default {
         },
         { id: '1', name: this.$t('PURCHASE.dueSoon'), value: 'dueSoon', num: 0 }
       ],
-      columns
+      columns: [
+        {
+          prop: 'purchaseRequisiteNo',
+          label: vm.$t('PURCHASE.purchaseRequisitionNo'),
+          visible: true,
+          minWidth: 200,
+          tooltip: true,
+          sortable: 'custom',
+          fixed: true
+        },
+        {
+          prop: 'requiredType',
+          propBy: 'requiredTypeStr',
+          label: vm.$t('PURCHASE.requiredFrom'),
+          visible: true,
+          minWidth: 200,
+          tooltip: true,
+          sortable: 'custom'
+        },
+        {
+          prop: 'documentNo',
+          label: vm.$t('PURCHASE.DocNo'),
+          visible: true,
+          minWidth: 160,
+          tooltip: true,
+          sortable: 'custom'
+        },
+        {
+          prop: 'requiredBy',
+          label: vm.$t('PURCHASE.requiredBy'),
+          visible: true,
+          minWidth: 200,
+          tooltip: true,
+          sortable: 'custom'
+        },
+        {
+          prop: 'costProjectCode',
+          label: vm.$t('PURCHASE.projectCode'),
+          visible: true,
+          minWidth: 200,
+          tooltip: true
+        },
+        {
+          prop: 'branchCompanyDeptName',
+          label: vm.$t('PURCHASE.department'),
+          visible: true,
+          minWidth: 200,
+          tooltip: true
+        },
+        {
+          prop: 'purchaseRequisiteStatusShowStr',
+          label: vm.$t('ui.status'),
+          visible: true,
+          minWidth: 160,
+          tooltip: true,
+          sortable: 'custom'
+        },
+        {
+          prop: 'approvedStatus',
+          propBy: 'approvedStatusStr',
+          label: vm.$t('ui.processStatus'),
+          visible: true,
+          minWidth: 160,
+          tooltip: true,
+          sortable: 'custom'
+        },
+        {
+          prop: 'productName',
+          label: vm.$t('PURCHASE.productName'),
+          minWidth: 160,
+          visible: true,
+          tooltip: false
+        },
+        {
+          prop: 'deliveryDate',
+          label: vm.$t('PURCHASE.requestedReceiptDate'),
+          minWidth: 160,
+          visible: true,
+          tooltip: false,
+          sortable: 'custom'
+        },
+        {
+          prop: 'receiveAddressName',
+          label: vm.$t('PURCHASE.deliveryAddress'),
+          minWidth: 160,
+          visible: true,
+          tooltip: true,
+          sortable: 'custom'
+        },
+        {
+          prop: 'dropShipping',
+          label: vm.$t('PURCHASE.dropShipping'),
+          minWidth: 160,
+          visible: true,
+          tooltip: true,
+          sortable: 'custom'
+        },
+        {
+          prop: 'createdBy',
+          label: vm.$t('ui.createdBy'),
+          minWidth: 160,
+          visible: true,
+          tooltip: true,
+          sortable: 'custom'
+        },
+        {
+          prop: 'createdTime',
+          label: vm.$t('ui.createdTime'),
+          minWidth: 160,
+          visible: true,
+          tooltip: true,
+          sortable: 'custom'
+        },
+        {
+          prop: 'modifiedBy',
+          label: vm.$t('ui.modifiedBy'),
+          minWidth: 160,
+          visible: true,
+          tooltip: true,
+          sortable: 'custom'
+        },
+        {
+          prop: 'modifiedTime',
+          label: vm.$t('ui.modifiedTime'),
+          minWidth: 160,
+          visible: true,
+          tooltip: true,
+          sortable: 'custom'
+        },
+        {
+          prop: 'approvedBy',
+          label: vm.$t('ui.approvedBy'),
+          minWidth: 160,
+          visible: true,
+          tooltip: true,
+          sortable: 'custom'
+        },
+        {
+          prop: 'approvedTime',
+          label: vm.$t('ui.approvedTime'),
+          minWidth: 160,
+          visible: true,
+          tooltip: true,
+          sortable: 'custom'
+        }
+      ]
     }
   },
   computed: {
@@ -480,20 +537,6 @@ export default {
     hidePop(e) {
       if (this.$refs.ToolTipShowList) {
         this.$refs.ToolTipShowList.hidePop(e)
-      }
-    },
-    column(prop, label, minWidth, tooltip = true, sortable = false, propBy) {
-      return {
-        prop,
-        propBy,
-        label,
-        visible: true,
-        minWidth,
-        colMinWidth: minWidth,
-        tooltip,
-        sortable: sortable ? 'custom' : false,
-        fixed: prop === 'purchaseRequisiteNo',
-        colSortIndex: 0
       }
     },
     async loadDictionaries() {
