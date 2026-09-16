@@ -7,9 +7,9 @@
 参考源：
 
 ```text
-ERP-VUE2  = 业务事实来源
-CRM-VUE3  = Vue3 技术实现参考
-ERP-VUE3  = 唯一允许修改的目标项目
+ERP-VUE2 代码分支 main = 业务事实来源
+CRM-VUE3 代码分支 main = Vue3 技术实现参考
+ERP-VUE3 代码分支 develop = 唯一允许修改的目标项目
 ```
 
 ---
@@ -251,13 +251,13 @@ obj[key] = value
 Vue2：
 
 ```vue
-<template slot="header" slot-scope="scope">
+<template slot="header" slot-scope="scope"></template>
 ```
 
 Vue3：
 
 ```vue
-<template #header="scope">
+<template #header="scope"></template>
 ```
 
 Vue2：

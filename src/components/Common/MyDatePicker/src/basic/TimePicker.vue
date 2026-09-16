@@ -223,7 +223,7 @@ export default {
   left: 4px;
   right: 4px;
   height: 30px;
-  z-index: -1;
+  z-index: 1;
   border-top: 1px solid rgb(204, 204, 204);
   border-bottom: 1px solid rgb(204, 204, 204);
 }
