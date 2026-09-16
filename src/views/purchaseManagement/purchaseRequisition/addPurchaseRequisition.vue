@@ -1,5 +1,5 @@
 <template>
-  <PurchaseRequisitionForm mode="add" />
+  <PurchaseRequisitionForm :key="$route.query.timeId || 'add'" mode="add" />
 </template>
 
 <script>
