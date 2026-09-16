@@ -7,7 +7,7 @@
     placement="top"
     :show-arrow="true"
     popper-class="pop-warp"
-    :offset="-30"
+    :offset="8"
     persistent
   >
     <div class="pop-box" @mouseenter="cancelHide" @mouseleave="scheduleHide">
