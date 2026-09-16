@@ -118,8 +118,12 @@
         />
 
         <div class="pr-search-actions">
-          <el-button type="primary" size="small" @click="search">{{ $t('uiBtn.search') }}</el-button>
-          <el-button size="small" @click="resetSearch">{{ $t('uiBtn.reset') }}</el-button>
+          <el-button type="primary" size="small" @click="search">{{
+            $t('uiBtn.search')
+          }}</el-button>
+          <el-button size="small" @click="resetSearch">{{
+            $t('uiBtn.reset')
+          }}</el-button>
         </div>
       </div>
     </el-card>
@@ -146,8 +150,16 @@
 
         <div v-if="showDeliveryFilter" class="pr-delivery-filter">
           <span>{{ $t('PURCHASE.deliveryStatus') }}:</span>
-          <el-radio-group v-model="queryParams.deliveryStatus" size="small" @change="deliveryStatusChange">
-            <el-radio-button v-for="item in deliveryFilters" :key="item.id" :value="item.id">
+          <el-radio-group
+            v-model="queryParams.deliveryStatus"
+            size="small"
+            @change="deliveryStatusChange"
+          >
+            <el-radio-button
+              v-for="item in deliveryFilters"
+              :key="item.id"
+              :value="item.id"
+            >
               {{ item.name }}<span v-if="item.num"> ({{ item.num }})</span>
             </el-radio-button>
           </el-radio-group>
@@ -184,9 +196,17 @@
         align="center"
         :selectable="selectable"
       />
-      <el-table-column type="index" :label="$t('ui.sn')" width="60" fixed="left" align="center">
+      <el-table-column
+        type="index"
+        :label="$t('ui.sn')"
+        width="60"
+        fixed="left"
+        align="center"
+      >
         <template #default="scope">
-          {{ scope.$index + (queryParams.pageNum - 1) * queryParams.pageSize + 1 }}
+          {{
+            scope.$index + (queryParams.pageNum - 1) * queryParams.pageSize + 1
+          }}
         </template>
       </el-table-column>
       <el-table-column
@@ -204,7 +224,9 @@
       >
         <template #default="scope">
           <template v-if="item.prop === 'dropShipping'">
-            <el-tag v-if="scope.row.dropShipping === '1'">{{ $t('uiBtn.active') }}</el-tag>
+            <el-tag v-if="scope.row.dropShipping === '1'">{{
+              $t('uiBtn.active')
+            }}</el-tag>
             <el-tag v-else-if="scope.row.dropShipping === '0'" type="danger">
               {{ $t('uiBtn.inactive') }}
             </el-tag>
@@ -226,7 +248,11 @@
       />
     </div>
 
-    <ExportDlg ref="ExportDlgRef" :loading="exportLoading" @export="handleExport" />
+    <ExportDlg
+      ref="ExportDlgRef"
+      :loading="exportLoading"
+      @export="handleExport"
+    />
   </div>
 </template>
 
@@ -248,18 +274,86 @@ export default {
   mixins: [pageMixin],
   data() {
     const columns = [
-      this.column('purchaseRequisiteNo', this.$t('PURCHASE.purchaseRequisitionNo'), 200, true, true),
-      this.column('requiredType', this.$t('PURCHASE.requiredFrom'), 180, true, true, 'requiredTypeStr'),
+      this.column(
+        'purchaseRequisiteNo',
+        this.$t('PURCHASE.purchaseRequisitionNo'),
+        200,
+        true,
+        true
+      ),
+      this.column(
+        'requiredType',
+        this.$t('PURCHASE.requiredFrom'),
+        180,
+        true,
+        true,
+        'requiredTypeStr'
+      ),
       this.column('documentNo', this.$t('PURCHASE.DocNo'), 160, true, true),
-      this.column('requiredBy', this.$t('PURCHASE.requiredBy'), 160, true, true),
-      this.column('costProjectCode', this.$t('PURCHASE.projectCode'), 170, true, false),
-      this.column('branchCompanyDeptName', this.$t('PURCHASE.department'), 190, true, false),
-      this.column('purchaseRequisiteStatusShowStr', this.$t('ui.status'), 150, true, true),
-      this.column('approvedStatus', this.$t('ui.processStatus'), 150, true, true, 'approvedStatusStr'),
-      this.column('productName', this.$t('PURCHASE.productName'), 180, false, false),
-      this.column('deliveryDate', this.$t('PURCHASE.requestedReceiptDate'), 160, false, true),
-      this.column('receiveAddressName', this.$t('PURCHASE.deliveryAddress'), 180, true, true),
-      this.column('dropShipping', this.$t('PURCHASE.dropShipping'), 130, true, true),
+      this.column(
+        'requiredBy',
+        this.$t('PURCHASE.requiredBy'),
+        160,
+        true,
+        true
+      ),
+      this.column(
+        'costProjectCode',
+        this.$t('PURCHASE.projectCode'),
+        170,
+        true,
+        false
+      ),
+      this.column(
+        'branchCompanyDeptName',
+        this.$t('PURCHASE.department'),
+        190,
+        true,
+        false
+      ),
+      this.column(
+        'purchaseRequisiteStatusShowStr',
+        this.$t('ui.status'),
+        150,
+        true,
+        true
+      ),
+      this.column(
+        'approvedStatus',
+        this.$t('ui.processStatus'),
+        150,
+        true,
+        true,
+        'approvedStatusStr'
+      ),
+      this.column(
+        'productName',
+        this.$t('PURCHASE.productName'),
+        180,
+        false,
+        false
+      ),
+      this.column(
+        'deliveryDate',
+        this.$t('PURCHASE.requestedReceiptDate'),
+        160,
+        false,
+        true
+      ),
+      this.column(
+        'receiveAddressName',
+        this.$t('PURCHASE.deliveryAddress'),
+        180,
+        true,
+        true
+      ),
+      this.column(
+        'dropShipping',
+        this.$t('PURCHASE.dropShipping'),
+        130,
+        true,
+        true
+      ),
       this.column('createdBy', this.$t('ui.createdBy'), 150, true, true),
       this.column('createdTime', this.$t('ui.createdTime'), 170, true, true),
       this.column('modifiedBy', this.$t('ui.modifiedBy'), 150, true, true),
@@ -318,7 +412,12 @@ export default {
       ],
       deliveryFilters: [
         { id: '0', name: this.$t('PURCHASE.all'), value: 'all', num: 0 },
-        { id: '2', name: this.$t('PURCHASE.overdue'), value: 'overdue', num: 0 },
+        {
+          id: '2',
+          name: this.$t('PURCHASE.overdue'),
+          value: 'overdue',
+          num: 0
+        },
         { id: '1', name: this.$t('PURCHASE.dueSoon'), value: 'dueSoon', num: 0 }
       ],
       columns
@@ -330,7 +429,8 @@ export default {
         .filter(column => column.visible)
         .sort((a, b) => a.colSortIndex - b.colSortIndex)
       const hasProjectCode = this.tableList.some(row => row.costProjectCode)
-      if (!hasProjectCode) result = result.filter(column => column.prop !== 'costProjectCode')
+      if (!hasProjectCode)
+        result = result.filter(column => column.prop !== 'costProjectCode')
       return result
     },
     showDeliveryFilter() {
@@ -389,7 +489,9 @@ export default {
       this.queryParams.dateRange = [startDate.getTime(), endDate.getTime()]
     },
     dictLabel(options, value) {
-      const item = options.find(option => String(option.dictValue) === String(value))
+      const item = options.find(
+        option => String(option.dictValue) === String(value)
+      )
       return item?.dictLabel || value || ''
     },
     transformDepartments(list) {
@@ -415,16 +517,23 @@ export default {
     normalizeParams() {
       const params = JSON.parse(JSON.stringify(this.queryParams))
       const dateRange = params.dateRange || []
-      params.startDateCreatedTime = dateRange[0] ? Number(dateRange[0]) : undefined
-      params.endDateCreatedTime = dateRange[1] ? Number(dateRange[1]) : undefined
+      params.startDateCreatedTime = dateRange[0]
+        ? Number(dateRange[0])
+        : undefined
+      params.endDateCreatedTime = dateRange[1]
+        ? Number(dateRange[1])
+        : undefined
       delete params.dateRange
       params.departmentIdList = (params.departmentIdList || []).map(path =>
         Array.isArray(path) ? path[path.length - 1] : path
       )
       if (!params.departmentIdList.length) params.departmentIdList = undefined
-      if (!params.purchaseRequisiteStatusList?.length) params.purchaseRequisiteStatusList = undefined
-      if (!params.approvedStatusList?.length) params.approvedStatusList = undefined
-      if (!params.receiveAddressNameList?.length) params.receiveAddressNameList = undefined
+      if (!params.purchaseRequisiteStatusList?.length)
+        params.purchaseRequisiteStatusList = undefined
+      if (!params.approvedStatusList?.length)
+        params.approvedStatusList = undefined
+      if (!params.receiveAddressNameList?.length)
+        params.receiveAddressNameList = undefined
       if (!params.requiredIdList?.length) params.requiredIdList = undefined
       if (!params.dropShippingList?.length) params.dropShippingList = undefined
       if (!params.condition) params.condition = undefined
@@ -449,7 +558,8 @@ export default {
       ]
 
       try {
-        const [listResponse, countResponse, deliveryResponse] = await Promise.all(requests)
+        const [listResponse, countResponse, deliveryResponse] =
+          await Promise.all(requests)
         if (token !== this.queryToken) return
         const rows = (listResponse.rows || []).map(row => ({
           ...row,
@@ -457,8 +567,14 @@ export default {
           modifiedTime: this.formatDateTime(row.modifiedTime),
           approvedTime: this.formatDateTime(row.approvedTime),
           deliveryDate: this.formatDate(row.deliveryDate),
-          requiredTypeStr: this.dictLabel(this.requiredTypeOptions || [], row.requiredType),
-          approvedStatusStr: this.dictLabel(this.approvedStatusOptions, row.approvedStatus)
+          requiredTypeStr: this.dictLabel(
+            this.requiredTypeOptions || [],
+            row.requiredType
+          ),
+          approvedStatusStr: this.dictLabel(
+            this.approvedStatusOptions,
+            row.approvedStatus
+          )
         }))
         this.tableList = rows
         this.total = listResponse.total || 0
@@ -483,7 +599,9 @@ export default {
       return value ? this.parseTime(value, this.$store.getters.fmtForYmd) : ''
     },
     formatDateTime(value) {
-      return value ? this.parseTime(value, this.$store.getters.fmtForYmdhms) : ''
+      return value
+        ? this.parseTime(value, this.$store.getters.fmtForYmdhms)
+        : ''
     },
     async tabChange() {
       const pageSize = this.queryParams.pageSize
@@ -558,7 +676,8 @@ export default {
       ) {
         return `row-deliveryStatus-${row.deliveryStatus}`
       }
-      if (this.ids.includes(row.purchaseRequisiteId)) return 'table-SelectedRow-bgcolor'
+      if (this.ids.includes(row.purchaseRequisiteId))
+        return 'table-SelectedRow-bgcolor'
       return ''
     },
     handleAdd() {

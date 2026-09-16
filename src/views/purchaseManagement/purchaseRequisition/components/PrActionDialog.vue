@@ -12,7 +12,10 @@
       <el-form-item :label="operatorLabel">
         <el-input :model-value="operator" disabled />
       </el-form-item>
-      <el-form-item :label="$t('PURCHASE.actionReason')" :required="reasonRequired">
+      <el-form-item
+        :label="$t('PURCHASE.actionReason')"
+        :required="reasonRequired"
+      >
         <el-input
           v-model="reason"
           type="textarea"
@@ -46,7 +49,8 @@ export default {
     type: {
       type: String,
       required: true,
-      validator: value => ['approve', 'reject', 'cancel', 'close'].includes(value)
+      validator: value =>
+        ['approve', 'reject', 'cancel', 'close'].includes(value)
     },
     operator: {
       type: String,

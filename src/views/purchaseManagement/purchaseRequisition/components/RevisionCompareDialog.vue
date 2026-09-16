@@ -16,31 +16,60 @@
         max-height="320"
         class="mb20"
       >
-        <el-table-column prop="label" :label="$t('uiBtn.fieldName')" min-width="180" />
-        <el-table-column prop="beforeValue" :label="$t('PURCHASE.beforeRevision')" min-width="220" show-overflow-tooltip />
-        <el-table-column prop="afterValue" :label="$t('PURCHASE.afterRevision')" min-width="220" show-overflow-tooltip />
+        <el-table-column
+          prop="label"
+          :label="$t('uiBtn.fieldName')"
+          min-width="180"
+        />
+        <el-table-column
+          prop="beforeValue"
+          :label="$t('PURCHASE.beforeRevision')"
+          min-width="220"
+          show-overflow-tooltip
+        />
+        <el-table-column
+          prop="afterValue"
+          :label="$t('PURCHASE.afterRevision')"
+          min-width="220"
+          show-overflow-tooltip
+        />
       </el-table>
 
       <el-collapse v-model="activeNames" v-if="hasDetail">
         <el-collapse-item v-if="beforeFiles.length" name="beforeFiles">
-          <template #title>{{ $t('ui.attachment') }} · {{ $t('PURCHASE.beforeRevision') }}</template>
+          <template #title
+            >{{ $t('ui.attachment') }} ·
+            {{ $t('PURCHASE.beforeRevision') }}</template
+          >
           <myUpload ref="beforeUpload" :disabled="true" />
         </el-collapse-item>
         <el-collapse-item v-if="afterFiles.length" name="afterFiles">
-          <template #title>{{ $t('ui.attachment') }} · {{ $t('PURCHASE.afterRevision') }}</template>
+          <template #title
+            >{{ $t('ui.attachment') }} ·
+            {{ $t('PURCHASE.afterRevision') }}</template
+          >
           <myUpload ref="afterUpload" :disabled="true" />
         </el-collapse-item>
         <el-collapse-item v-if="beforeDetails.length" name="beforeDetails">
-          <template #title>{{ $t('PURCHASE.productInfo') }} · {{ $t('PURCHASE.beforeRevision') }}</template>
+          <template #title
+            >{{ $t('PURCHASE.productInfo') }} ·
+            {{ $t('PURCHASE.beforeRevision') }}</template
+          >
           <detail-table :rows="beforeDetails" />
         </el-collapse-item>
         <el-collapse-item v-if="afterDetails.length" name="afterDetails">
-          <template #title>{{ $t('PURCHASE.productInfo') }} · {{ $t('PURCHASE.afterRevision') }}</template>
+          <template #title
+            >{{ $t('PURCHASE.productInfo') }} ·
+            {{ $t('PURCHASE.afterRevision') }}</template
+          >
           <detail-table :rows="afterDetails" :highlight="true" />
         </el-collapse-item>
       </el-collapse>
 
-      <el-empty v-if="!loading && !basicUpdates.length && !hasDetail" :description="$t('ui.noData')" />
+      <el-empty
+        v-if="!loading && !basicUpdates.length && !hasDetail"
+        :description="$t('ui.noData')"
+      />
     </div>
 
     <template #footer>
@@ -75,7 +104,9 @@ const DetailTable = {
     }
     const cellClassName = ({ row, column }) => {
       if (!props.highlight || row.updateType !== '1') return ''
-      return (row.updateMsgList || []).some(item => item.name === column.property)
+      return (row.updateMsgList || []).some(
+        item => item.name === column.property
+      )
         ? 'edit-table-cell'
         : ''
     }
@@ -90,14 +121,48 @@ const DetailTable = {
           cellClassName
         },
         () => [
-          h(ElTableColumn, { type: 'index', label: '#', width: 55, align: 'center' }),
-          h(ElTableColumn, { prop: 'productName', label: 'Product', minWidth: 180, showOverflowTooltip: true }),
-          h(ElTableColumn, { prop: 'internalPartNo', label: 'Internal Part No.', minWidth: 160, showOverflowTooltip: true }),
-          h(ElTableColumn, { prop: 'externalPartNo', label: 'External Part No.', minWidth: 160, showOverflowTooltip: true }),
+          h(ElTableColumn, {
+            type: 'index',
+            label: '#',
+            width: 55,
+            align: 'center'
+          }),
+          h(ElTableColumn, {
+            prop: 'productName',
+            label: 'Product',
+            minWidth: 180,
+            showOverflowTooltip: true
+          }),
+          h(ElTableColumn, {
+            prop: 'internalPartNo',
+            label: 'Internal Part No.',
+            minWidth: 160,
+            showOverflowTooltip: true
+          }),
+          h(ElTableColumn, {
+            prop: 'externalPartNo',
+            label: 'External Part No.',
+            minWidth: 160,
+            showOverflowTooltip: true
+          }),
           h(ElTableColumn, { prop: 'uom', label: 'UOM', minWidth: 100 }),
-          h(ElTableColumn, { prop: 'qty', label: 'Qty', minWidth: 100, align: 'right' }),
-          h(ElTableColumn, { prop: 'deliveryDate', label: 'Delivery Date', minWidth: 145 }),
-          h(ElTableColumn, { prop: 'remarks', label: 'Remarks', minWidth: 180, showOverflowTooltip: true })
+          h(ElTableColumn, {
+            prop: 'qty',
+            label: 'Qty',
+            minWidth: 100,
+            align: 'right'
+          }),
+          h(ElTableColumn, {
+            prop: 'deliveryDate',
+            label: 'Delivery Date',
+            minWidth: 145
+          }),
+          h(ElTableColumn, {
+            prop: 'remarks',
+            label: 'Remarks',
+            minWidth: 180,
+            showOverflowTooltip: true
+          })
         ]
       )
   }
@@ -120,7 +185,12 @@ export default {
   data() {
     return {
       loading: false,
-      activeNames: ['beforeFiles', 'afterFiles', 'beforeDetails', 'afterDetails'],
+      activeNames: [
+        'beforeFiles',
+        'afterFiles',
+        'beforeDetails',
+        'afterDetails'
+      ],
       basicUpdates: [],
       beforeDetails: [],
       afterDetails: [],
@@ -161,7 +231,9 @@ export default {
     },
     formatValue(value, name) {
       if (name === 'dropShipping') {
-        return value === '1' ? this.$t('uiBtn.active') : this.$t('uiBtn.inactive')
+        return value === '1'
+          ? this.$t('uiBtn.active')
+          : this.$t('uiBtn.inactive')
       }
       return value ?? ''
     },

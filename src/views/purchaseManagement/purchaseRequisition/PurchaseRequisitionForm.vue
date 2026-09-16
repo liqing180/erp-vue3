@@ -19,28 +19,60 @@
       >
         {{ $t('uiBtn.saveDraft') }}
       </el-button>
-      <el-button v-if="canApprove" type="primary" size="small" @click="openApprove">
+      <el-button
+        v-if="canApprove"
+        type="primary"
+        size="small"
+        @click="openApprove"
+      >
         {{ $t('uiBtn.approve') }}
       </el-button>
-      <el-button v-if="canReject" type="primary" size="small" @click="openAction('reject')">
+      <el-button
+        v-if="canReject"
+        type="primary"
+        size="small"
+        @click="openAction('reject')"
+      >
         {{ $t('uiBtn.reject1') }}
       </el-button>
-      <el-button v-if="canWithdraw" type="primary" size="small" @click="withdrawApproval">
+      <el-button
+        v-if="canWithdraw"
+        type="primary"
+        size="small"
+        @click="withdrawApproval"
+      >
         {{ $t('uiBtn.withdrawApprove') }}
       </el-button>
-      <el-button v-if="canCancel" type="primary" size="small" @click="openAction('cancel')">
+      <el-button
+        v-if="canCancel"
+        type="primary"
+        size="small"
+        @click="openAction('cancel')"
+      >
         {{ $t('uiBtn.cancel') }}
       </el-button>
-      <el-button v-if="canClose" type="primary" size="small" @click="openAction('close')">
+      <el-button
+        v-if="canClose"
+        type="primary"
+        size="small"
+        @click="openAction('close')"
+      >
         {{ $t('uiBtn.close') }}
       </el-button>
       <el-button v-if="canRevise" type="primary" size="small" @click="goRevise">
         {{ $t('uiBtn.revise') }}
       </el-button>
-      <el-button v-if="canCompare" type="primary" size="small" @click="compareVisible = true">
+      <el-button
+        v-if="canCompare"
+        type="primary"
+        size="small"
+        @click="compareVisible = true"
+      >
         {{ $t('PURCHASE.revisionComparison') }}
       </el-button>
-      <el-button type="primary" size="small" @click="back">{{ $t('uiBtn.back') }}</el-button>
+      <el-button type="primary" size="small" @click="back">{{
+        $t('uiBtn.back')
+      }}</el-button>
     </template>
 
     <template #content>
@@ -53,7 +85,12 @@
       >
         <template #title>
           <span>{{ $t('PURCHASE.pendingRevisionReview') }}</span>
-          <el-button link type="primary" class="ml10" @click="compareVisible = true">
+          <el-button
+            link
+            type="primary"
+            class="ml10"
+            @click="compareVisible = true"
+          >
             {{ $t('PURCHASE.revisionComparison') }}
           </el-button>
         </template>
@@ -66,7 +103,12 @@
               <FormCollapseItemTitle :title="$t('ui.basicInfo')" />
             </template>
 
-            <el-form ref="formRef" :model="form" label-width="180px" @submit.prevent>
+            <el-form
+              ref="formRef"
+              :model="form"
+              label-width="180px"
+              @submit.prevent
+            >
               <el-row :gutter="12">
                 <el-col :span="8">
                   <el-form-item :label="$t('PURCHASE.requiredFrom')">
@@ -75,7 +117,10 @@
                 </el-col>
                 <el-col :span="8">
                   <el-form-item :label="$t('ui.status')">
-                    <el-input :model-value="form.purchaseRequisiteStatusShowStr || ''" disabled />
+                    <el-input
+                      :model-value="form.purchaseRequisiteStatusShowStr || ''"
+                      disabled
+                    />
                   </el-form-item>
                 </el-col>
                 <el-col :span="8">
@@ -144,7 +189,9 @@
                         :value="item.costProjectId"
                       >
                         <span>{{ item.costProjectCode }}</span>
-                        <span v-if="item.costProjectName"> · {{ item.costProjectName }}</span>
+                        <span v-if="item.costProjectName">
+                          · {{ item.costProjectName }}</span
+                        >
                       </el-option>
                     </el-select>
                   </el-form-item>
@@ -186,7 +233,11 @@
                       />
                     </el-select>
                   </el-form-item>
-                  <el-form-item v-else :label="$t('PURCHASE.deliveryAddress')" required>
+                  <el-form-item
+                    v-else
+                    :label="$t('PURCHASE.deliveryAddress')"
+                    required
+                  >
                     <el-select
                       v-model="form.warehouseId"
                       style="width: 100%"
@@ -219,7 +270,11 @@
                 </el-col>
                 <el-col :span="8">
                   <el-form-item :label="$t('PURCHASE.requestedEmail')">
-                    <el-input v-model.trim="form.email" maxlength="500" :disabled="formReadOnly" />
+                    <el-input
+                      v-model.trim="form.email"
+                      maxlength="500"
+                      :disabled="formReadOnly"
+                    />
                   </el-form-item>
                 </el-col>
                 <el-col :span="8">
@@ -264,13 +319,27 @@
             </template>
 
             <div class="pr-detail-toolbar" v-if="!formReadOnly">
-              <el-button type="primary" size="small" @click="productDialogVisible = true">
+              <el-button
+                type="primary"
+                size="small"
+                @click="productDialogVisible = true"
+              >
                 {{ $t('PURCHASE.addProduct') }}
               </el-button>
-              <el-button v-if="canAddAdhoc" type="primary" size="small" @click="addAdhocRow">
+              <el-button
+                v-if="canAddAdhoc"
+                type="primary"
+                size="small"
+                @click="addAdhocRow"
+              >
                 {{ $t('PURCHASE.addAdhocEntry') }}
               </el-button>
-              <el-button v-if="canAddCustom" type="primary" size="small" @click="addCustomRow">
+              <el-button
+                v-if="canAddCustom"
+                type="primary"
+                size="small"
+                @click="addCustomRow"
+              >
                 {{ $t('PURCHASE.addCustomProduct') }}
               </el-button>
               <el-input
@@ -290,8 +359,17 @@
               v-table-tab
               :row-class-name="detailRowClassName"
             >
-              <el-table-column type="index" :label="$t('ui.sn')" width="60" align="center" />
-              <el-table-column prop="productName" :label="$t('PURCHASE.productName')" min-width="190">
+              <el-table-column
+                type="index"
+                :label="$t('ui.sn')"
+                width="60"
+                align="center"
+              />
+              <el-table-column
+                prop="productName"
+                :label="$t('PURCHASE.productName')"
+                min-width="190"
+              >
                 <template #default="scope">
                   <el-input
                     v-if="isFreeTextProduct(scope.row) && !formReadOnly"
@@ -301,13 +379,28 @@
                   <span v-else>{{ scope.row.productName }}</span>
                 </template>
               </el-table-column>
-              <el-table-column prop="internalPartNo" :label="$t('PURCHASE.internalPartNo')" min-width="160" show-overflow-tooltip />
-              <el-table-column prop="externalPartNo" :label="$t('PURCHASE.externalPartNo')" min-width="160" show-overflow-tooltip>
+              <el-table-column
+                prop="internalPartNo"
+                :label="$t('PURCHASE.internalPartNo')"
+                min-width="160"
+                show-overflow-tooltip
+              />
+              <el-table-column
+                prop="externalPartNo"
+                :label="$t('PURCHASE.externalPartNo')"
+                min-width="160"
+                show-overflow-tooltip
+              >
                 <template #default="scope">
                   {{ externalPartNoText(scope.row) }}
                 </template>
               </el-table-column>
-              <el-table-column prop="alias" :label="$t('PURCHASE.alias')" min-width="130" show-overflow-tooltip>
+              <el-table-column
+                prop="alias"
+                :label="$t('PURCHASE.alias')"
+                min-width="130"
+                show-overflow-tooltip
+              >
                 <template #default="scope">
                   <el-input
                     v-if="isFreeTextProduct(scope.row) && !formReadOnly"
@@ -317,7 +410,11 @@
                   <span v-else>{{ scope.row.alias }}</span>
                 </template>
               </el-table-column>
-              <el-table-column prop="description" :label="$t('ui.description')" min-width="200">
+              <el-table-column
+                prop="description"
+                :label="$t('ui.description')"
+                min-width="200"
+              >
                 <template #default="scope">
                   <el-input
                     v-if="!formReadOnly"
@@ -327,7 +424,11 @@
                   <span v-else>{{ scope.row.description }}</span>
                 </template>
               </el-table-column>
-              <el-table-column prop="uom" :label="$t('PURCHASE.uom')" min-width="120">
+              <el-table-column
+                prop="uom"
+                :label="$t('PURCHASE.uom')"
+                min-width="120"
+              >
                 <template #default="scope">
                   <el-select
                     v-if="isFreeTextProduct(scope.row) && !formReadOnly"
@@ -336,12 +437,21 @@
                     style="width: 100%"
                     @change="freeTextUomChange(scope.row)"
                   >
-                    <el-option v-for="item in allUomList" :key="item" :label="item" :value="item" />
+                    <el-option
+                      v-for="item in allUomList"
+                      :key="item"
+                      :label="item"
+                      :value="item"
+                    />
                   </el-select>
                   <span v-else>{{ scope.row.uom }}</span>
                 </template>
               </el-table-column>
-              <el-table-column prop="qty" :label="$t('PURCHASE.qty')" min-width="130">
+              <el-table-column
+                prop="qty"
+                :label="$t('PURCHASE.qty')"
+                min-width="130"
+              >
                 <template #default="scope">
                   <el-input-number
                     v-if="!formReadOnly"
@@ -352,7 +462,9 @@
                     :max="999999"
                     style="width: 100%"
                   />
-                  <span v-else>{{ $numberStr(scope.row.qty, scope.row.decimalNum ?? 3) }}</span>
+                  <span v-else>{{
+                    $numberStr(scope.row.qty, scope.row.decimalNum ?? 3)
+                  }}</span>
                 </template>
               </el-table-column>
               <el-table-column
@@ -362,10 +474,19 @@
                 min-width="125"
               >
                 <template #default="scope">
-                  {{ $numberStr(scope.row.receiptQtyForBasic, scope.row.decimalNum ?? 3) }}
+                  {{
+                    $numberStr(
+                      scope.row.receiptQtyForBasic,
+                      scope.row.decimalNum ?? 3
+                    )
+                  }}
                 </template>
               </el-table-column>
-              <el-table-column prop="deliveryDate" :label="$t('PURCHASE.requestedReceiptDate')" min-width="170">
+              <el-table-column
+                prop="deliveryDate"
+                :label="$t('PURCHASE.requestedReceiptDate')"
+                min-width="170"
+              >
                 <template #default="scope">
                   <el-date-picker
                     v-if="!formReadOnly"
@@ -379,15 +500,33 @@
                   <span v-else>{{ formatDate(scope.row.deliveryDate) }}</span>
                 </template>
               </el-table-column>
-              <el-table-column prop="remarks" :label="$t('ui.remarks')" min-width="180">
+              <el-table-column
+                prop="remarks"
+                :label="$t('ui.remarks')"
+                min-width="180"
+              >
                 <template #default="scope">
-                  <el-input v-if="!formReadOnly" v-model="scope.row.remarks" maxlength="200" />
+                  <el-input
+                    v-if="!formReadOnly"
+                    v-model="scope.row.remarks"
+                    maxlength="200"
+                  />
                   <span v-else>{{ scope.row.remarks }}</span>
                 </template>
               </el-table-column>
-              <el-table-column v-if="!formReadOnly" :label="$t('ui.action')" width="90" fixed="right" align="center">
+              <el-table-column
+                v-if="!formReadOnly"
+                :label="$t('ui.action')"
+                width="90"
+                fixed="right"
+                align="center"
+              >
                 <template #default="scope">
-                  <el-button link type="danger" @click="removeDetail(scope.row)">
+                  <el-button
+                    link
+                    type="danger"
+                    @click="removeDetail(scope.row)"
+                  >
                     {{ $t('uiBtn.delete') }}
                   </el-button>
                 </template>
@@ -415,10 +554,25 @@
               <FormCollapseItemTitle :title="$t('ui.systemOperationLog')" />
             </template>
             <el-table :data="operationLogList" border max-height="320">
-              <el-table-column prop="operatorBy" :label="$t('ui.operName')" min-width="150" />
-              <el-table-column prop="operationDescription" :label="$t('ui.description')" min-width="260" show-overflow-tooltip />
-              <el-table-column prop="operatorTime" :label="$t('ui.operTime')" min-width="180">
-                <template #default="scope">{{ formatDateTime(scope.row.operatorTime) }}</template>
+              <el-table-column
+                prop="operatorBy"
+                :label="$t('ui.operName')"
+                min-width="150"
+              />
+              <el-table-column
+                prop="operationDescription"
+                :label="$t('ui.description')"
+                min-width="260"
+                show-overflow-tooltip
+              />
+              <el-table-column
+                prop="operatorTime"
+                :label="$t('ui.operTime')"
+                min-width="180"
+              >
+                <template #default="scope">{{
+                  formatDateTime(scope.row.operatorTime)
+                }}</template>
               </el-table-column>
             </el-table>
           </el-collapse-item>
@@ -570,7 +724,9 @@ export default {
     canWithdraw() {
       return (
         this.mode === 'edit' &&
-        checkPermi(['purchaseManagement:purchaseRequisition:withdrawApprove']) &&
+        checkPermi([
+          'purchaseManagement:purchaseRequisition:withdrawApprove'
+        ]) &&
         this.buttonAuthMsg.isCanWithdrawApproved === '1'
       )
     },
@@ -600,17 +756,22 @@ export default {
     },
     canCompare() {
       return Boolean(
-        this.form.purchaseRequisiteId && this.buttonAuthMsg.isCanSeeUpdateMsg === '1'
+        this.form.purchaseRequisiteId &&
+          this.buttonAuthMsg.isCanSeeUpdateMsg === '1'
       )
     },
     showRevisionAlert() {
       return this.canApprove && this.canCompare
     },
     canAddAdhoc() {
-      return checkPermi(['purchaseManagement:purchaseRequisition:addAdhocEntry'])
+      return checkPermi([
+        'purchaseManagement:purchaseRequisition:addAdhocEntry'
+      ])
     },
     canAddCustom() {
-      return checkPermi(['purchaseManagement:purchaseRequisition:addCustomProduct'])
+      return checkPermi([
+        'purchaseManagement:purchaseRequisition:addCustomProduct'
+      ])
     },
     productRows() {
       return this.details.filter(row => row.productId)
@@ -694,10 +855,12 @@ export default {
         })
       ])
 
-      this.requiredTypeOptions = results[0].status === 'fulfilled' ? results[0].value || [] : []
+      this.requiredTypeOptions =
+        results[0].status === 'fulfilled' ? results[0].value || [] : []
       this.departmentOptions =
         results[1].status === 'fulfilled' ? results[1].value.data || [] : []
-      this.allUomList = results[2].status === 'fulfilled' ? results[2].value.data || [] : []
+      this.allUomList =
+        results[2].status === 'fulfilled' ? results[2].value.data || [] : []
       this.dropShippingAddressOptions =
         results[3].status === 'fulfilled' ? results[3].value.data || [] : []
       this.projectOptions =
@@ -711,7 +874,9 @@ export default {
     },
     async initializeAdd() {
       this.form = this.createEmptyForm()
-      const defaultDepartment = this.departmentOptions.find(item => item.isDefault === '1')
+      const defaultDepartment = this.departmentOptions.find(
+        item => item.isDefault === '1'
+      )
       if (defaultDepartment) {
         this.applyDepartment(defaultDepartment)
         await this.loadRequiredByOptions()
@@ -739,8 +904,8 @@ export default {
       this.form = { ...data }
       this.buttonAuthMsg = data.buttonAuthMsg || {}
       this.operationLogList = data.operationLogList || []
-      this.details = (data.purchaseRequisiteDetailList || []).map((row, index) =>
-        this.normalizeDetail(row, index)
+      this.details = (data.purchaseRequisiteDetailList || []).map(
+        (row, index) => this.normalizeDetail(row, index)
       )
 
       if (
@@ -770,10 +935,16 @@ export default {
       }
       return {
         ...row,
-        _rowKey: row.purchaseRequisiteDetailId || row.productId || row.customId || `pr-${Date.now()}-${index}`,
+        _rowKey:
+          row.purchaseRequisiteDetailId ||
+          row.productId ||
+          row.customId ||
+          `pr-${Date.now()}-${index}`,
         productType: row.productType || '1',
         includeDecimal: row.includeDecimal || '1',
-        decimalNum: Number.isFinite(Number(row.decimalNum)) ? Number(row.decimalNum) : 3,
+        decimalNum: Number.isFinite(Number(row.decimalNum))
+          ? Number(row.decimalNum)
+          : 3,
         uom: row.uom || row.inventoryUom || row.basicUom || '',
         basicUom: row.basicUom || row.inventoryUom || row.uom || '',
         uomCoefficient: row.uomCoefficient || 1,
@@ -802,9 +973,12 @@ export default {
       this.form.allSuperiorName = item?.allSuperiorName || ''
     },
     async departmentChange(value) {
-      const item = this.departmentOptions.find(option => option.departmentId === value)
+      const item = this.departmentOptions.find(
+        option => option.departmentId === value
+      )
       this.applyDepartment(item)
-      const keepCurrentUser = this.form.requiredId === this.$store.state.user.userId
+      const keepCurrentUser =
+        this.form.requiredId === this.$store.state.user.userId
       if (!keepCurrentUser) {
         this.form.requiredId = ''
         this.form.requiredBy = ''
@@ -812,12 +986,16 @@ export default {
       await this.loadRequiredByOptions()
     },
     requiredByChange(value) {
-      const item = this.requiredByOptions.find(option => option.userId === value)
+      const item = this.requiredByOptions.find(
+        option => option.userId === value
+      )
       this.form.requiredId = item?.userId || ''
       this.form.requiredBy = item?.nickName || ''
     },
     costProjectChange(value) {
-      const item = this.projectOptions.find(option => option.costProjectId === value)
+      const item = this.projectOptions.find(
+        option => option.costProjectId === value
+      )
       this.form.costProjectId = item?.costProjectId || ''
       this.form.costProjectCode = item?.costProjectCode || ''
       this.form.costProjectName = item?.costProjectName || ''
@@ -825,7 +1003,8 @@ export default {
         this.form.receiveAddressName = item.receiveAddress
       }
       const partner = item?.businessPartner || {}
-      if (partner.countryMobileCode) this.form.mobileCode = partner.countryMobileCode
+      if (partner.countryMobileCode)
+        this.form.mobileCode = partner.countryMobileCode
     },
     applyWarehouse(item) {
       this.form.warehouseId = item?.warehouseId || ''
@@ -833,7 +1012,9 @@ export default {
       this.form.noCanSelectProductIdList = item?.noCanSelectProductIdList || []
     },
     warehouseChange(value) {
-      const item = this.warehouseOptions.find(option => option.warehouseId === value)
+      const item = this.warehouseOptions.find(
+        option => option.warehouseId === value
+      )
       this.applyWarehouse(item)
     },
     dropShippingAddressChange(value) {
@@ -855,7 +1036,10 @@ export default {
       return row.isAdhocEntry === '1' || row.isCustomProduct === '1'
     },
     externalPartNoText(row) {
-      if (Array.isArray(row.externalPartNoList) && row.externalPartNoList.length) {
+      if (
+        Array.isArray(row.externalPartNoList) &&
+        row.externalPartNoList.length
+      ) {
         return row.externalPartNoList.join(', ')
       }
       return row.externalPartNo || ''
@@ -916,7 +1100,9 @@ export default {
       return time.getTime() < Date.now() - 90 * 24 * 60 * 60 * 1000
     },
     async deliveryDateChange(index, row) {
-      row.deliveryDate = row.deliveryDate ? Number(row.deliveryDate) : row.deliveryDate
+      row.deliveryDate = row.deliveryDate
+        ? Number(row.deliveryDate)
+        : row.deliveryDate
       if (index !== 0 || !row.deliveryDate || this.details.length < 2) return
       const hasOtherDate = this.details.slice(1).some(item => item.deliveryDate)
       if (!hasOtherDate) {
@@ -938,7 +1124,9 @@ export default {
       return value ? this.parseTime(value, this.$store.getters.fmtForYmd) : ''
     },
     formatDateTime(value) {
-      return value ? this.parseTime(value, this.$store.getters.fmtForYmdhms) : ''
+      return value
+        ? this.parseTime(value, this.$store.getters.fmtForYmdhms)
+        : ''
     },
     detailRowClassName({ row }) {
       if (row['ROW-ERROR']) return 'required-row'
@@ -956,16 +1144,22 @@ export default {
         return false
       }
       if (!this.form.requiredId) {
-        this.$modal.msgError(`${this.$t('PURCHASE.requiredBy')}: ${this.$t('ui.reqMsg')}`)
+        this.$modal.msgError(
+          `${this.$t('PURCHASE.requiredBy')}: ${this.$t('ui.reqMsg')}`
+        )
         return false
       }
       if (this.form.dropShipping === '1') {
         if (!String(this.form.receiveAddressName || '').trim()) {
-          this.$modal.msgError(`${this.$t('PURCHASE.deliveryAddress')}: ${this.$t('ui.reqMsg')}`)
+          this.$modal.msgError(
+            `${this.$t('PURCHASE.deliveryAddress')}: ${this.$t('ui.reqMsg')}`
+          )
           return false
         }
         if (!String(this.form.contactPersonName || '').trim()) {
-          this.$modal.msgError(`${this.$t('PURCHASE.consignee')}: ${this.$t('ui.reqMsg')}`)
+          this.$modal.msgError(
+            `${this.$t('PURCHASE.consignee')}: ${this.$t('ui.reqMsg')}`
+          )
           return false
         }
         if (!this.validateEmail()) {
@@ -973,7 +1167,9 @@ export default {
           return false
         }
       } else if (!this.form.warehouseId) {
-        this.$modal.msgError(`${this.$t('PURCHASE.deliveryAddress')}: ${this.$t('ui.reqMsg')}`)
+        this.$modal.msgError(
+          `${this.$t('PURCHASE.deliveryAddress')}: ${this.$t('ui.reqMsg')}`
+        )
         return false
       }
 
@@ -992,7 +1188,11 @@ export default {
       this.details.forEach(row => {
         row['ROW-ERROR'] = false
         requiredFields.forEach(([field]) => {
-          if (row[field] === undefined || row[field] === null || String(row[field]).trim() === '') {
+          if (
+            row[field] === undefined ||
+            row[field] === null ||
+            String(row[field]).trim() === ''
+          ) {
             row[`${field}Error`] = true
             row['ROW-ERROR'] = true
             hasError = true
@@ -1059,7 +1259,10 @@ export default {
       )
       if (!blockedRows.length) return payload
 
-      const names = blockedRows.map(row => row.productName).filter(Boolean).join(', ')
+      const names = blockedRows
+        .map(row => row.productName)
+        .filter(Boolean)
+        .join(', ')
       await ElMessageBox.confirm(
         `${this.$t('PURCHASE.switchToTip').replace('$1', payload.warehouseName || '')} ${names}. ${this.$t('PURCHASE.switchToTip2')}`,
         this.$t('PURCHASE.warehouseChangeNotice'),
@@ -1069,10 +1272,13 @@ export default {
           type: 'warning'
         }
       )
-      payload.purchaseRequisiteDetailList = payload.purchaseRequisiteDetailList.filter(
+      payload.purchaseRequisiteDetailList =
+        payload.purchaseRequisiteDetailList.filter(
+          row => !blockedIds.includes(row.productId)
+        )
+      this.details = this.details.filter(
         row => !blockedIds.includes(row.productId)
       )
-      this.details = this.details.filter(row => !blockedIds.includes(row.productId))
       if (!payload.purchaseRequisiteDetailList.length) {
         this.$modal.msgError(this.$t('PURCHASE.prProductTableEmpty'))
         return false
@@ -1170,7 +1376,9 @@ export default {
         this.actionVisible = false
         this.pendingApprovalForm = undefined
         this.markDirtySaved()
-        this.$modal.msgSuccess(response.msg || this.$t('PURCHASE.actionSuccess'))
+        this.$modal.msgSuccess(
+          response.msg || this.$t('PURCHASE.actionSuccess')
+        )
         this.leavePage()
       } finally {
         this.actionLoading = false
@@ -1183,7 +1391,9 @@ export default {
           businessId: this.form.purchaseRequisiteId,
           taskId: this.taskId || undefined
         })
-        this.$modal.msgSuccess(response.msg || this.$t('PURCHASE.actionSuccess'))
+        this.$modal.msgSuccess(
+          response.msg || this.$t('PURCHASE.actionSuccess')
+        )
         await this.loadRecord()
         this.registerDirtyState()
       } catch {

@@ -16,7 +16,9 @@
         @keyup.enter="search"
         @clear="search"
       />
-      <el-button type="primary" @click="search">{{ $t('uiBtn.search') }}</el-button>
+      <el-button type="primary" @click="search">{{
+        $t('uiBtn.search')
+      }}</el-button>
       <el-button @click="resetSearch">{{ $t('uiBtn.reset') }}</el-button>
     </div>
 
@@ -44,18 +46,58 @@
           @row-click="handleRowClick"
         >
           <el-table-column type="selection" width="52" reserve-selection />
-          <el-table-column type="index" :label="$t('ui.sn')" width="60" align="center">
+          <el-table-column
+            type="index"
+            :label="$t('ui.sn')"
+            width="60"
+            align="center"
+          >
             <template #default="scope">
               {{ scope.$index + (query.pageNum - 1) * query.pageSize + 1 }}
             </template>
           </el-table-column>
-          <el-table-column prop="productName" :label="$t('PURCHASE.productName')" min-width="200" show-overflow-tooltip />
-          <el-table-column prop="internalPartNo" :label="$t('PURCHASE.internalPartNo')" min-width="180" show-overflow-tooltip />
-          <el-table-column prop="description" :label="$t('ui.description')" min-width="220" show-overflow-tooltip />
-          <el-table-column prop="alias" :label="$t('PURCHASE.alias')" min-width="140" show-overflow-tooltip />
-          <el-table-column prop="inventoryUom" :label="$t('PURCHASE.uom')" min-width="110" show-overflow-tooltip />
-          <el-table-column prop="qtyOnHand" label="Qty On Hand" min-width="130" align="right" />
-          <el-table-column prop="availableQty" label="Available Qty" min-width="130" align="right" />
+          <el-table-column
+            prop="productName"
+            :label="$t('PURCHASE.productName')"
+            min-width="200"
+            show-overflow-tooltip
+          />
+          <el-table-column
+            prop="internalPartNo"
+            :label="$t('PURCHASE.internalPartNo')"
+            min-width="180"
+            show-overflow-tooltip
+          />
+          <el-table-column
+            prop="description"
+            :label="$t('ui.description')"
+            min-width="220"
+            show-overflow-tooltip
+          />
+          <el-table-column
+            prop="alias"
+            :label="$t('PURCHASE.alias')"
+            min-width="140"
+            show-overflow-tooltip
+          />
+          <el-table-column
+            prop="inventoryUom"
+            :label="$t('PURCHASE.uom')"
+            min-width="110"
+            show-overflow-tooltip
+          />
+          <el-table-column
+            prop="qtyOnHand"
+            label="Qty On Hand"
+            min-width="130"
+            align="right"
+          />
+          <el-table-column
+            prop="availableQty"
+            label="Available Qty"
+            min-width="130"
+            align="right"
+          />
         </el-table>
 
         <div class="pr-product-pagination">
@@ -75,7 +117,9 @@
     <template #footer>
       <span class="pr-product-selected">Selected: {{ selectedMap.size }}</span>
       <el-button @click="close">{{ $t('uiBtn.back') }}</el-button>
-      <el-button type="primary" @click="confirm">{{ $t('uiBtn.confirm1') }}</el-button>
+      <el-button type="primary" @click="confirm">{{
+        $t('uiBtn.confirm1')
+      }}</el-button>
     </template>
   </el-dialog>
 </template>
@@ -242,7 +286,9 @@ export default {
       this.loadProducts()
     },
     normalizeRow(row) {
-      const existing = this.selectedRows.find(item => item.productId === row.productId)
+      const existing = this.selectedRows.find(
+        item => item.productId === row.productId
+      )
       if (existing) return existing
       return {
         ...row,
@@ -250,14 +296,18 @@ export default {
         uom: row.uom || row.inventoryUom || row.basicUom || '',
         basicUom: row.basicUom || row.inventoryUom || row.uom || '',
         includeDecimal: row.includeDecimal || '1',
-        decimalNum: Number.isFinite(Number(row.decimalNum)) ? Number(row.decimalNum) : 3,
+        decimalNum: Number.isFinite(Number(row.decimalNum))
+          ? Number(row.decimalNum)
+          : 3,
         uomCoefficient: row.uomCoefficient || 1,
         externalPartNoList: row.externalPartNoList || [],
         externalPartNoListJson: row.externalPartNoListJson || []
       }
     },
     confirm() {
-      const result = [...this.selectedMap.values()].map(row => this.normalizeRow(row))
+      const result = [...this.selectedMap.values()].map(row =>
+        this.normalizeRow(row)
+      )
       this.$emit('confirm', result)
       this.close()
     }

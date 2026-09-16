@@ -113,7 +113,8 @@ const en = {
     prReviseSuccess: 'Purchase requisition revision submitted.',
     warehouseChangeNotice: 'Change Delivery Warehouse',
     switchTo: 'Switch to $1',
-    switchToTip: 'The following products cannot be selected after switching to $1:',
+    switchToTip:
+      'The following products cannot be selected after switching to $1:',
     switchToTip2: 'Continuing will remove these products automatically.',
     autoRemoveSubmit: 'Remove and Continue',
     revisionVersion: 'Revision Version',
@@ -126,8 +127,10 @@ const en = {
     closeReason: 'Close Reason',
     actionReason: 'Comment',
     actionSuccess: 'Operation completed.',
-    pendingRevisionReview: 'This purchase requisition contains revision changes. Review the revision differences before approval.',
-    applyFirstDeliveryDate: 'Apply the first line requested receipt date to all products?',
+    pendingRevisionReview:
+      'This purchase requisition contains revision changes. Review the revision differences before approval.',
+    applyFirstDeliveryDate:
+      'Apply the first line requested receipt date to all products?',
     invalidEmail: 'The email format is invalid.',
     detailIncomplete: 'Required product detail fields are incomplete.',
     withdrawConfirm: 'Withdraw approval for this purchase requisition?'
