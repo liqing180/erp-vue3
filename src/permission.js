@@ -4,6 +4,7 @@ import { ElMessage } from 'element-plus'
 import NProgress from 'nprogress'
 import 'nprogress/nprogress.css'
 import { getToken } from '@/utils/auth'
+import { msgErrorClass } from '@/plugins/modal'
 
 NProgress.configure({ showSpinner: false })
 
@@ -24,6 +25,7 @@ const whiteList = [
 ]
 
 router.beforeEach((to, from, next) => {
+  msgErrorClass.closeAll()
   router.prevRoute = from
   NProgress.start()
 
