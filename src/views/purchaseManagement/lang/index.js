@@ -56,7 +56,13 @@ const zh = {
     rejectionOpinion: '驳回意见',
     cancelReason: '取消原因',
     closeReason: '关闭原因',
-    actionReason: '操作说明'
+    actionReason: '操作说明',
+    actionSuccess: '操作成功。',
+    pendingRevisionReview: '当前采购申请存在修订内容，请在审批前核对版本差异。',
+    applyFirstDeliveryDate: '是否将第一行的要求到货日期应用到全部产品？',
+    invalidEmail: '邮箱格式不正确。',
+    detailIncomplete: '产品明细存在必填项未填写。',
+    withdrawConfirm: '确认撤回采购申请审批？'
   }
 }
 
@@ -118,7 +124,13 @@ const en = {
     rejectionOpinion: 'Rejection Comment',
     cancelReason: 'Cancellation Reason',
     closeReason: 'Close Reason',
-    actionReason: 'Comment'
+    actionReason: 'Comment',
+    actionSuccess: 'Operation completed.',
+    pendingRevisionReview: 'This purchase requisition contains revision changes. Review the revision differences before approval.',
+    applyFirstDeliveryDate: 'Apply the first line requested receipt date to all products?',
+    invalidEmail: 'The email format is invalid.',
+    detailIncomplete: 'Required product detail fields are incomplete.',
+    withdrawConfirm: 'Withdraw approval for this purchase requisition?'
   }
 }
 
