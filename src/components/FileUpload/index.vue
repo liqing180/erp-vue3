@@ -124,7 +124,9 @@ function handleBeforeUpload(file) {
   if (props.fileType.length) {
     const fileName = file.name.split('.')
     const fileExt = String(fileName[fileName.length - 1] || '').toLowerCase()
-    const allowedFileTypes = props.fileType.map(type => String(type).toLowerCase())
+    const allowedFileTypes = props.fileType.map(type =>
+      String(type).toLowerCase()
+    )
     const isTypeOk = allowedFileTypes.includes(fileExt)
     if (!isTypeOk) {
       proxy.$modal.msgError(
