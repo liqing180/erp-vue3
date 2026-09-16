@@ -125,7 +125,6 @@
 
 <script>
 import pageMixin from '@/mixins/tableMinx'
-// import locale from '@/views/system/lang/index'
 import {
   querySysEmailTemplateList,
   queryUserTemplateFor
@@ -244,10 +243,7 @@ export default {
       return this.$store.getters.fmtForYmdhms
     }
   },
-  beforeCreate() {
-    // this.$i18n.mergeLocaleMessage('zh', locale.zh)
-    // this.$i18n.mergeLocaleMessage('en', locale.en)
-  },
+
   created() {
     this.queryParams.pageSize = this.$$initPageSize(this.saveKey)
     this.$$initColumnVisible(this.saveKey, this.columns)

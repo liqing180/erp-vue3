@@ -635,7 +635,6 @@ import { checkPermi } from '@/utils/permission'
 import MyDictDataClass from '@/utils/dict/myDictDataClass'
 import menuKey from '@/config/menuKey'
 import { formDirtyClass } from '@/mixins/formDirtyClass'
-import locale from '@/views/purchaseManagement/lang'
 import ProductSelectDialog from './components/ProductSelectDialog.vue'
 import PrActionDialog from './components/PrActionDialog.vue'
 import RevisionCompareDialog from './components/RevisionCompareDialog.vue'
@@ -801,10 +800,6 @@ export default {
     containsSystemDockingProduct() {
       return this.details.some(row => row.isSystemDocking === '1')
     }
-  },
-  beforeCreate() {
-    this.$i18n.mergeLocaleMessage('zh', locale.zh)
-    this.$i18n.mergeLocaleMessage('en', locale.en)
   },
   mounted() {
     this.initialize()

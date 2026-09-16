@@ -103,8 +103,6 @@ export default {
         }
       }
     }
-    // this.$i18n.mergeLocaleMessage('zh', locale.zh)
-    // this.$i18n.mergeLocaleMessage('en', locale.en)
   },
   computed: {},
   methods: {

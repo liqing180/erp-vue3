@@ -40,8 +40,6 @@
 
 <script>
 import { debounce } from '@/utils'
-import i18n from '@/lang'
-import locale from './lang'
 import BoardHeader from './boardHeader.vue'
 import SettingDlg from './settingDlg.vue'
 import IFrame from '@/components/iFrame/index.vue'
@@ -53,9 +51,6 @@ import {
   queryTodayTransactionsSales,
   queryTodayTransactionsOverall
 } from '@/api/reportManagement/dashboard'
-
-i18n.global.mergeLocaleMessage('zh', locale.zh)
-i18n.global.mergeLocaleMessage('en', locale.en)
 
 const appUrl = import.meta.env.VITE_APP_URL || ''
 

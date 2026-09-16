@@ -6,6 +6,7 @@ import rightToolbar from './rightToolbar'
 import system from './system'
 import organization from './organization'
 import sales from './sales'
+import purchase from './purchase'
 import customer from './customer'
 import calendar from './calendar'
 import dashboard from './dashboard'
@@ -16,6 +17,7 @@ const messages = {
     ...system.en,
     ...organization.en,
     ...sales.en,
+    ...purchase.en,
     ...customer.en,
     ...calendar.en,
     ...dashboard.en,
@@ -26,6 +28,7 @@ const messages = {
     ...system.zh,
     ...organization.zh,
     ...sales.zh,
+    ...purchase.zh,
     ...customer.zh,
     ...calendar.zh,
     ...dashboard.zh,

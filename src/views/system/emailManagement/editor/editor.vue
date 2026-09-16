@@ -44,7 +44,6 @@
 
 <script>
 import { $on, $off, $once, $emit } from '../../../../utils/gogocodeTransfer'
-import locale from './locale'
 
 import BtnBackColor from './btns/BtnBackColor.vue'
 import BtnBlockquote from './btns/BtnBlockquote.vue'
@@ -530,10 +529,6 @@ export default {
       immediate: true,
       deep: true
     }
-  },
-  beforeCreate() {
-    this.$i18n.mergeLocaleMessage('zh', locale.zh)
-    this.$i18n.mergeLocaleMessage('en', locale.en)
   },
   mounted() {
     const vm = this

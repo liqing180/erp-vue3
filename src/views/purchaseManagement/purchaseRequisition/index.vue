@@ -258,7 +258,6 @@
 
 <script>
 import pageMixin from '@/mixins/tableMinx'
-import locale from '@/views/purchaseManagement/lang'
 import MyDictDataClass from '@/utils/dict/myDictDataClass'
 import menuKey from '@/config/menuKey'
 import { checkPermi } from '@/utils/permission'
@@ -441,10 +440,7 @@ export default {
       return checkPermi(['purchaseManagement:purchaseRequisition:export'])
     }
   },
-  beforeCreate() {
-    this.$i18n.mergeLocaleMessage('zh', locale.zh)
-    this.$i18n.mergeLocaleMessage('en', locale.en)
-  },
+
   async created() {
     this.queryParams.pageSize = this.$$initPageSize(this.saveKey)
     this.$$initColumnVisible(this.saveKey, this.columns)
