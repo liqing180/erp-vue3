@@ -33,77 +33,26 @@ jobs:
         run: yarn install --non-interactive --network-timeout 100000
 
       - name: Apply PR parity fixes
-        shell: python
+        shell: bash
         run: |
-          from pathlib import Path
+          set -euo pipefail
+          LIST='src/views/purchaseManagement/purchaseRequisition/index.vue'
+          FORM='src/views/purchaseManagement/purchaseRequisition/PurchaseRequisitionForm.vue'
 
-          list_path = Path('src/views/purchaseManagement/purchaseRequisition/index.vue')
-          text = list_path.read_text()
-          old = """      statusOptions: [],
-                approvedStatusOptions: [],
-                receiveAddressOptions: [],"""
-          new = """      statusOptions: [],
-                approvedStatusOptions: [],
-                requiredTypeOptions: [],
-                receiveAddressOptions: [],"""
-          assert old in text
-          text = text.replace(old, new, 1)
+          sed -i '/approvedStatusOptions: \[\],/a\      requiredTypeOptions: [],' "$LIST"
+          sed -i 's/const \[status, approved\] = await Promise.all(/const [status, approved, requiredType] = await Promise.all(/' "$LIST"
+          sed -i "/MyDictDataClass.getDictFn('approved_status')/s/$/,/" "$LIST"
+          sed -i "/MyDictDataClass.getDictFn('approved_status'),/a\        MyDictDataClass.getDictFn('p_required_type')" "$LIST"
+          sed -i '/this.approvedStatusOptions = approved || \[\]/a\      this.requiredTypeOptions = requiredType || []' "$LIST"
 
-          old = """      const [status, approved] = await Promise.all([
-                MyDictDataClass.getDictFn('p_purchase_requisite_status'),
-                MyDictDataClass.getDictFn('approved_status')
-              ])
-              this.statusOptions = status || []
-              this.approvedStatusOptions = approved || []"""
-          new = """      const [status, approved, requiredType] = await Promise.all([
-                MyDictDataClass.getDictFn('p_purchase_requisite_status'),
-                MyDictDataClass.getDictFn('approved_status'),
-                MyDictDataClass.getDictFn('p_required_type')
-              ])
-              this.statusOptions = status || []
-              this.approvedStatusOptions = approved || []
-              this.requiredTypeOptions = requiredType || []"""
-          assert old in text
-          text = text.replace(old, new, 1)
-          list_path.write_text(text)
+          sed -i '/@click="productDialogVisible = true"/i\                :disabled="form.dropShipping !== '\''1'\'' && !form.warehouseId"' "$FORM"
+          sed -i '/@click="addAdhocRow"/i\                :disabled="form.dropShipping !== '\''1'\'' && !form.warehouseId"' "$FORM"
+          sed -i '/@click="addCustomRow"/i\                :disabled="form.dropShipping !== '\''1'\'' && !form.warehouseId"' "$FORM"
+          sed -i "s/:disabled=\"formReadOnly || containsSystemDockingProduct\"/:disabled=\"formReadOnly || containsSystemDockingProduct || form.isSalesDropShipping === '1'\"/" "$FORM"
 
-          form_path = Path('src/views/purchaseManagement/purchaseRequisition/PurchaseRequisitionForm.vue')
-          text = form_path.read_text()
-          text = text.replace(
-              """                type="primary"
-                      size="small"
-                      @click="productDialogVisible = true"""",
-              """                type="primary"
-                      size="small"
-                      :disabled="form.dropShipping !== '1' && !form.warehouseId"
-                      @click="productDialogVisible = true"""",
-              1,
-          )
-          text = text.replace(
-              """                v-if="canAddAdhoc"
-                      type="primary"
-                      size="small"
-                      @click="addAdhocRow"""",
-              """                v-if="canAddAdhoc"
-                      type="primary"
-                      size="small"
-                      :disabled="form.dropShipping !== '1' && !form.warehouseId"
-                      @click="addAdhocRow"""",
-              1,
-          )
-          text = text.replace(
-              """                v-if="canAddCustom"
-                      type="primary"
-                      size="small"
-                      @click="addCustomRow"""",
-              """                v-if="canAddCustom"
-                      type="primary"
-                      size="small"
-                      :disabled="form.dropShipping !== '1' && !form.warehouseId"
-                      @click="addCustomRow"""",
-              1,
-          )
-          form_path.write_text(text)
+          grep -q 'requiredTypeOptions: \[\]' "$LIST"
+          grep -q "getDictFn('p_required_type')" "$LIST"
+          grep -q "form.isSalesDropShipping === '1'" "$FORM"
 
       - name: Fix PR lint formatting
         run: |
