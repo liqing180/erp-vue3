@@ -3,6 +3,7 @@
     @dragstart.prevent
     :class="[
       'w100',
+      'my-input-number',
       'el-input-number',
       inputNumberSize ? 'el-input-number--' + inputNumberSize : '',
       { 'is-disabled': inputNumberDisabled },
@@ -378,3 +379,13 @@ export default {
   }
 }
 </script>
+<style lang="scss">
+.my-input-number {
+  .el-input__wrapper {
+    padding: 0 !important;
+    .el-input__inner {
+      padding: 0 15px !important;
+    }
+  }
+}
+</style>

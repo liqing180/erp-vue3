@@ -58,16 +58,9 @@ export default {
   watch: {
     curValue() {
       this.showDefault()
-    },
-    defaultTime() {
-      if (!this.curValue) {
-        this.showDefault()
-      }
     }
   },
-  mounted() {
-    this.$nextTick(this.showDefault)
-  },
+
   beforeUnmount() {
     clearTimeout(this.hourScrollTimer)
     clearTimeout(this.minuteScrollTimer)
@@ -91,11 +84,7 @@ export default {
       }
     },
     showDefault() {
-      if (
-        this.curValue !== undefined &&
-        this.curValue !== null &&
-        this.curValue !== ''
-      ) {
+      if (this.curValue) {
         const current = new Date(Number(this.curValue))
         if (!Number.isNaN(current.getTime())) {
           this.clickHour(current.getHours(), false)

@@ -106,6 +106,40 @@
                 </el-col>
               </el-row>
               <!-- <el-row>
+                <el-col :span="8">
+                  <el-form-item :label="'金额'">
+                    <el-input-number
+                      v-model="form.length"
+                      v-thousandSplit="{
+                        precision: 6,
+                        minPrecision: 2,
+                        keepDec: false
+                      }"
+                      :precision="6"
+                      :min-precision="2"
+                      :min="0"
+                      :max="99999999.99"
+                      style="width: 100%"
+                      controls-position="right"
+                    />
+                  </el-form-item>
+                </el-col>
+                <el-col :span="8">
+                  <el-form-item :label="`开始时间`">
+                    <my-date-picker
+                      v-model="form.startDateTime"
+                      :format="fmtForYmdhm"
+                      type="datetime"
+                      value-format="x"
+                      :default-time="getCurrentTime()"
+                      :style="{ width: '100%' }"
+                      placeholder=""
+                      clearable
+                    ></my-date-picker>
+                  </el-form-item>
+                </el-col>
+              </el-row> -->
+              <!-- <el-row>
                 <el-col :span="24">
                   <el-form-item
                     :label="`${$t('ui.attachment')}`"
@@ -287,6 +321,10 @@ export default {
     fmtForYmdhms() {
       return this.$store.getters.fmtForYmdhms
     },
+    fmtForYmdhm() {
+      return this.$store.getters.fmtForYmdhm
+    },
+
     editAuth() {
       return this.checkPermi(['system:post:edit'])
     },
@@ -301,6 +339,13 @@ export default {
     }
   },
   methods: {
+    getCurrentTime() {
+      const now = new Date()
+      const hours = now.getHours().toString().padStart(2, '0')
+      const minutes = now.getMinutes().toString().padStart(2, '0')
+      const seconds = now.getSeconds().toString().padStart(2, '0')
+      return `${hours}:${minutes}:${seconds}`
+    },
     init() {
       this.collapseWarningForBasicInfo = false
       this.handleUpdate()

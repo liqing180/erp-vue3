@@ -409,6 +409,23 @@ export default {
       return date
     },
     handleModelValue(value) {
+      if (value) {
+        const date = new Date(Number(value))
+        const TimePickerRef = this.$refs.timeWheelRef
+        if (
+          TimePickerRef.selectedHour &&
+          TimePickerRef.selectedHour !== date.getHours()
+        ) {
+          date.setHours(TimePickerRef.selectedHour)
+        }
+        if (
+          TimePickerRef.selectedMinute &&
+          TimePickerRef.selectedMinute !== date.getMinutes()
+        ) {
+          date.setMinutes(TimePickerRef.selectedMinute)
+        }
+        value = date.getTime()
+      }
       this.emitModelValue(value)
     },
     handleChange(value) {
@@ -463,6 +480,9 @@ export default {
         bodyWrapper.appendChild(target)
       }
       this.sidecarTarget = target
+      setTimeout(() => {
+        this.$refs.timeWheelRef.showDefault()
+      }, 0)
     },
     removeSidecarTarget() {
       const target = this.sidecarTarget
