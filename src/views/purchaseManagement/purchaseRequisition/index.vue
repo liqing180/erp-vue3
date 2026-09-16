@@ -223,7 +223,15 @@
         header-align="center"
       >
         <template #default="scope">
-          <template v-if="item.prop === 'dropShipping'">
+          <template v-if="item.prop === 'productName'">
+            <div
+              @mouseenter="showPop($event, scope.row)"
+              @mouseleave="hidePop($event, scope.row)"
+            >
+              <div class="ellipsis-text">{{ scope.row.productName }}</div>
+            </div>
+          </template>
+          <template v-else-if="item.prop === 'dropShipping'">
             <el-tag v-if="scope.row.dropShipping === '1'">{{
               $t('uiBtn.active')
             }}</el-tag>
@@ -253,11 +261,14 @@
       :loading="exportLoading"
       @export="handleExport"
     />
+
+    <ToolTipShowListForFN ref="ToolTipShowList" />
   </div>
 </template>
 
 <script>
 import pageMixin from '@/mixins/tableMinx'
+import ToolTipShowListForFN from '@/components/Common/ToolTipShowList/tableUse.vue'
 import MyDictDataClass from '@/utils/dict/myDictDataClass'
 import menuKey from '@/config/menuKey'
 import { checkPermi } from '@/utils/permission'
@@ -270,6 +281,7 @@ import {
 
 export default {
   name: 'PurchaseRequisition',
+  components: { ToolTipShowListForFN },
   mixins: [pageMixin],
   data() {
     const columns = [
@@ -455,6 +467,21 @@ export default {
     }
   },
   methods: {
+    showPop(e, row) {
+      const list = row.purchaseRequisiteDetailList || []
+      const params = {
+        labelKey: 'productName',
+        list
+      }
+      if (list.length > 0 && this.$refs.ToolTipShowList) {
+        this.$refs.ToolTipShowList.showPop(e, params)
+      }
+    },
+    hidePop(e) {
+      if (this.$refs.ToolTipShowList) {
+        this.$refs.ToolTipShowList.hidePop(e)
+      }
+    },
     column(prop, label, minWidth, tooltip = true, sortable = false, propBy) {
       return {
         prop,
