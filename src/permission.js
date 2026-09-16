@@ -20,9 +20,6 @@ const whiteList = [
   '/appH5/verification/verification',
   '/appH5/verification/signature',
   '/settingNewPassword',
-  '/customerQuestionnaire',
-  '/externalPQ',
-  '/externalPQSuccess',
   '/authLogin'
 ]
 
@@ -58,9 +55,6 @@ router.beforeEach((to, from, next) => {
     } else {
       next()
     }
-  } else if (to.path === '/bpm/history') {
-    next(`/login?redirect=${encodeURIComponent(to.fullPath)}`)
-    NProgress.done()
   } else {
     const type = sessionStorage.getItem('type') || ''
     if (type && type !== 'undefined') {
