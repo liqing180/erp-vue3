@@ -120,11 +120,14 @@ watch(
 
 // 上传前校检格式和大小
 function handleBeforeUpload(file) {
-  // 校检文件类型
+  // 校检文件类型（保持 ERP-VUE2 对扩展名大小写不敏感的行为）
   if (props.fileType.length) {
     const fileName = file.name.split('.')
-    const fileExt = fileName[fileName.length - 1]
-    const isTypeOk = props.fileType.indexOf(fileExt) >= 0
+    const fileExt = String(fileName[fileName.length - 1] || '').toLowerCase()
+    const allowedFileTypes = props.fileType.map(type =>
+      String(type).toLowerCase()
+    )
+    const isTypeOk = allowedFileTypes.includes(fileExt)
     if (!isTypeOk) {
       proxy.$modal.msgError(
         `文件格式不正确，请上传${props.fileType.join('/')}格式文件!`

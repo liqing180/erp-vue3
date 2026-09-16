@@ -19,6 +19,8 @@ import i18n from './lang'
 import lang from './lang/el'
 import registerErpGlobals from '@/bootstrap/registerErpGlobals'
 import erpRouteMixin from '@/bootstrap/erpRouteMixin'
+import installAppLifecycle from '@/bootstrap/appLifecycle'
+import installElementPlusCompat from '@/bootstrap/elementPlusCompat'
 
 import 'virtual:svg-icons-register'
 import elementIcons from '@/components/SvgIcon/svgicon'
@@ -65,6 +67,8 @@ app.use(ElementPlus, {
 registerErpGlobals(app, i18n)
 app.mixin(erpRouteMixin)
 directive(app)
+installAppLifecycle()
+installElementPlusCompat()
 
 // 保留 ERP-VUE2 跨页签 token 同步行为。
 window.addEventListener('visibilitychange', () => {

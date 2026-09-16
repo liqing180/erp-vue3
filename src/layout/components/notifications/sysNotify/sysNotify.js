@@ -60,13 +60,7 @@ class SysNotifyClass {
       121: '/salesManagement/viewQuestionnaireTemplate',
       122: '/salesManagement/editSalesPriceStrategy',
       123: '/salesManagement/editServicePriceList',
-      126: '/system/editPaymentTerm',
-      201: '/system/systemSetup/editSalesGroup',
-      202: '/leads/viewLeads',
-      203: '/customerManagement/viewCustomer',
-      204: '/customerManagement/viewProspectiveCustomer',
-      205: '/salesOpportunity/viewSalesOpportunity',
-      206: '/competitor/editCompetitor'
+      126: '/system/editPaymentTerm'
     }
 
     this.mainListPageAll = {
@@ -121,6 +115,14 @@ class SysNotifyClass {
         authKey: 'salesManagement:servicePriceList:list'
       }
     }
+
+    this.multilineTemplateKeys = new Set([
+      'Product_Master_BUSINESS_GROUP_UPDATE_PRODUCT',
+      'Emergency_Goods_Receipt_PROCUREMENT',
+      'PRE_DELIVERY_NOTICE_Sys_Created_FROM_PO',
+      'SALES_INQUIRY_Quoted',
+      'DELIVERY_ORDER_Created'
+    ])
   }
 
   getShowResolve(item) {
@@ -370,8 +372,22 @@ class SysNotifyClass {
   }
 
   createItemList(rowList) {
-    return rowList.map(item =>
-      h(
+    return rowList.map(item => {
+      const valueNode = this.multilineTemplateKeys.has(item.templateKey)
+        ? h('div', {
+            style: 'line-height: 1.8',
+            class: 'm-value',
+            innerHTML: this.formatText(item.value)
+          })
+        : h(
+            'span',
+            {
+              class: 'm-value'
+            },
+            item.value
+          )
+
+      return h(
         'div',
         {
           style: {
@@ -394,18 +410,10 @@ class SysNotifyClass {
                 `${item.label} : `
               )
             : null,
-          item.value !== 'null'
-            ? h(
-                'span',
-                {
-                  class: 'm-value'
-                },
-                item.value
-              )
-            : null
+          item.value !== 'null' ? valueNode : null
         ]
       )
-    )
+    })
   }
 }
 

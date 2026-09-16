@@ -3,7 +3,6 @@ import { createWebHistory, createRouter } from 'vue-router'
 import Layout from '@/layout'
 import system from './system'
 import organization from './organization'
-import customerManagement from './customerManagement'
 import salesManagement from './salesManagement'
 
 /**
@@ -110,80 +109,8 @@ export const constantRoutes = [
       }
     ]
   },
-  {
-    path: '',
-    component: Layout,
-    hidden: true,
-    children: [
-      {
-        path: '/leads/addLeads',
-        component: () => import('@/views/leads/addLeads'),
-        name: 'AddLeads',
-        meta: { title: 'addLeads', activeMenu: '/leads' }
-      },
-      {
-        path: '/leads/editLeads',
-        component: () => import('@/views/leads/editLeads'),
-        name: 'EditLeads',
-        meta: { title: 'editLeads', activeMenu: '/leads' }
-      },
-      {
-        path: '/leads/viewLeads',
-        component: () => import('@/views/leads/viewLeads'),
-        name: 'ViewLeads',
-        meta: { title: 'viewLeads', activeMenu: '/leads' }
-      }
-    ]
-  },
-  {
-    path: '',
-    component: Layout,
-    hidden: true,
-    children: [
-      {
-        path: '/salesOpportunity/addSalesOpportunity',
-        component: () => import('@/views/salesOpportunity/addSalesOpportunity'),
-        name: 'AddSalesOpportunity',
-        meta: { title: 'addSalesOpportunity', activeMenu: '/salesOpportunity' }
-      },
-      {
-        path: '/salesOpportunity/editSalesOpportunity',
-        component: () =>
-          import('@/views/salesOpportunity/editSalesOpportunity'),
-        name: 'EditSalesOpportunity',
-        meta: { title: 'editSalesOpportunity', activeMenu: '/salesOpportunity' }
-      },
-      {
-        path: '/salesOpportunity/viewSalesOpportunity',
-        component: () =>
-          import('@/views/salesOpportunity/viewSalesOpportunity'),
-        name: 'ViewSalesOpportunity',
-        meta: { title: 'viewSalesOpportunity', activeMenu: '/salesOpportunity' }
-      }
-    ]
-  },
-  {
-    path: '',
-    component: Layout,
-    hidden: true,
-    children: [
-      {
-        path: '/competitor/addCompetitor',
-        component: () => import('@/views/competitor/addCompetitor'),
-        name: 'AddCompetitor',
-        meta: { title: 'addCompetitor', activeMenu: '/competitor' }
-      },
-      {
-        path: '/competitor/editCompetitor',
-        component: () => import('@/views/competitor/editCompetitor'),
-        name: 'EditCompetitor',
-        meta: { title: 'editCompetitor', activeMenu: '/competitor' }
-      }
-    ]
-  },
   system,
   organization,
-  customerManagement,
   salesManagement
 ]
 
