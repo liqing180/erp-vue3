@@ -375,6 +375,7 @@ export default {
       queryToken: 0,
       statusOptions: [],
       approvedStatusOptions: [],
+      requiredTypeOptions: [],
       receiveAddressOptions: [],
       departmentOptions: [],
       requiredByOptions: [],
@@ -473,12 +474,14 @@ export default {
       }
     },
     async loadDictionaries() {
-      const [status, approved] = await Promise.all([
+      const [status, approved, requiredType] = await Promise.all([
         MyDictDataClass.getDictFn('p_purchase_requisite_status'),
-        MyDictDataClass.getDictFn('approved_status')
+        MyDictDataClass.getDictFn('approved_status'),
+        MyDictDataClass.getDictFn('p_required_type')
       ])
       this.statusOptions = status || []
       this.approvedStatusOptions = approved || []
+      this.requiredTypeOptions = requiredType || []
     },
     setDefaultDateRange() {
       const endDate = new Date()

@@ -202,9 +202,9 @@ export default {
     hasDetail() {
       return Boolean(
         this.beforeDetails.length ||
-          this.afterDetails.length ||
-          this.beforeFiles.length ||
-          this.afterFiles.length
+        this.afterDetails.length ||
+        this.beforeFiles.length ||
+        this.afterFiles.length
       )
     }
   },

@@ -205,7 +205,11 @@
                       v-model="form.dropShipping"
                       active-value="1"
                       inactive-value="0"
-                      :disabled="formReadOnly || containsSystemDockingProduct"
+                      :disabled="
+                        formReadOnly ||
+                        containsSystemDockingProduct ||
+                        form.isSalesDropShipping === '1'
+                      "
                     />
                   </el-form-item>
                 </el-col>
@@ -322,6 +326,7 @@
               <el-button
                 type="primary"
                 size="small"
+                :disabled="form.dropShipping !== '1' && !form.warehouseId"
                 @click="productDialogVisible = true"
               >
                 {{ $t('PURCHASE.addProduct') }}
@@ -330,6 +335,7 @@
                 v-if="canAddAdhoc"
                 type="primary"
                 size="small"
+                :disabled="form.dropShipping !== '1' && !form.warehouseId"
                 @click="addAdhocRow"
               >
                 {{ $t('PURCHASE.addAdhocEntry') }}
@@ -338,6 +344,7 @@
                 v-if="canAddCustom"
                 type="primary"
                 size="small"
+                :disabled="form.dropShipping !== '1' && !form.warehouseId"
                 @click="addCustomRow"
               >
                 {{ $t('PURCHASE.addCustomProduct') }}
@@ -757,7 +764,7 @@ export default {
     canCompare() {
       return Boolean(
         this.form.purchaseRequisiteId &&
-          this.buttonAuthMsg.isCanSeeUpdateMsg === '1'
+        this.buttonAuthMsg.isCanSeeUpdateMsg === '1'
       )
     },
     showRevisionAlert() {
