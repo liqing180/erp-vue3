@@ -86,7 +86,9 @@ function filterAsyncRouter(asyncRouterMap, lastRouter = false, type = false) {
 
         if (!component) {
           if (import.meta.env.DEV) {
-            console.warn(`[Router] View not found: ${view}, route skipped: ${route.path}`)
+            console.warn(
+              `[Router] View not found: ${view}, route skipped: ${route.path}`
+            )
           }
           return false
         }
