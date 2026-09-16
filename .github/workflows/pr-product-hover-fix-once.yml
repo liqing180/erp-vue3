@@ -5,33 +5,30 @@ on:
     branches:
       - develop
     paths:
-      - '.github/workflows/pr-product-hover-fix-once.yml'
+      - .github/workflows/pr-product-hover-fix-once.yml
 
 permissions:
   contents: write
 
 jobs:
   fix:
-    runs-on: ubuntu-24.04
-    timeout-minutes: 10
+    runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
         with:
           ref: develop
           fetch-depth: 0
 
-      - name: Restore PR product hover behavior
-        shell: python
+      - name: Patch PR list
         run: |
+          python3 <<'PY'
           from pathlib import Path
 
           path = Path('src/views/purchaseManagement/purchaseRequisition/index.vue')
           text = path.read_text()
 
-          old = '''        <template #default="scope">
-          <template v-if="item.prop === 'dropShipping'">'''
-          new = '''        <template #default="scope">
+          old = "        <template #default=\"scope\">\n          <template v-if=\"item.prop === 'dropShipping'\">"
+          new = """        <template #default="scope">
           <template v-if="item.prop === 'productName'">
             <div
               @mouseenter="showPop($event, scope.row)"
@@ -40,24 +37,19 @@ jobs:
               <div class="ellipsis-text">{{ scope.row.productName }}</div>
             </div>
           </template>
-          <template v-else-if="item.prop === 'dropShipping'">'''
+          <template v-else-if="item.prop === 'dropShipping'">"""
           assert old in text, 'productName cell anchor not found'
           text = text.replace(old, new, 1)
 
-          old = '''    <ExportDlg
-      ref="ExportDlgRef"
-      :loading="exportLoading"
-      @export="handleExport"
-    />
-  </div>'''
-          new = '''    <ExportDlg
+          old = "    <ExportDlg\n      ref=\"ExportDlgRef\"\n      :loading=\"exportLoading\"\n      @export=\"handleExport\"\n    />\n  </div>"
+          new = """    <ExportDlg
       ref="ExportDlgRef"
       :loading="exportLoading"
       @export="handleExport"
     />
 
     <ToolTipShowListForFN ref="ToolTipShowList" />
-  </div>'''
+  </div>"""
           assert old in text, 'tooltip component anchor not found'
           text = text.replace(old, new, 1)
 
@@ -66,19 +58,13 @@ jobs:
           assert old in text, 'import anchor not found'
           text = text.replace(old, new, 1)
 
-          old = '''export default {
-  name: 'PurchaseRequisition',
-  mixins: [pageMixin],'''
-          new = '''export default {
-  name: 'PurchaseRequisition',
-  components: { ToolTipShowListForFN },
-  mixins: [pageMixin],'''
+          old = "export default {\n  name: 'PurchaseRequisition',\n  mixins: [pageMixin],"
+          new = "export default {\n  name: 'PurchaseRequisition',\n  components: { ToolTipShowListForFN },\n  mixins: [pageMixin],"
           assert old in text, 'component registration anchor not found'
           text = text.replace(old, new, 1)
 
-          old = '''  methods: {
-    column(prop, label, minWidth, tooltip = true, sortable = false, propBy) {'''
-          new = '''  methods: {
+          old = "  methods: {\n    column(prop, label, minWidth, tooltip = true, sortable = false, propBy) {"
+          new = """  methods: {
     showPop(e, row) {
       const list = row.purchaseRequisiteDetailList || []
       const params = {
@@ -94,30 +80,14 @@ jobs:
         this.$refs.ToolTipShowList.hidePop(e)
       }
     },
-    column(prop, label, minWidth, tooltip = true, sortable = false, propBy) {'''
+    column(prop, label, minWidth, tooltip = true, sortable = false, propBy) {"""
           assert old in text, 'methods anchor not found'
           text = text.replace(old, new, 1)
 
           path.write_text(text)
+          PY
 
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-
-      - name: Install Yarn
-        run: npm install --global yarn@1.22.22
-
-      - name: Install dependencies
-        run: yarn install --non-interactive --network-timeout 100000
-
-      - name: Lint fixed file
-        run: |
-          yarn eslint src/views/purchaseManagement/purchaseRequisition/index.vue --fix
-          yarn eslint src/views/purchaseManagement/purchaseRequisition/index.vue
-
-      - name: Commit fix and remove one-time workflow
-        shell: bash
+      - name: Commit fix
         run: |
           rm .github/workflows/pr-product-hover-fix-once.yml
           git config user.name "github-actions[bot]"
