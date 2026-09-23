@@ -118,6 +118,7 @@ export default {
     name: String,
     label: String,
     placeholder: String,
+    roundingType: [String, Number],
     precision: {
       type: Number,
       validator(val) {
@@ -267,11 +268,8 @@ export default {
     },
     toPrecision(num, precision) {
       if (precision === undefined) precision = this.numPrecision
-      if (this.minPrecision !== undefined) {
-        return Number(numberStr(num, precision, false))
-      }
-      return parseFloat(
-        Math.round(num * Math.pow(10, precision)) / Math.pow(10, precision)
+      return Number(
+        numberStr(num, { precision, roundingType: this.roundingType }, false)
       )
     },
     getPrecision(value) {

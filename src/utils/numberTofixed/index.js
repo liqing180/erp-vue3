@@ -20,6 +20,15 @@ export const numberStr = function (
   keepDec = true,
   minPrecision
 ) {
+  // 币别舍入枚举：1 四舍五入、2 向上、3 向下；未指定时沿用全局设置。
+  let roundingType
+  if (toFixed && typeof toFixed === 'object') {
+    const options = toFixed
+    toFixed = options.precision
+    keepDec = options.keepDec === undefined ? true : options.keepDec
+    minPrecision = options.minPrecision
+    roundingType = options.roundingType
+  }
   if (TypeJudge.isNull(numData) || TypeJudge.isUndefined(numData)) {
     return ''
   }
@@ -32,7 +41,8 @@ export const numberStr = function (
   }
 
   const big = new Big(numData)
-  const toFixedType = getToFixedType()
+  const toFixedType =
+    { 1: '4', 2: '0', 3: '1' }[roundingType] || getToFixedType()
   let result = ''
 
   if (!toFixed) {
@@ -63,6 +73,7 @@ export const numberStr = function (
   }
 
   if (minPrecision !== undefined) {
+    minPrecision = Math.min(minPrecision, toFixed || 0)
     const decimalIndex = result.indexOf('.')
     const decimalLength =
       decimalIndex === -1 ? 0 : result.length - decimalIndex - 1
@@ -103,6 +114,37 @@ export default {
 
     app.config.globalProperties.$num = function (numData, toFixed) {
       return Number(numberStr(numData, toFixed))
+    }
+
+    app.config.globalProperties.$getMinNum = precision => {
+      let min
+      switch (precision) {
+        case 0:
+          min = 1
+          break
+        case 1:
+          min = 0.1
+          break
+        case 2:
+          min = 0.01
+          break
+        case 3:
+          min = 0.001
+          break
+        case 4:
+          min = 0.0001
+          break
+        case 5:
+          min = 0.00001
+          break
+        case 6:
+          min = 0.000001
+          break
+        default:
+          min = 1
+          break
+      }
+      return min
     }
   }
 }
