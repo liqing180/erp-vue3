@@ -51,7 +51,7 @@
         <el-badge
           v-if="getGroupBadge(item.name) > 0"
           is-dot
-          class="erp-menu-badge erp-menu-dot"
+          class="erp-menu-badge"
         />
       </template>
 
@@ -241,12 +241,10 @@ function menuItemClick(menuItem) {
   position: absolute;
   right: 6px;
   top: 0;
+  height: 100%;
+  display: inline-flex;
+  align-items: center;
   z-index: 3;
   flex-shrink: 0;
-}
-
-.erp-menu-dot {
-  top: 50%;
-  transform: translateY(-50%);
 }
 </style>
