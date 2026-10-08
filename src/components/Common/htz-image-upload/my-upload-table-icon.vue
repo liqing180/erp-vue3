@@ -7,7 +7,7 @@
           :disabled="uploadDisabled"
           v-if="!disabled"
           @click="handleUpload"
-          icon="el-icon-upload2"
+          icon="Upload"
           >{{ $t('uiBtn.upload') }}</el-button
         >
       </div> -->
@@ -20,7 +20,7 @@
         <template v-if="file.status === 'success'">
           <div class="file-icon-box" v-if="file.fileType === 'img'">
             <el-image
-              style="width: 90px; height: 90px"
+              style="width: 32px; height: 32px"
               :src="file.onlineUrl"
               fit="contain"
               :preview-src-list="[file.onlineUrl]"
@@ -79,7 +79,7 @@
           </div>
         </template>
         <div v-else class="file-icon-box">
-          <i class="el-icon-loading"></i>
+          <el-icon><Loading /></el-icon>
         </div>
       </div>
       <div v-if="fileList.length < limit && !disabled" class="file-icon-item">
@@ -89,8 +89,7 @@
           @click="handleUpload"
           :title="$t('uiBtn.upload')"
         >
-          <Plus style="color: #666; width: 30px; height: 30px" />
-          <!-- <i class="el-icon-upload2" style="font-size: 16px"></i> -->
+          <el-icon style="font-size: 16px"><Upload /></el-icon>
         </div>
       </div>
     </div>
@@ -119,7 +118,7 @@
           :file-list="fileListCache"
           :headers="{ Authorization: isToken ? access_token : null }"
         >
-          <i class="el-icon-plus"></i>
+          <el-icon><Plus /></el-icon>
           <div class="el-upload__text" ref="uploadText">
             {{ $t('ui.clickUploadTip') }}
           </div>
@@ -128,7 +127,7 @@
 
       <el-image-viewer
         v-if="showviewer"
-        :on-close="closeviewer"
+        @close="closeviewer"
         :url-list="urlList"
         :zIndex="imageViewerIndex"
         style="width: 100%; height: 100%; margin-left: 0%; margin-top: 0%"
@@ -137,6 +136,7 @@
       <div v-if="previewVideoSrc && dialogVisible">
         <el-dialog
           :close-on-click-modal="false"
+          v-dialogDrag
           width="1140px"
           append-to-body
           v-model="dialogVisible"
@@ -166,13 +166,12 @@ import { debounce } from 'lodash'
 
 import { mapState } from 'vuex'
 
-// import elImageViewer from 'element-ui/packages/image/src/image-viewer'
-// import { PopupManager } from 'element-ui/lib/utils/popup'
+import calculateMD5 from './calculateMD5'
 
 export default {
+  emits: ['onSuccess'],
   components: {
     // draggable,
-    // elImageViewer
   },
   props: {
     disabled: {
@@ -187,7 +186,7 @@ export default {
       type: [Number],
       default: 0
     },
-    oneFileSize: {
+    allFileSize: {
       type: [Number],
       default: 0
     },
@@ -262,8 +261,8 @@ export default {
       return this.disabled || this.fileList.length > 0
     },
     sys_file_max_size() {
-      if (this.oneFileSize) {
-        return this.oneFileSize
+      if (this.allFileSize) {
+        return this.allFileSize
       }
       if (this.$store.state.user.sys_file_max_size) {
         return this.$store.state.user.sys_file_max_size
@@ -301,7 +300,7 @@ export default {
   watch: {
     fileList: {
       immediate: false,
-      deep: true,
+      deep: false,
       handler: function (value) {
         this.updateFileList(value)
       }
@@ -309,7 +308,15 @@ export default {
   },
 
   methods: {
-    changeDefault(row) {},
+    changeDefault(row) {
+      if (row.isDefault === '1') {
+        this.fileList.forEach(item => {
+          if (row.uid !== item.uid) {
+            item.isDefault = '0'
+          }
+        })
+      }
+    },
     closeviewer() {
       this.showviewer = false
       this.urlList = []
@@ -371,7 +378,7 @@ export default {
         // 视频时长值的获取要等到这个匿名函数执行完毕才产生
         result = audioElement.duration // 得到时长为秒，小数，182.36
         result = parseInt(result) // 转为int值
-        self.$set(file, 'times', self.formatTime(result || 0))
+        file.times = self.formatTime(result || 0)
       })
     },
     initFileList(files) {
@@ -394,7 +401,7 @@ export default {
         }
         list.push(rowData)
       })
-      this.fileListCache = JSON.parse(JSON.stringify(list))
+      this.fileListCache = [...list]
       this.fileList = list
     },
     getFileList() {
@@ -403,9 +410,9 @@ export default {
     getFileIds(option) {
       if (option && option.required && this.fileList.length === 0) {
         if (option.requiredMsg) {
-          this.$message.error(option.requiredMsg)
+          this.$modal.msgError(option.requiredMsg)
         } else {
-          this.$message.error(this.$t('ui.uploadReq'))
+          this.$modal.msgError(this.$t('ui.uploadReq'))
         }
         return false
       }
@@ -419,7 +426,7 @@ export default {
         return item
       })
       if (uploading) {
-        this.$message.error(this.$t('ui.uploading'))
+        this.$modal.msgError(this.$t('ui.uploading'))
 
         return false
       } else {
@@ -481,19 +488,18 @@ export default {
       this.dialogVisible = true
     },
     handlePreviewImg(file) {
-      // const zIndex = PopupManager.nextZIndex()
-      // this.imageViewerIndex = zIndex + 20
-      this.urlList.push(file.onlineUrl)
+      this.urlList = [file.onlineUrl]
       this.showviewer = true
     },
     handlePreviewFile(file) {
       if (!this.online_preview_url) {
         return
       }
-      const url = window.btoa(file.onlineUrl)
-      // let http = 'https://file.keking.cn/onlinePreview?url='
+      // const url = window.btoa(file.onlineUrl)
+      const url = `${file.onlineUrl}?fullfilename=${encodeURIComponent(file.name)}`
+      // const http = 'https://file.img-sz.top/preview/onlinePreview?url='
       const http = this.online_preview_url
-      const myUrl = `${http}${url}`
+      const myUrl = `${http}${window.btoa(url)}`
       window.open(myUrl, '_blank')
     },
     delFile(file) {
@@ -502,14 +508,9 @@ export default {
           this.fileList.splice(index, 1)
         }
       })
+      this.$refs.myUpload.abort(file)
+      this.$refs.myUpload.handleRemove(file)
       this.$emit('onSuccess')
-
-      // const list = this.$refs.myUpload.uploadFiles
-      // list.forEach(item => {
-      //   if (item.uid === file.uid) {
-      //     this.$refs.myUpload.handleRemove(item)
-      //   }
-      // })
     },
     /* 此方法用于表单中途新增已上传成功的文件 */
     addFileForUnshift(item) {
@@ -522,45 +523,52 @@ export default {
         status: 'success'
       }
       this.fileList.unshift(rowData)
-      this.$refs.myUpload.uploadFiles.unshift(rowData)
+      this.fileListCache = [...this.fileListCache, rowData]
     },
+
     handleRemove(file, fileList) {
       this.fileList.forEach((item, index) => {
         if (item.uid === file.uid) {
           this.fileList.splice(index, 1)
         }
       })
-
       // console.log('handleRemove', file, fileList)
       //   this.fileList = fileList
     },
     showFileMaxReq: debounce(function () {
       const vm = this
-      vm.$message.error(
+      vm.$modal.msgError(
         vm.$t('ui.fileMaxReq').replace('$1', vm.sys_file_max_count)
       )
-    }, 100),
+    }, 500),
     showFileLimitNumReq: debounce(function () {
       const vm = this
-      vm.$message.error(
+      vm.$modal.msgError(
         vm.$t('ui.fileLimitNumReq').replace('$1', vm.sys_file_max_size)
       )
-    }, 100),
+    }, 500),
     showUploadTypeErrorReq: debounce(function () {
       const vm = this
       const str = vm.accept.join('/')
-      vm.$message.error(vm.$t('ui.uploadTypeErrorReq').replace('$1', str))
-    }, 100),
+      vm.$modal.msgError(vm.$t('ui.uploadTypeErrorReq').replace('$1', str))
+    }, 500),
     showRepeatFile: debounce(function () {
       const vm = this
-      vm.$message.error(vm.$t('ui.repeatFile'))
-    }, 100),
-    handleBeforeUpload(file) {
+      vm.$modal.msgError(vm.$t('ui.repeatFile'))
+    }, 500),
+    async handleBeforeUpload(file) {
+      try {
+        file.fileMd5 = await calculateMD5(file)
+      } catch {
+        return false
+      }
       const vm = this
       vm.fullscreenLoading = true
       if (this.accept && this.accept.length > 0) {
         const findItem = this.accept.find(item => {
-          return file.name.toLowerCase().indexOf(item) !== -1
+          const extension =
+            file.name.indexOf('.') > -1 ? '.' + file.name.split('.').pop() : ''
+          return extension.toLowerCase().includes(item.toLowerCase())
         })
         if (!findItem) {
           this.showUploadTypeErrorReq()
@@ -571,12 +579,18 @@ export default {
         vm.showFileMaxReq()
         return false
       }
-      const isLt50M = file.size / 1024 / 1024 > vm.sys_file_max_size
+
+      const totalSize = vm.fileList.reduce((total, item) => {
+        return total + Number(item.size)
+      }, Number(file.size))
+      const isLt50M = totalSize / 1024 / 1024 > vm.sys_file_max_size
       if (isLt50M) {
         vm.showFileLimitNumReq()
       }
 
-      const isContain = vm.fileList.some(_file => _file.name === file.name)
+      const isContain = vm.fileList.some(
+        _file => file.fileMd5 && file.fileMd5 === _file.fileMd5
+      )
       if (isContain) {
         vm.showRepeatFile()
       }
@@ -585,15 +599,16 @@ export default {
       }
       if (!isContain && !isLt50M) {
         file.uploading = true
-        // if (this.fileList.length <= 0) {
-        //   file.isDefault = '1'
-        // }
+        if (this.fileList.length <= 0) {
+          file.isDefault = '1'
+        }
         this.fileList.push({ ...file })
         return true
       } else {
         return false
       }
     },
+
     handleUploadFaile(errdata, file) {
       this.fullscreenLoading = false
       this.fileList.forEach((item, index) => {
@@ -601,7 +616,7 @@ export default {
           this.fileList.splice(index, 1)
         }
       })
-      // this.$message.error('上传失败')
+      // this.$modal.msgError('上传失败')
     },
     handleUploadSuccess(results, file, fileList) {
       const { data, code, msg } = results
@@ -612,13 +627,13 @@ export default {
         file.creatorName = data.creatorName
         file.size = data.size
         file.fileType = this.getFileType(file)
+        file.fileMd5 = data.fileMd5
         if (file.fileType === 'video') {
           this.getVideoDuration(file)
         }
         this.fileList.forEach((item, index) => {
           if (item.uid === file.uid) {
-            // this.$set(file, 'isDefault', item.isDefault)
-            // this.$set(file, 'remarks', item.remarks)
+            file.isDefault = item.isDefault
             file.remarks = item.remarks
             this.fileList.splice(index, 1, file)
             this.$emit('onSuccess')
@@ -629,7 +644,20 @@ export default {
         this.delFile(file)
 
         // this.fileListCache = JSON.parse(JSON.stringify(this.fileList))
-        this.$message.error(msg)
+        this.$modal.msgError({
+          message: msg,
+          duration: 0
+        })
+      }
+
+      const obj = fileList.find(item => {
+        return item.status === 'uploading'
+      })
+
+      if (obj) {
+        this.fullscreenLoading = true
+      } else {
+        this.fullscreenLoading = false
       }
     }
   }
@@ -642,13 +670,12 @@ export default {
 .file-box {
   display: flex;
   flex-wrap: wrap;
-  // width: 205px;
+  width: 205px;
 }
 .file-icon-item {
-  // width: 36px;
-  // height: 36px;
-  // padding: 2px;
-  margin-right: 10px;
+  width: 36px;
+  height: 36px;
+  padding: 2px;
   position: relative;
 
   .file-del-icon {
@@ -666,8 +693,8 @@ export default {
   }
 }
 .file-icon-box {
-  width: 90px;
-  height: 90px;
+  width: 32px;
+  height: 32px;
   position: relative;
   box-shadow: inset 0 0 1px 1px #e3e3e3;
   display: flex;
@@ -675,8 +702,8 @@ export default {
   justify-content: center;
 
   .file-img {
-    width: 90px;
-    height: 90px;
+    width: 32px;
+    height: 32px;
   }
 }
 

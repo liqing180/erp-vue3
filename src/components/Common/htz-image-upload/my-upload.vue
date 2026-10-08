@@ -1,7 +1,12 @@
 <template>
-  <div class="my-upload-file-warp">
+  <div
+    class="my-upload-file-warp"
+    ref="uploadFileWarp"
+    @mouseenter="isInUploadArea = true"
+    @mouseleave="isInUploadArea = false"
+  >
     <el-form>
-      <div class="mb5" v-if="!singleFile">
+      <div class="mb5">
         <el-button
           size="small"
           v-if="!disabled"
@@ -37,183 +42,125 @@
         :before-upload="handleBeforeUpload"
         :on-success="handleUploadSuccess"
         :on-error="handleUploadFaile"
+        :on-progress="handleUploadProgress"
         :file-list="fileListCache"
         :headers="{ Authorization: isToken ? access_token : null }"
       >
-        <el-icon class="avatar-uploader-icon" v-if="!singleFile">
-          <plus />
-        </el-icon>
-        <div class="el-upload__text" ref="uploadText">
-          {{ $t('ui.clickUploadTip') }},
+        <el-icon v-if="!singleFile"><Plus /></el-icon>
+        <div class="el-upload__text">
+          {{ singleFile ? '+' : '' }}
+          {{ $t('ui.dragOrPasteUploadTip') }},
           {{ $t('ui.fileMaxSize').replace('$1', sys_file_max_size) }}
         </div>
         <!-- <div class="el-upload__tip" slot="tip">只能上传jpg/png文件，且不超过500kb</div> -->
       </el-upload>
-      <div
-        v-for="file in fileList"
-        :key="file.uid"
-        class="file-item"
-        :class="{ curAction: file.uid === curObj.uid }"
-      >
-        <div class="item-left">
-          <span
-            class="fileName"
-            @click="handlePreview(file)"
-            :title="file.name"
-          >
-            <el-icon
-              style="font-size: 16px; vertical-align: text-bottom"
-              v-if="file.status === 'success'"
-              ><Link
-            /></el-icon>
-            <el-icon
-              v-else
-              style="font-size: 16px; vertical-align: text-bottom"
-              class="rotating-icon"
-              ><Loading
-            /></el-icon>
-            {{ getfileNameAndSuffixShow(file).name }}</span
-          >
-          <span class="fs-0">{{ getfileNameAndSuffixShow(file).suffix }}</span>
-
-          <span class="fs-0" style="color: #999">{{
-            `(${$numberStr(file.size / 1024, 2)}KB)`
-          }}</span>
-          <span
-            class="primary-pointer ml10 fs-0"
-            type="text"
-            v-show="file.status !== 'success'"
-            @click="delFile(file)"
-            >{{ $t('ui.cancelUpload') }}</span
-          >
-          <span
-            class="fs-0 ml10 item-left-btn"
-            v-show="file.status === 'success'"
-          >
-            <span class="primary-pointer ml10" @click="handlePreview(file)">{{
-              $t('ui.preview')
-            }}</span>
-            <span v-if="file.downLoading" class="ml10">
-              <i class="el-icon-loading"></i>
-              {{ $t('下载中') }}
-            </span>
+      <div ref="sortable">
+        <div
+          v-for="(file, index) in fileList"
+          :key="file.uid + '_' + index"
+          class="file-item sortableItem"
+          :class="{
+            curAction: file.uid === curObj.uid,
+            'file-item-edit': modifyHighlight && file.updateType === '1',
+            'file-item-add': modifyHighlight && file.updateType === '2',
+            'file-item-delete': modifyHighlight && file.updateType === '3'
+          }"
+        >
+          <div class="item-left">
             <span
-              class="primary-pointer ml10"
-              v-else
+              class="fileName"
+              @click="handlePreview(file)"
+              :title="file.name"
+            >
+              <el-icon v-if="file.status === 'success'"><Link /></el-icon>
+              <el-icon v-else class="is-loading"><Loading /></el-icon>
+              {{ getfileNameAndSuffixShow(file).name }}</span
+            >
+            <span class="fs-0">{{
+              getfileNameAndSuffixShow(file).suffix
+            }}</span>
+
+            <span class="fs-0" style="color: #999">{{
+              `(${$numberStr(file.size / 1024, 2)}KB)`
+            }}</span>
+            <span
+              class="primary-pointer ml10 fs-0"
               type="text"
-              @click="handleDownFile(file)"
-              >{{ $t('ui.download') }}</span
+              v-show="file.status !== 'success'"
+              @click="delFile(file)"
+              >{{ $t('ui.cancelUpload') }}</span
             >
-            <el-popover
-              placement="top"
-              trigger=""
-              title=" "
-              :width="320"
-              :visible="popShowData['show' + file.uid] || false"
+            <span
+              class="fs-0 ml10 item-left-btn"
+              v-show="file.status === 'success'"
             >
-              <template #default>
-                <div>
-                  <div class="mb10">
-                    <el-input
-                      ref="myInput1"
-                      style="width: 100%"
-                      v-model="curObj.name"
-                      :maxlength="50"
-                      @keyup.enter="hidePop('comFirm')"
-                    ></el-input>
-                  </div>
-                  <div style="text-align: center; margin: 0">
-                    <el-button size="small" @click="hidePop('cancel')">{{
-                      $t('menu.cancel')
-                    }}</el-button>
-                    <el-button
-                      type="primary"
-                      size="small"
-                      :disabled="!curObj.name"
-                      @click="hidePop('comFirm')"
-                      >{{ $t('uiBtn.confirm1') }}</el-button
-                    >
-                  </div>
-                </div>
-              </template>
-              <template #reference>
+              <span class="primary-pointer ml10" @click="handlePreview(file)">{{
+                $t('ui.preview')
+              }}</span>
+              <template v-if="isToken">
+                <span v-if="file.downLoading" class="ml10">
+                  <el-icon class="is-loading"><Loading /></el-icon>
+                  {{ $t('ui.downloading') }}
+                </span>
                 <span
                   class="primary-pointer ml10"
+                  v-else
                   type="text"
-                  :ref="'btn' + file.uid"
-                  v-if="!disabled"
-                  @click="showPop(file, 'changeName')"
-                  >{{ $t('ui.rename') }}
-                </span>
+                  @click="handleDownFile(file)"
+                  >{{ $t('ui.download') }}</span
+                >
               </template>
-            </el-popover>
 
-            <span
-              class="primary-pointer ml10"
-              v-if="!disabled && !file.disCancel"
-              type="text"
-              @click="delFile(file)"
-              >{{ $t('uiBtn.delete') }}
-            </span>
-          </span>
-        </div>
-        <div class="item-right" v-show="file.status === 'success'">
-          <span v-if="fomType" class="mr20 fs-0">{{
-            file.fromType || fomType
-          }}</span>
-          <span class="uploadBy mr20 fs-0" :title="file.creatorName">{{
-            file.creatorName
-          }}</span>
-          <span class="mr20 fs-0">{{
-            parseTime(file.createTime, fmtForYmdhm)
-          }}</span>
-
-          <el-popover
-            placement="top"
-            trigger=""
-            title=" "
-            :width="320"
-            :visible="popShowData['show2' + file.uid] || false"
-          >
-            <template #default>
-              <div>
-                <div class="mb10">
-                  <el-input
-                    style="width: 100%"
-                    v-model="curObj.remarks"
-                    :maxlength="50"
-                    @keyup.enter="hidePop('comFirm')"
-                  ></el-input>
-                </div>
-                <div style="text-align: center; margin: 0">
-                  <el-button size="small" @click="hidePop('cancel')">{{
-                    $t('menu.cancel')
-                  }}</el-button>
-                  <el-button
-                    type="primary"
-                    size="small"
-                    :disabled="!curObj.name"
-                    @click="hidePop('comFirm')"
-                    >{{ $t('uiBtn.confirm1') }}</el-button
-                  >
-                </div>
-              </div>
-            </template>
-            <template #reference>
               <span
-                v-show="!disabled || file.remarks"
-                class="fs-0"
-                style="font-weight: bold"
-                :class="disabled ? '' : 'primary-pointer'"
+                class="primary-pointer ml10"
                 type="text"
-                @click="showPop(file, 'changeRemarks')"
-                >{{ $t('ui.remarks') }}<span v-show="disabled">:</span></span
-              >
-            </template>
-          </el-popover>
-          <span class="fileRemarks" :title="file.remarks">{{
-            file.remarks
-          }}</span>
+                :ref="'btn' + file.uid"
+                v-if="!disabled"
+                @click="showPop($event, file, 'changeName')"
+                >{{ $t('ui.rename') }}
+              </span>
+              <span
+                class="primary-pointer ml10"
+                v-if="!disabled && !file.disCancel"
+                type="text"
+                @click="delFile(file)"
+                >{{ $t('uiBtn.delete') }}
+              </span>
+            </span>
+          </div>
+          <div class="item-right" v-show="file.status === 'success'">
+            <span v-if="fomType" class="mr20 fs-0">{{
+              file.fromType || fomType
+            }}</span>
+            <span
+              class="uploadBy mr20 fs-0"
+              :title="uploadPerson || file.creatorName"
+              >{{ uploadPerson || file.creatorName }}</span
+            >
+            <span class="mr20 fs-0">{{
+              parseTime(file.createTime, fmtForYmdhm)
+            }}</span>
+            <span
+              v-show="!disabled || file.remarks"
+              class="fs-0"
+              style="font-weight: bold"
+              :class="disabled ? '' : 'primary-pointer'"
+              type="text"
+              @click="showPop($event, file, 'changeRemarks')"
+              >{{ $t('ui.remarks') }}<span v-show="disabled">:</span></span
+            >
+            <span class="fileRemarks" :title="file.remarks">{{
+              file.remarks
+            }}</span>
+          </div>
+          <div class="w100" v-show="file.status !== 'success'">
+            <el-progress
+              :percentage="parsePercentage(file.percentage2) || 0"
+              color="#409eff"
+              :stroke-width="2"
+              :show-text="false"
+            ></el-progress>
+          </div>
         </div>
       </div>
     </el-form>
@@ -222,15 +169,57 @@
       {{ $t('ui.noAttachment') }}
     </div>
 
+    <el-popover
+      placement="top"
+      :width="320"
+      :visible="popoverVisible"
+      :virtual-ref="popoverTrigger"
+      virtual-triggering
+    >
+      <div class="mb10">
+        <el-input
+          ref="myInput1"
+          v-show="curObj.changeType === 'changeName'"
+          style="width: 100%"
+          v-model="curObj.name"
+          :maxlength="50"
+          @keyup.enter="hidePop('comFirm')"
+        ></el-input>
+        <el-input
+          ref="myInput2"
+          v-show="curObj.changeType === 'changeRemarks'"
+          style="width: 100%"
+          v-model="curObj.remarks"
+          :maxlength="100"
+          @keyup.enter="hidePop('comFirm')"
+        ></el-input>
+      </div>
+      <div style="text-align: right; margin: 0">
+        <el-button size="small" @click="hidePop('cancel')">{{
+          $t('menu.cancel')
+        }}</el-button>
+        <el-button
+          type="primary"
+          size="small"
+          :disabled="!curObj.name"
+          @click="hidePop('comFirm')"
+          >{{ $t('uiBtn.confirm1') }}</el-button
+        >
+      </div>
+    </el-popover>
+
     <el-image-viewer
       v-if="showviewer"
-      :url-list="urlList"
       @close="closeviewer"
+      :url-list="urlList"
+      style="width: 100%; height: 100%; margin-left: 0%; margin-top: 0%"
+      :zIndex="imageViewerIndex"
     />
   </div>
 </template>
 
 <script>
+// import draggable from 'vuedraggable'
 import {
   multiFileUpload,
   downloadFile,
@@ -240,13 +229,11 @@ import downFile from '@/utils/downFile.js'
 import { debounce } from 'lodash'
 
 import { mapState } from 'vuex'
-
-import { ClickOutside } from 'element-plus'
-
-// import { ElImageViewer } from 'element-plus/lib/components/image-viewer'
-
+import Sortable from 'sortablejs'
+import { genFileId } from 'element-plus'
+import calculateMD5 from './calculateMD5'
 export default {
-  // components: { ElImageViewer },
+  emits: ['uploadChange', 'onSuccess'],
   props: {
     disabled: {
       type: [Boolean],
@@ -260,7 +247,7 @@ export default {
       type: [Number],
       default: 0
     },
-    oneFileSize: {
+    allFileSize: {
       type: [Number],
       default: 0
     },
@@ -281,11 +268,6 @@ export default {
       type: Boolean,
       default: true
     },
-    // 删除文件是否弹确认框
-    isDelConfirm: {
-      type: Boolean,
-      default: false
-    },
     updateFileList: {
       type: Function,
       default() {
@@ -295,48 +277,47 @@ export default {
     singleFile: {
       type: Boolean,
       default: false
+    },
+    documentName: {
+      type: String,
+      default: ''
+    },
+    documentNameList: {
+      type: Array,
+      default: () => []
+    },
+    uploadPerson: {
+      type: String,
+      default: ''
+    },
+    modifyHighlight: {
+      type: Boolean,
+      default: false
+    },
+    isDelConfirm: {
+      type: Boolean,
+      default: false
     }
-  },
-  directives: {
-    ClickOutside
   },
   data() {
     return {
-      targetRef: undefined,
       visible: false,
-      fileList: [
-        // {
-        //   name: 'food.jpeg',
-        //   uid: '6107357109157888',
-        //   url: 'https://fuss10.elemecdn.com/3/63/4e7f3a15429bfda99bce42a18cdd1jpeg.jpeg?imageMogr2/thumbnail/360x360/format/webp/quality/100'
-        // },
-        // {
-        //   name: 'food2.jpeg',
-        //   uid: '6107357109157882',
-        //   url: 'https://fuss10.elemecdn.com/3/63/4e7f3a15429bfda99bce42a18cdd1jpeg.jpeg?imageMogr2/thumbnail/360x360/format/webp/quality/100'
-        // }
-      ],
-      fileListCache: [
-        // { name: 'food.jpeg',
-        //   uid: '6107357109157888',
-        //   url: 'https://fuss10.elemecdn.com/3/63/4e7f3a15429bfda99bce42a18cdd1jpeg.jpeg?imageMogr2/thumbnail/360x360/format/webp/quality/100'
-        // },
-        // { name: 'food2.jpeg',
-        //   uid: '6107357109157882',
-        //   url: 'https://fuss10.elemecdn.com/3/63/4e7f3a15429bfda99bce42a18cdd1jpeg.jpeg?imageMogr2/thumbnail/360x360/format/webp/quality/100'
-        // }
-      ],
+      fileList: [],
+      fileListCache: [],
       fullscreenLoading: false,
       dialogVisible: false,
       previewVideoSrc: '',
-      reference: undefined,
+      popoverTrigger: undefined,
+      popoverVisible: false,
       curObj: {},
-      popShowData: {},
       showviewer: false,
       urlList: [],
-      imageViewerIndex: 3000
+      imageViewerIndex: 3000,
+      sortableDom: undefined,
+      isInUploadArea: false
     }
   },
+
   computed: {
     ...mapState({
       access_token: state => state.user.token
@@ -354,8 +335,8 @@ export default {
       return this.disabled || this.fileList.length > 0
     },
     sys_file_max_size() {
-      if (this.oneFileSize) {
-        return this.oneFileSize
+      if (this.allFileSize) {
+        return this.allFileSize
       }
       if (this.$store.state.user.sys_file_max_size) {
         return this.$store.state.user.sys_file_max_size
@@ -378,10 +359,50 @@ export default {
       return ''
     },
     comAccept() {
+      return this.comAcceptList.join(',')
+    },
+    comAcceptList() {
       if (this.accept && this.accept.length > 0) {
-        return this.accept.join(',')
+        return this.accept
       }
-      return 'image/*,video/*, .ai, .bmp, .ps, .psd, .svg, .tif, .tiff, .key, .odp, .pps, .ppt, .pptx, .ods, .xlr, .xls, .xlsx, .doc, .docx, .odt, .pdf, .rtf, .tex, .txt, .wks, .wps, .wpd'
+
+      return [
+        '.PDF',
+        '.JPG',
+        '.JPEG',
+        '.PNG',
+        '.XLSX',
+        '.XLS',
+        '.CSV',
+        '.DOCX',
+        '.DOC',
+        '.TXT'
+      ]
+      // return [
+      //   '.DOC',
+      //   '.DOCX',
+      //   '.TXT',
+      //   '.RTF',
+      //   '.ODT',
+      //   '.XLS',
+      //   '.XLSX',
+      //   '.CSV',
+      //   '.PPT',
+      //   '.PPTX',
+      //   '.PDF',
+      //   '.OFD',
+      //   '.JPEG',
+      //   '.JPG',
+      //   '.PNG',
+      //   '.GIF',
+      //   '.TIFF',
+      //   '.WebP',
+      //   '.BMP',
+      //   '.RAW',
+      //   '.SVG',
+      //   '.EPS',
+      //   '.AI'
+      // ]
     },
     fmtForYmd() {
       return this.$store.getters.fmtForYmd
@@ -392,15 +413,81 @@ export default {
   },
   watch: {
     fileList: {
-      deep: true,
       immediate: true,
-
       handler: function (value) {
         this.updateFileList(value)
+        if (!this.disabled) {
+          setTimeout(() => {
+            this.setDragTable()
+          }, 1000)
+        }
       }
     }
   },
+
+  mounted() {
+    this.initPasteUpload()
+    const dragger = this.$refs.myUpload?.$el.querySelector('.el-upload-dragger')
+    dragger?.addEventListener('click', this.handleDraggerClick)
+  },
+  beforeUnmount() {
+    document.removeEventListener('paste', this.handlePaste)
+    const dragger = this.$refs.myUpload?.$el.querySelector('.el-upload-dragger')
+    dragger?.removeEventListener('click', this.handleDraggerClick)
+    this.destroyDraggable()
+    this.fileList.forEach(file => this.clearProgressTimer(file))
+  },
   methods: {
+    handleDraggerClick(e) {
+      e.stopPropagation()
+      e.preventDefault()
+    },
+    initPasteUpload() {
+      document.addEventListener('paste', this.handlePaste)
+    },
+    handlePaste(e) {
+      if (this.disabled) return
+      // 关键：鼠标不在上传区域 → 直接不处理
+      if (!this.isInUploadArea) return
+
+      const files = e.clipboardData?.files
+      if (!files || files.length === 0) return
+      e.preventDefault() // 阻止默认粘贴
+      this.uploadFiles(files)
+    },
+    uploadFiles(files) {
+      const upload = this.$refs.myUpload
+      if (!upload || this.uploadDisabled) return
+      Array.from(files).forEach(file => {
+        file.uid = genFileId()
+        upload.handleStart(file)
+      })
+      upload.submit()
+    },
+    destroyDraggable() {
+      if (this.sortableDom) {
+        this.sortableDom.destroy()
+        this.sortableDom = undefined
+      }
+    },
+    // 拖动
+    setDragTable() {
+      const el = this.$refs.sortable
+      if (!el || this.sortableDom) return
+      this.sortableDom = Sortable.create(el, {
+        handle: '.sortableItem',
+        animation: 100,
+        ghostClass: 'blue-background-class',
+        onEnd: evt => {
+          if (evt.oldIndex === evt.newIndex) return
+          const targetRow = this.fileList.splice(evt.oldIndex, 1)[0]
+          this.fileList.splice(evt.newIndex, 0, targetRow)
+          this.fileListCache = [...this.fileList]
+          this.updateFileList(this.fileList)
+          this.$emit('onSuccess')
+        }
+      })
+    },
     closeviewer() {
       this.showviewer = false
       this.urlList = []
@@ -421,72 +508,63 @@ export default {
         suffix
       }
     },
-    showPop(file, type) {
+    showPop(e, file, type) {
       if (this.disabled) return
-      this.popShowData = {}
+      this.curObj.changeType = type
+      const data = this.getfileNameAndSuffix(file)
+      this.curObj.name = data.name
+      this.curObj.suffix = data.suffix
+      this.curObj.remarks = file.remarks
+      this.curObj.uid = file.uid
+      this.popoverTrigger = e.currentTarget
+      this.popoverVisible = true
       setTimeout(() => {
-        this.curObj['changeType'] = type
-        const data = this.getfileNameAndSuffix(file)
-        this.curObj['name'] = data.name
-        this.curObj['suffix'] = data.suffix
-        this.curObj['remarks'] = file.remarks
-        this.curObj['uid'] = file.uid
-        this.curObj['hide'] = false
         if (type === 'changeName') {
-          this.popShowData['show' + file.uid] = true
-        } else {
-          this.popShowData['show2' + file.uid] = true
+          this.$refs.myInput1.focus()
+        } else if (type === 'changeRemarks') {
+          this.$refs.myInput2.focus()
         }
-      }, 100)
+      }, 200)
     },
     hidePop(type) {
       if (type === 'comFirm') {
         const name = `${this.curObj.name}.${this.curObj.suffix}`
         const remarks = this.curObj.remarks
-
         if (this.curObj.changeType === 'changeName') {
-          const isRepeat = this.fileList.find(
-            item => item.uid !== this.curObj.uid && item.name === name
-          )
-          if (isRepeat) {
-            this.$message.error(this.$t('ui.uploadRepeatErr'))
-            return
-          }
-          this.fileList.forEach((item, index) => {
+          // const isRepeat = this.fileList.find(
+          //   (item) => item.uid !== this.curObj.uid && item.name === name
+          // )
+          // if (isRepeat) {
+          //   this.$modal.msgError(this.$t('ui.uploadRepeatErr'))
+          //   return
+          // }
+          this.fileList.forEach(item => {
             if (item.uid === this.curObj.uid) {
-              item['name'] = name
+              item.name = name
             }
           })
           this.updateFileList(this.fileList)
           this.$emit('onSuccess')
         }
         if (this.curObj.changeType === 'changeRemarks') {
-          this.fileList.forEach((item, index) => {
+          this.fileList.forEach(item => {
             if (item.uid === this.curObj.uid) {
-              item['remarks'] = remarks
+              item.remarks = remarks
             }
           })
           this.updateFileList(this.fileList)
-          this.$emit('onSuccess')
         }
       }
-      this.popShowData = {}
-      if (this.curObj) {
-        this.curObj.hide = true
-      }
-      setTimeout(() => {
-        if (this.curObj.hide) {
-          this.curObj.uid = undefined
-        }
-      }, 200)
+      this.popoverVisible = false
+      this.curObj = {}
     },
     handlePreview(file) {
       if (!file.onlineUrl) return
       const fileType = this.getFileType(file)
       switch (fileType) {
         /* case 'video':
-        this.handlePreviewVideo(file)
-        break */
+          this.handlePreviewVideo(file)
+          break */
 
         case 'img':
           this.handlePreviewImg(file)
@@ -498,10 +576,11 @@ export default {
       }
     },
     handleUpload() {
-      this.$refs.uploadText.click()
-    },
-    format(percentage) {
-      return percentage === 100 ? 'Uploading...' : `${percentage}%`
+      if (this.uploadDisabled) return
+      const input = this.$refs.myUpload?.$el.querySelector('input[type="file"]')
+      if (!input) return
+      input.value = ''
+      input.click()
     },
 
     previewDownFile() {
@@ -523,9 +602,7 @@ export default {
       const hours = parseInt(_seconds / 3600)
 
       if (hours) {
-        result = `${this.PadZero(hours)} : ${this.PadZero(
-          mins
-        )} : ${this.PadZero(seconds)}`
+        result = `${this.PadZero(hours)} : ${this.PadZero(mins)} : ${this.PadZero(seconds)}`
       } else {
         result = `${this.PadZero(mins)} : ${this.PadZero(seconds)}`
       }
@@ -539,7 +616,7 @@ export default {
         // 视频时长值的获取要等到这个匿名函数执行完毕才产生
         result = audioElement.duration // 得到时长为秒，小数，182.36
         result = parseInt(result) // 转为int值
-        self.$set(file, 'times', self.formatTime(result || 0))
+        file.times = self.formatTime(result || 0)
       })
     },
     initFileList(files) {
@@ -562,7 +639,7 @@ export default {
         }
         list.push(rowData)
       })
-      this.fileListCache = JSON.parse(JSON.stringify(list))
+      this.fileListCache = [...list]
       this.fileList = list
     },
     getFileList() {
@@ -572,13 +649,12 @@ export default {
         return item
       })
     },
-
     getFileIds(option) {
       if (option && option.required && this.fileList.length === 0) {
         if (option.requiredMsg) {
-          this.$message.error(option.requiredMsg)
+          this.$modal.msgError(option.requiredMsg)
         } else {
-          this.$message.error(this.$t('ui.uploadReq'))
+          this.$modal.msgError(this.$t('ui.uploadReq'))
         }
         return false
       }
@@ -592,7 +668,8 @@ export default {
         return item
       })
       if (uploading) {
-        this.$message.error(this.$t('ui.uploading'))
+        this.$modal.msgError(this.$t('ui.uploading'))
+
         return false
       } else {
         return fileIds
@@ -638,13 +715,38 @@ export default {
         }
       })
     },
+    getFileNameWithoutExtension(filename) {
+      // 找到最后一个 "." 的位置
+      const lastDotIndex = filename.lastIndexOf('.')
+      // 如果没有 "." 或 "." 是第一个字符（如 .gitignore），直接返回原名称
+      if (lastDotIndex <= 0) {
+        return filename
+      }
+      // 截取从 0 到最后一个 "." 之前的部分
+      return filename.substring(0, lastDotIndex)
+    },
     handleDownFile(file) {
       const url = downloadFile
       const param = { id: file.fileId }
-      file['downLoading'] = true
-      downFile('post', url, param, { fileName: file.name }, type => {
-        console.log(type)
-        file['downLoading'] = false
+
+      let fileName = file.name
+      const documentNameList = this.documentNameList.filter(x => !!x)
+      // console.log(documentNameList, '====637')
+      if (documentNameList && documentNameList.length > 0) {
+        const str = this.getFileNameWithoutExtension(fileName)
+        // console.log(str, '=====640')
+        const flag = documentNameList.some(x => str.indexOf(x) !== -1)
+        if (this.documentName && !flag) {
+          fileName = this.documentName + ' - ' + fileName
+        }
+      } else {
+        if (this.documentName) {
+          fileName = this.documentName + ' - ' + fileName
+        }
+      }
+      file.downLoading = true
+      downFile('post', url, param, { fileName }, () => {
+        file.downLoading = false
       })
     },
     parsePercentage(val) {
@@ -657,39 +759,45 @@ export default {
       this.dialogVisible = true
     },
     handlePreviewImg(file) {
-      // const zIndex = PopupManager.nextZIndex()
-      // this.imageViewerIndex = zIndex + 20
-      this.urlList.push(file.onlineUrl)
+      this.urlList = [file.onlineUrl]
       this.showviewer = true
     },
     handlePreviewFile(file) {
       if (!this.online_preview_url) {
         return
       }
-      const url = window.btoa(file.onlineUrl)
-      // let http = 'https://file.keking.cn/onlinePreview?url='
+      // const url = window.btoa(file.onlineUrl)
+      const url = `${file.onlineUrl}?fullfilename=${encodeURIComponent(file.name)}`
+      // const http = 'https://file.img-sz.top/preview/onlinePreview?url='
       const http = this.online_preview_url
-      const myUrl = `${http}${url}`
+      const myUrl = `${http}${window.btoa(url)}`
       window.open(myUrl, '_blank')
     },
     delFile(file) {
       if (this.isDelConfirm) {
-        this.$modal.confirm(this.$t('ui.delConfirm')).then(() => {
-          this.fileList.forEach((item, index) => {
-            if (item.uid === file.uid) {
-              this.fileList.splice(index, 1)
-            }
+        this.$modal
+          .confirm(this.$t('ui.delConfirm'))
+          .then(() => {
+            this.removeFile(file)
           })
-          this.$emit('onSuccess')
-        })
-      } else {
-        this.fileList.forEach((item, index) => {
-          if (item.uid === file.uid) {
-            this.fileList.splice(index, 1)
-          }
-        })
-        this.$emit('onSuccess')
+          .catch(() => {})
+        return
       }
+      this.removeFile(file)
+    },
+    removeFile(file, notify = true) {
+      this.clearProgressTimer(file)
+      this.fileList.forEach((item, index) => {
+        if (item.uid === file.uid) {
+          this.fileList.splice(index, 1)
+        }
+      })
+
+      this.$refs.myUpload.abort(file)
+      this.$refs.myUpload.handleRemove(file)
+      const ids = this.fileList.map(item => item.fileId)
+      this.$emit('uploadChange', ids)
+      if (notify) this.$emit('onSuccess')
     },
     /* 此方法用于表单中途新增已上传成功的文件 */
     addFileForUnshift(item) {
@@ -702,45 +810,62 @@ export default {
         status: 'success'
       }
       this.fileList.unshift(rowData)
-      this.$refs.myUpload.uploadFiles.unshift(rowData)
+      this.fileListCache = [...this.fileListCache, rowData]
     },
 
     handleRemove(file, fileList) {
+      this.clearProgressTimer(file)
       this.fileList.forEach((item, index) => {
         if (item.uid === file.uid) {
           this.fileList.splice(index, 1)
         }
       })
+      this.fileListCache = this.fileListCache.filter(
+        item => item.uid !== file.uid
+      )
       // console.log('handleRemove', file, fileList)
       //   this.fileList = fileList
     },
     showFileMaxReq: debounce(function () {
       const vm = this
-      vm.$message.error(
+      vm.$modal.msgError(
         vm.$t('ui.fileMaxReq').replace('$1', vm.sys_file_max_count)
       )
-    }, 100),
+    }, 500),
     showFileLimitNumReq: debounce(function () {
       const vm = this
-      vm.$message.error(
+      vm.$modal.msgError(
         vm.$t('ui.fileLimitNumReq').replace('$1', vm.sys_file_max_size)
       )
-    }, 100),
+    }, 500),
     showUploadTypeErrorReq: debounce(function () {
       const vm = this
-      const str = vm.accept.join('/')
-      vm.$message.error(vm.$t('ui.uploadTypeErrorReq').replace('$1', str))
-    }, 100),
+      if (this.accept && this.accept.length > 0) {
+        const str = vm.comAcceptList.join(' / ')
+        vm.$modal.msgError(vm.$t('ui.uploadTypeErrorReq').replace('$1', str))
+      } else {
+        vm.$modal.msgError(vm.$t('ui.uploadTypeErrorReqFixed'))
+      }
+    }, 500),
     showRepeatFile: debounce(function () {
       const vm = this
-      vm.$message.error(vm.$t('ui.repeatFile'))
-    }, 100),
-    handleBeforeUpload(file) {
+      vm.$modal.msgError(vm.$t('ui.repeatFile'))
+    }, 500),
+    async handleBeforeUpload(file) {
+      try {
+        file.fileMd5 = await calculateMD5(file)
+      } catch {
+        this.$modal.msgError(this.$t('ui.uploadError'))
+        return false
+      }
+
       const vm = this
       vm.fullscreenLoading = true
-      if (this.accept && this.accept.length > 0) {
-        const findItem = this.accept.find(item => {
-          return file.name.toLowerCase().indexOf(item) !== -1
+      if (this.comAcceptList && this.comAcceptList.length > 0) {
+        const findItem = this.comAcceptList.find(item => {
+          const extension =
+            file.name.indexOf('.') > -1 ? '.' + file.name.split('.').pop() : ''
+          return extension.toLowerCase().includes(item.toLowerCase())
         })
         if (!findItem) {
           this.showUploadTypeErrorReq()
@@ -751,17 +876,22 @@ export default {
         vm.showFileMaxReq()
         return false
       }
-      const isLt50M = file.size / 1024 / 1024 > vm.sys_file_max_size
+
+      const totalSize = vm.fileList.reduce((total, item) => {
+        return total + Number(item.size)
+      }, Number(file.size))
+      const isLt50M = totalSize / 1024 / 1024 > vm.sys_file_max_size
       if (isLt50M) {
         vm.showFileLimitNumReq()
       }
 
-      const isContain1 = vm.fileList.some(_file => _file.name === file.name)
+      const isContain1 = vm.fileList.some(
+        _file => file.fileMd5 && file.fileMd5 === _file.fileMd5
+      )
       const isContain2 = vm.filterOthersFileList.some(_file => {
-        console.log(_file)
-        return _file.name === file.name
+        return file.fileMd5 && file.fileMd5 === _file.fileMd5
       })
-      console.log(vm.filterOthersFileList, isContain2, file.name)
+      // console.log(vm.filterOthersFileList, isContain2, file.name)
 
       const isContain = isContain1 || isContain2
       if (isContain) {
@@ -771,8 +901,20 @@ export default {
         vm.fullscreenLoading = false
       }
       if (!isContain && !isLt50M) {
+        const newRow = {
+          fileMd5: file.fileMd5,
+          name: file.name,
+          uid: file.uid,
+          lastModified: file.lastModified,
+          size: file.size,
+          type: file.type,
+          webkitRelativePath: file.webkitRelativePath,
+          uploading: true,
+          percentage2: 0,
+          startUPTime: Date.now()
+        }
         file.uploading = true
-        this.fileList.push(file)
+        this.fileList.push(newRow)
         return true
       } else {
         return false
@@ -780,14 +922,14 @@ export default {
     },
 
     handleUploadFaile(errdata, file) {
-      console.log(file)
+      this.clearProgressTimer(file)
       this.fullscreenLoading = false
       this.fileList.forEach((item, index) => {
         if (item.uid === file.uid) {
           this.fileList.splice(index, 1)
         }
       })
-      // this.$message.error('上传失败')
+      // this.$modal.msgError('上传失败')
     },
     handleUploadSuccess(results, file, fileList) {
       const { data, code, msg } = results
@@ -799,39 +941,87 @@ export default {
         file.creatorName = data.creatorName
         file.size = data.size
         file.fileType = this.getFileType(file)
+        file.fileMd5 = data.fileMd5
         if (file.fileType === 'video') {
           this.getVideoDuration(file)
         }
         this.fileList.forEach((item, index) => {
           if (item.uid === file.uid) {
+            this.clearProgressTimer(item)
             this.fileList.splice(index, 1, file)
-            this.$emit('onSuccess')
           }
         })
+        // this.fileList.push(file)
       } else {
-        this.delFile(file)
-        this.$message.error(msg)
+        this.removeFile(file, false)
+
+        // this.fileListCache = JSON.parse(JSON.stringify(this.fileList))
+        this.$modal.msgError({
+          message: msg,
+          duration: 0
+        })
+      }
+
+      const obj = fileList.find(item => {
+        return item.status === 'uploading'
+      })
+
+      if (obj) {
+        this.fullscreenLoading = true
+      } else {
+        this.fullscreenLoading = false
+      }
+      const ids = this.fileList.map(item => item.fileId)
+      this.$emit('uploadChange', ids)
+      if (code === 200) this.$emit('onSuccess')
+    },
+    handleUploadProgress(event, file) {
+      this.fileList.forEach((item, index) => {
+        if (item.uid === file.uid) {
+          item.percentage2 = event.percent * 0.6
+          if (event.percent === 100) {
+            item.endUPTime = Date.now()
+            const intervalTime = (item.endUPTime - item.startUPTime) / 60
+            item.timer = setInterval(() => {
+              this.updateProcessingProgress(item)
+            }, intervalTime)
+          }
+        }
+      })
+    },
+    updateProcessingProgress(item) {
+      const targetMax = 98
+      const currentProgress = item.percentage2
+      const remaining = targetMax - currentProgress
+      if (remaining <= 0) {
+        if (item.timer) {
+          clearInterval(item.timer)
+          item.timer = undefined
+        }
+        return
+      }
+      // 核心：用指数衰减计算增长值，剩余越少增长越慢
+      // 增长值 = 剩余进度 * 衰减系数（0.02~0.05之间，值越小减速越明显）
+      const growth = remaining * 0.03
+      // 确保每次至少增长0.1%，避免完全停滞
+      const minGrowth = 0.1
+      const actualGrowth = Math.max(growth, minGrowth)
+      const newP = Math.min(
+        parseFloat((currentProgress + actualGrowth).toFixed(1)),
+        targetMax
+      )
+      item.percentage2 = newP
+    },
+    clearProgressTimer(file) {
+      if (file.timer) {
+        clearInterval(file.timer)
+        file.timer = undefined
       }
     }
-  },
-  emits: ['update:value']
+  }
 }
 </script>
-
 <style lang="scss">
-.rotating-icon {
-  display: inline-block;
-  animation: spin 2s linear infinite; /* 更快的旋转 */
-}
-@keyframes spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
-}
-
 .is-upload-disabled .el-upload {
   display: none;
 }
@@ -849,7 +1039,7 @@ export default {
       width: 100%;
       height: auto;
       padding: 10px 0;
-      .el-icon-plus {
+      .el-icon {
         font-size: 20px;
       }
       .el-upload__text {
@@ -866,6 +1056,7 @@ export default {
     transition: background-color 0.3s;
     border-radius: 4px;
     font-size: 14px;
+    margin: 4px 0;
     // vertical-align: text-top;
     .item-left {
       display: inline-flex;
@@ -914,6 +1105,28 @@ export default {
       }
     }
   }
+  .file-item-add {
+    background: #d2e3fc;
+    border-left: 3px solid #1a73e8;
+    padding-left: 7px;
+  }
+  .file-item-edit {
+    background: #f0f7ff;
+    border-left: 3px solid #c2d7fb;
+    padding-left: 7px;
+  }
+  .file-item-delete {
+    background: #f5f5f4;
+    border-left: 3px solid #78716c;
+    padding-left: 7px;
+  }
+  .file-item-delete span:not(.item-left-btn) {
+    text-decoration: line-through;
+  }
+  .file-item-delete .item-left-btn span {
+    text-decoration: none;
+  }
+
   .el-upload-list__item {
     transition: none !important;
     .el-progress__text {
@@ -929,6 +1142,7 @@ export default {
     background-color: #eee;
   }
 }
+
 .noAttachment {
   background-color: #fff;
   border: 1px dashed #d9d9d9;
