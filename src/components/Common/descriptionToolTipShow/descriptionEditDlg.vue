@@ -48,11 +48,11 @@
                 <div v-if="!disabled" class="editable-row" @click="showPop">
                   <div class="primary-pointer tooltip-row flex-value">
                     <span v-if="sourceText.trim()">{{ sourceText }}</span>
-                    <span v-else class="transparent-placeholder">
-                      -------------
-                    </span>
+                    <span v-else class="transparent-placeholder"></span>
                   </div>
-                  <el-icon class="edit-icon"><Edit /></el-icon>
+                  <el-icon class="edit-icon primary-pointer" :size="26"
+                    ><Edit
+                  /></el-icon>
                 </div>
                 <div v-else class="tooltip-row">{{ sourceText }}</div>
               </slot>
@@ -174,7 +174,7 @@ export default {
 }
 
 .tooltip-row {
-  min-width: 50px;
+  min-width: 30px;
   height: 100%;
   overflow: hidden;
   white-space: nowrap;
@@ -194,7 +194,6 @@ export default {
 .edit-icon {
   flex: 0 0 auto;
   padding-left: 5px;
-  font-size: 20px;
   cursor: pointer;
 }
 

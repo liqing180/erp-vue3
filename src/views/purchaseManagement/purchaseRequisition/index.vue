@@ -22,11 +22,12 @@
       v-show="showSearch"
     />
 
-    <div class="pr-toolbar mb10">
+    <div class="pr-toolbar mb8">
       <div class="pr-toolbar-left">
         <el-button
           v-hasPermi="['purchaseManagement:purchaseRequisition:add']"
           type="primary"
+          icon="Plus"
           size="small"
           @click="handleAdd"
         >
@@ -35,6 +36,7 @@
         <el-button
           v-hasPermi="['purchaseManagement:purchaseRequisition:export']"
           type="warning"
+          icon="Download"
           size="small"
           :loading="exportLoading"
           @click="openExport"
@@ -43,20 +45,35 @@
         </el-button>
 
         <div v-if="showDeliveryFilter" class="pr-delivery-filter">
-          <span>{{ $t('PURCHASE.deliveryStatus') }}:</span>
-          <el-radio-group
-            v-model="queryParams.deliveryStatus"
-            size="small"
-            @change="deliveryStatusChange"
-          >
-            <el-radio-button
+          <span class="pr-delivery-label">
+            <svg-icon icon-class="filter" />
+            {{ $t('PURCHASE.deliveryStatus') }} ：
+          </span>
+          <div class="pr-delivery-options">
+            <button
               v-for="item in deliveryFilters"
               :key="item.id"
-              :value="item.id"
+              type="button"
+              :class="[
+                'pr-delivery-tag',
+                'pr-delivery-tag-' + item.value,
+                { 'is-active': item.id === queryParams.deliveryStatus }
+              ]"
+              :aria-pressed="item.id === queryParams.deliveryStatus"
+              @click="deliveryStatusChange(item.id)"
             >
+              <svg-icon
+                v-if="item.id !== '0'"
+                :icon-class="
+                  item.id === queryParams.deliveryStatus
+                    ? 'filter-active-' + item.id
+                    : 'filter-' + item.id
+                "
+                class="pr-delivery-icon"
+              />
               {{ item.name }}<span v-if="item.num"> ({{ item.num }})</span>
-            </el-radio-button>
-          </el-radio-group>
+            </button>
+          </div>
         </div>
       </div>
 
@@ -662,7 +679,8 @@ export default {
       }
       await Promise.all([this.getList(), this.loadSearchOptions()])
     },
-    deliveryStatusChange() {
+    deliveryStatusChange(deliveryStatus) {
+      this.queryParams.deliveryStatus = deliveryStatus
       this.queryParams.pageNum = 1
       this.getList()
     },
@@ -781,15 +799,67 @@ export default {
 .pr-toolbar-left {
   display: flex;
   align-items: center;
-  gap: 8px;
   min-width: 0;
 }
 
 .pr-delivery-filter {
   display: flex;
   align-items: center;
-  gap: 8px;
-  margin-left: 12px;
+  height: 30px;
+  margin-left: 20px;
+  font-size: 12px;
+  flex-shrink: 0;
+}
+
+.pr-delivery-label {
+  margin-right: 10px;
+  white-space: nowrap;
+}
+
+.pr-delivery-options {
+  display: flex;
+  gap: 10px;
+}
+
+.pr-delivery-tag {
+  font: inherit;
+  height: 25px;
+  line-height: 25px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: 5px;
+  background-color: #f3f4f6;
+  color: inherit;
+  white-space: nowrap;
+  cursor: pointer;
+
+  &.is-active {
+    color: #fff;
+    background-color: #2f3846;
+  }
+
+  &-overdue {
+    color: #e86e6d;
+    background-color: #fff1f0;
+
+    &.is-active {
+      background-color: #ef4444;
+    }
+  }
+
+  &-dueSoon {
+    color: #e39842;
+    background-color: #fffbe6;
+
+    &.is-active {
+      background-color: #f59e0b;
+    }
+  }
+}
+
+.pr-delivery-icon {
+  margin-right: 5px;
+  font-size: 18px;
 }
 
 .pr-pagination {

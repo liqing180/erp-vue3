@@ -303,25 +303,26 @@
                       >{{ $t('uiBtn.delete') }}</el-button
                     >
                   </el-col>
-                  <right-toolbar
-                    :showSearchBtn="false"
-                    :showRefreshBtn="false"
-                    :saveKey="saveKey"
-                    :savePath="savePath"
-                    :columns="configColumn"
-                    :columnsInit="columns"
-                  ></right-toolbar>
-
-                  <search-form
-                    ref="searchForm"
-                    v-model="queryParams"
-                    :searchData="searchData"
-                    :handleQuery="handleSearchForm"
-                    :resetQuery="resetSearchForm"
-                    :showCustom="false"
-                    :topShowCount="1"
-                    :isProductCustomSearch="true"
-                  />
+                  <div class="top-right-btn flex" style="gap: 10px">
+                    <search-form
+                      ref="searchForm"
+                      v-model="queryParams"
+                      :searchData="searchData"
+                      :handleQuery="handleSearchForm"
+                      :resetQuery="resetSearchForm"
+                      :showCustom="false"
+                      :topShowCount="1"
+                      :isProductCustomSearch="true"
+                    />
+                    <right-toolbar
+                      :showSearchBtn="false"
+                      :showRefreshBtn="false"
+                      :saveKey="saveKey"
+                      :savePath="savePath"
+                      :columns="configColumn"
+                      :columnsInit="columns"
+                    ></right-toolbar>
+                  </div>
                 </el-row>
                 <el-table
                   border
