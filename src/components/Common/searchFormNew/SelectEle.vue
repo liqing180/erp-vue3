@@ -33,11 +33,6 @@ export default {
     'filterable',
     'size'
   ],
-  watch: {
-    width: function (newVal, oldVal) {
-      console.log(newVal, '===')
-    }
-  },
   emits: ['updateForm']
 }
 </script>

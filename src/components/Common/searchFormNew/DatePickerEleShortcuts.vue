@@ -1,10 +1,7 @@
 <template>
-  <!-- :default-value="defaultValue" -->
   <el-date-picker
     @change="input"
-    :default-time="
-      ['00:00:00', '00:00:00'].map(d => dayjs(d, 'hh:mm:ss').toDate())
-    "
+    :default-time="defaultTime"
     :shortcuts="pickerOptions && pickerOptions.shortcuts"
     :disabled-date="pickerOptions && pickerOptions.disabledDate"
     :cell-class-name="pickerOptions && pickerOptions.cellClassName"
@@ -24,8 +21,6 @@
 </template>
 
 <script>
-// import * as dayjs from "dayjs";
-import dayjs from 'dayjs'
 export default {
   name: 'DatePickerEleShortcuts',
   data() {
@@ -134,7 +129,7 @@ export default {
       },
       disabled: false,
       dateRange: [],
-      dayjs
+      defaultTime: [new Date(2000, 0, 1), new Date(2000, 0, 1)]
     }
   },
   props: {
@@ -183,19 +178,19 @@ export default {
       immediate: true,
       deep: true,
       handler: function (newVal) {
-        this.dateRange = newVal
+        this.dateRange = Array.isArray(newVal) ? newVal.map(Number) : []
       }
     }
   },
   methods: {
-    input() {
+    input(value) {
       if (this.disabled) return
       this.disabled = true
       setTimeout(() => {
         this.disabled = false
       }, 200)
       this.$emit('updateForm', {
-        value: this.dateRange,
+        value: Array.isArray(value) ? value.map(Number) : undefined,
         format: this.format,
         type: this.type,
         startDate: this.startDate,

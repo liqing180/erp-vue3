@@ -14,10 +14,11 @@
       prefix-icon="Search"
       :style="{ width: mouseType === 'focus' ? '360px' : '240px' }"
       :placeholder="placeholder"
+      :disabled="disabled"
       :model-value="value"
       clearable
-      @input="$emit('updateForm', { value: $event, type })"
-      @keyup.enter="$emit('search')"
+      @input="handleInput"
+      @keyup.enter="handleEnter"
       @blur="blurFn"
       @focus="focusFn"
       @clear="clear"
@@ -32,8 +33,8 @@
       :disabled="disabled"
       :model-value="value"
       clearable
-      @input="$emit('updateForm', { value: $event, type })"
-      @keyup.enter="$emit('search')"
+      @input="handleInput"
+      @keyup.enter="handleEnter"
       @blur="blurFn"
       @focus="focusFn"
       @clear="clear"
@@ -55,6 +56,10 @@ export default {
     width: undefined,
     type: undefined,
     disabled: undefined,
+    interval: {
+      type: Number,
+      default: 2000
+    },
     isLine: {
       type: Boolean,
       default: true
@@ -66,13 +71,16 @@ export default {
   data() {
     return {
       tooltipVisible: true,
-      mouseType: 'blur'
+      mouseType: 'blur',
+      searchTimer: null,
+      tooltipTimer: null
     }
   },
   methods: {
     blurFn() {
       this.mouseType = 'blur'
-      setTimeout(() => {
+      clearTimeout(this.tooltipTimer)
+      this.tooltipTimer = setTimeout(() => {
         if (this.mouseType === 'blur') {
           this.tooltipVisible = true
         }
@@ -83,11 +91,37 @@ export default {
       this.tooltipVisible = false
     },
     clear() {
-      // $emit('updateForm', { value: $event, type })
-      // $emit('search')
+      this.$emit('updateForm', { value: '', type: this.type })
+      this.clearSearchTimer()
+      this.$nextTick(() => {
+        this.clearSearchTimer()
+        this.$emit('search')
+      })
+    },
+    clearSearchTimer() {
+      clearTimeout(this.searchTimer)
+      this.searchTimer = null
+    },
+    handleInput(value) {
+      this.$emit('updateForm', { value, type: this.type })
+      this.clearSearchTimer()
+      this.searchTimer = setTimeout(() => {
+        this.$emit('search')
+      }, this.interval)
+    },
+    handleEnter() {
+      this.clearSearchTimer()
+      this.$emit('search')
     }
   },
-  emits: ['updateForm', 'search', 'update:value']
+  deactivated() {
+    this.clearSearchTimer()
+  },
+  beforeUnmount() {
+    this.clearSearchTimer()
+    clearTimeout(this.tooltipTimer)
+  },
+  emits: ['updateForm', 'search']
 }
 </script>
 
@@ -95,18 +129,12 @@ export default {
 .custom-input {
   transition: width 0.2s;
   :deep(.el-input__wrapper) {
-    border-left: 0;
-    border-right: 0;
-    border-top: 0;
-    // background-color: inherit;
+    box-shadow: none;
+    border-bottom: 1px solid var(--el-border-color);
     border-radius: 0;
-    // border-radius: 20px; /* 将输入框内部边框的圆角设置为0，保持输入框内部为直角 */
-  }
-
-  /* :deep(.el-input__inner:focus) {
-    .el-input__icon.el-icon-search {
-      color: #1090ff;
+    &.is-focus {
+      border-bottom-color: var(--el-color-primary);
     }
-  } */
+  }
 }
 </style>

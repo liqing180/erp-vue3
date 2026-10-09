@@ -26,7 +26,7 @@ const directive = {
       el.__vueSetInterval__ = setInterval(isReize, 500)
     }
   },
-  unMounted(el) {
+  unmounted(el) {
     // 结束观察指定的Element
     if (el.__divro__) {
       el.__divro__.unobserve(el)

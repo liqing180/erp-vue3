@@ -1,5 +1,6 @@
 <template>
   <el-cascader
+    ref="cascader"
     :show-all-levels="false"
     placeholder=""
     :size="size"
@@ -38,6 +39,11 @@ export default {
     'multiple',
     'size'
   ],
+  methods: {
+    getCheckedNodes() {
+      return this.$refs.cascader.getCheckedNodes()
+    }
+  },
   emits: ['updateForm']
 }
 </script>

@@ -1,34 +1,32 @@
 <template>
   <div class="mb8" ref="searchBox" v-resize="divResizeFn">
     <el-form :inline="false" ref="ruleForm" @submit.prevent>
-      <div class="search-warp top-row" v-if="isShowTopRow">
+      <div
+        class="search-warp"
+        :class="{ 'top-row': !isProductCustomSearch }"
+        v-if="isShowTopRow"
+      >
+        <div class="flex"><slot name="left"></slot></div>
         <div class="search-content-warp">
           <div class="search-content">
             <div class="w100 top-row-content">
-              <div
-                class="flexStart"
-                :style="{ width: selectWidth + 'px' }"
-                ref="leftBox"
-                :key="timeStamp"
-              >
+              <div class="flexStart search-tags" ref="leftBox">
                 <div class="flex-1" style="word-break: break-all">
                   <ul
                     class="flexStart"
                     ref="selectTag"
-                    v-loading="loading"
                     v-show="!isAll && dividerShow"
                   >
                     <li
                       v-for="(item, index) in selectTagList"
                       :key="item.name"
-                      :ref="'li_' + index"
                       v-show="index < tagIndex"
                     >
                       <el-tag
                         class="tag flexStart"
                         type="info"
                         effect="plain"
-                        closable
+                        :closable="!notClosableNameList.includes(item.name)"
                         disable-transitions
                         @close="closeTag(item)"
                         @click="clickTag"
@@ -68,7 +66,9 @@
                               class="tag flexStart"
                               type="info"
                               effect="plain"
-                              closable
+                              :closable="
+                                !notClosableNameList.includes(item.name)
+                              "
                               disable-transitions
                               @close="closeTag(item)"
                               @click="clickTag"
@@ -91,7 +91,7 @@
                         </ul>
                         <template v-slot:reference>
                           <el-tag effect="plain">
-                            <Plus />
+                            <el-icon><Plus /></el-icon>
                             {{
                               selectTagList.slice(tagIndex).filter(x => x.title)
                                 .length
@@ -103,15 +103,8 @@
                   </ul>
                 </div>
               </div>
-              <el-form :inline="true" @submit.prevent>
-                <div
-                  class="search-content"
-                  style="
-                    flex-direction: row-reverse;
-                    margin-left: 40px;
-                    flex-shrink: 0;
-                  "
-                >
+              <div class="search-top-fields">
+                <div class="search-content search-fields">
                   <el-form-item
                     v-for="(item, index) in searchData.slice(0, topShowCount)"
                     :key="index"
@@ -126,13 +119,14 @@
                         updateForm(item.name, $event, index, item.label)
                       "
                       @search="search"
-                      :ref="item.type"
+                      :ref="item.name"
                       :size="size"
+                      :interval="interval"
                     >
                     </component>
                   </el-form-item>
                 </div>
-              </el-form>
+              </div>
             </div>
           </div>
         </div>
@@ -142,43 +136,23 @@
           v-if="isBtn || dividerShow"
         >
           <el-form-item>
-            <!-- <el-icon
-              v-if="dividerShow"
-              :class="isAll ? 'CaretBottom' : 'CaretRight'"
-              color="#409efc"
-              size="14"
+            <el-button
+              link
+              type="primary"
+              :aria-expanded="isAll"
+              :icon="isAll ? 'CaretBottom' : 'CaretRight'"
               @click="isAllChange"
-            >
-            </el-icon>
-            <el-icon
-              v-if="dividerShow"
-              class="Refresh"
-              color="#409efc"
-              size="14"
-              @click="resetForm"
-            ></el-icon> -->
+              v-if="dividerShow && isShowAllBtn"
+            />
 
-            <el-icon
-              size="14"
-              color="#409efc"
-              class="mr10"
-              style="cursor: pointer"
-              @click="isAllChange"
-              v-if="dividerShow"
-            >
-              <CaretBottom v-if="isAll" />
-              <CaretRight v-else />
-            </el-icon>
-
-            <el-icon
-              size="14"
-              color="#409efc"
-              style="cursor: pointer"
+            <el-button
+              link
+              type="primary"
+              icon="Refresh"
+              :aria-label="$t('uiBtn.reset')"
               @click="resetForm"
-              v-if="dividerShow"
-            >
-              <Refresh />
-            </el-icon>
+              v-if="dividerShow && isShowRefreshBtn"
+            />
           </el-form-item>
         </div>
         <div class="flexEnd">
@@ -218,7 +192,7 @@
                   )
                 "
                 @search="search"
-                :ref="item.type"
+                :ref="item.name"
                 :size="size"
               >
               </component>
@@ -249,8 +223,6 @@
 </template>
 
 <script>
-import { mapGetters } from 'vuex'
-
 /**
  * @desc                  搜索组件
  * @InputEle              文本框
@@ -287,7 +259,6 @@ import SelectInput from './SelectInput'
 import lodash from 'lodash'
 import resize from '@/directive/resize'
 import textSize from 'text-size'
-import Cookies from 'js-cookie'
 
 export default {
   name: 'searchEle',
@@ -319,9 +290,13 @@ export default {
    * @resetQuery      重置(函数)
    */
   props: {
+    modelValue: {
+      type: Object,
+      default: undefined
+    },
     value: {
       type: Object,
-      default: () => {}
+      default: () => ({})
     },
     searchData: {
       type: Array,
@@ -365,6 +340,11 @@ export default {
     width: {
       type: [Number, String]
     },
+    isProductCustomSearch: { type: Boolean, default: false },
+    isShowAllBtn: { type: Boolean, default: true },
+    isShowRefreshBtn: { type: Boolean, default: true },
+    interval: { type: Number, default: 2000 },
+    notClosableNameList: { type: Array, default: () => [] },
     // 搜索字段之间的关联 AND:且 OR:或
     operator: {
       type: String,
@@ -373,74 +353,50 @@ export default {
   },
   data() {
     return {
-      formData: {},
       isAll: true,
-      height: {
-        default: 50,
-        medium: 44,
-        small: 40,
-        mini: 38
-      },
       // 所有折叠选项中已选中的值
       selectTagList: [],
       // 定时函数
       drawTiming: null,
       // 最多显示宽度
       tagIndex: 0,
-      timeStamp: +new Date(),
-      loading: false,
       searchBoxWidth: undefined,
-      selectWidth: undefined,
       runTime: undefined,
-      maxTextWidth: undefined,
-      // size: Cookies.get('size') || 'small',
-      size: 'default'
+      maxTextWidth: undefined
     }
   },
   computed: {
-    ...mapGetters(['sidebar']),
-    // size() {
-    //   return this.$store.getters.size
-    // },
-    fontSize() {
-      const fontSizes = {
-        medium: 14,
-        default: 13,
-        small: 12
-      }
-      return fontSizes[this.size] || fontSizes.small
+    formData() {
+      return this.modelValue ?? this.value
     },
-    noResetList() {
-      const noReset = ['pageNum', 'pageSize']
-      this.searchData.forEach(item => {
-        if (item.noReset) {
-          noReset.push(item.name)
-        }
-      })
-      return noReset
-    },
-    menuTitle() {
-      return this.$route.meta.title
+    size() {
+      const size = this.$store.getters.size
+      return size === 'mini'
+        ? 'small'
+        : size === 'medium'
+          ? 'default'
+          : size || 'small'
     },
     dividerShow() {
       return this.searchData.length > this.topShowCount
     },
     fmtForYmd() {
       return this.$store.getters.fmtForYmd
-    },
-    fmtForYmdhms() {
-      return this.$store.getters.fmtForYmdhms
     }
   },
   watch: {
-    value: {
+    formData: {
       immediate: true,
       deep: true,
-      handler: function (value) {
-        this.formData = this.value || {}
-        setTimeout(() => {
-          this.initAllSelectTagMethod()
-        }, 100)
+      handler(next, previous) {
+        if (next !== previous) {
+          this.searchData.forEach(field => {
+            const ref = this.$refs[field.name]
+            const component = Array.isArray(ref) ? ref[0] : ref
+            component?.clearSearchTimer?.()
+          })
+        }
+        this.$nextTick(() => this.initAllSelectTagMethod())
       }
     },
     searchData: {
@@ -450,9 +406,7 @@ export default {
       handler: function () {
         this.initFormLabelWidth()
         this.selectTagList = []
-        setTimeout(() => {
-          this.initAllSelectTagMethod()
-        }, 100)
+        this.$nextTick(() => this.initAllSelectTagMethod())
       }
     }
   },
@@ -460,33 +414,25 @@ export default {
     this.initAllSelectTagMethod = lodash.debounce(this.initAllSelectTag, 1000)
   },
   activated() {
-    if (!this.isAll) {
-      const selectTagList = JSON.parse(JSON.stringify(this.selectTagList)) || []
-      this.tagIndex = selectTagList.length
-      this.selectTagList = []
-      this.timeStamp += 1
-      this.loading = true
-      setTimeout(() => {
-        this.selectTagList = selectTagList
-        this.loading = false
-        // this.calcRate()
-        this.divResizeFn()
-      }, 100)
-    }
+    this.divResizeFn()
+  },
+  beforeUnmount() {
+    this.initAllSelectTagMethod.cancel()
+    clearTimeout(this.drawTiming)
   },
   mounted() {
     // 处理搜索条件有默认值时的折叠数据
     this.initAllSelectTagMethod()
+    this.divResizeFn()
   },
   methods: {
     initAllSelectTag() {
-      // console.log('调用 allSelectTag')
-
       this.searchData.forEach((x, i) => {
         if (i >= this.topShowCount) {
           this.allSelectTag(x.name, x, i, x.label)
         }
       })
+      this.$nextTick(this.calcRate)
     },
     getColumnSpan(screenWidth) {
       if (screenWidth >= 1920) {
@@ -507,8 +453,8 @@ export default {
           minSelectWidth = Math.max(minSelectWidth, item.minSelectWidth)
         }
         let width1 = textSize.getTextWidth({
-          text: item.label,
-          fontSize: 14 + 2,
+          text: item.label || '',
+          fontSize: 16,
           fontName:
             'Helvetica Neue, Helvetica, PingFang SC, Hiragino Sans GB, Microsoft YaHei, Arial, sans-serif'
         })
@@ -522,88 +468,70 @@ export default {
     },
     isAllChange() {
       this.isAll = !this.isAll
-      if (!this.isAll) {
-        this.delayed()
-      }
-    },
-    delayed() {
-      if (!this.isAll) {
-        setTimeout(() => {
-          // this.calcRate()
-          this.divResizeFn()
-        }, 100)
-      }
+      if (!this.isAll) this.$nextTick(this.divResizeFn)
     },
     calcRate() {
       const selectTag = this.$refs.selectTag
       const leftBox = this.$refs.leftBox
-      if (!selectTag || selectTag.length <= 0) return
+      if (this.isAll || !selectTag || !leftBox) return
+      this.tagIndex = this.selectTagList.length
       this.$nextTick(() => {
-        if (selectTag) {
-          const ulWidth =
-            selectTag.clientWidth > leftBox.clientWidth
-              ? leftBox.clientWidth
-              : selectTag.clientWidth
-          if (!ulWidth) return
-          let tagWidth = 0
-          let tagIndex = this.tagIndex
-          for (let i = 0; i < this.selectTagList.length; i++) {
-            if (this.$refs['li_' + i] && this.$refs['li_' + i].length > 0) {
-              tagWidth += this.$refs['li_' + i][0].clientWidth
-              if (tagWidth + 50 >= ulWidth) {
-                tagIndex = i
-                this.tagIndex = tagIndex
-                return
-              }
-            }
-            if (i === this.selectTagList.length - 1) {
-              if (
-                tagIndex < this.selectTagList.length &&
-                ulWidth > tagWidth + 200
-              ) {
-                const num = parseInt((ulWidth - tagWidth) / 200)
-                tagIndex += num
-                this.tagIndex = tagIndex
-              }
-            }
+        const availableWidth = leftBox.clientWidth
+        if (!availableWidth) return
+        let tagWidth = 0
+        const elements = selectTag.children
+        for (let i = 0; i < this.selectTagList.length; i++) {
+          tagWidth += elements[i]?.offsetWidth || 0
+          if (tagWidth + 50 > availableWidth) {
+            this.tagIndex = i
+            break
           }
         }
       })
     },
-    // 搜索
+    emitForm() {
+      this.$emit('update:modelValue', this.formData)
+      this.$emit('update:value', this.formData)
+    },
+    getElcascaderEleCheckedNodes() {
+      const ref = this.$refs.productCategoryIds
+      const cascader = Array.isArray(ref) ? ref[0] : ref
+      return cascader?.getCheckedNodes() || []
+    },
     search() {
-      this.$refs.customSearchDlg.resetForm()
-      // this.handleQuery(this.formData)
+      this.emitForm()
+      this.$refs.customSearchDlg?.resetForm()
 
       const { optional, ...params } = this.formData
       this.handleQuery(params)
     },
     // 重置
     resetForm() {
-      // const { pageNum, pageSize } = this.formData
-      // this.formData = { pageNum, pageSize }
       this.resetQuery()
       this.selectTagList = []
       this.tagIndex = 0
     },
     // 组件值变化时触发
     updateForm(name, e, index, label) {
-      const { type, value, startDate, endDate, selectName, inputName } = e
+      let shouldSearch = false
+      const { type, format, value, startDate, endDate, selectName, inputName } =
+        e
       // 判断日期类型
       if (
         type &&
-        (type === 'DatePickerEle' || type === 'DatePickerEleShortcuts')
+        (type === 'DatePickerEle' || type === 'DatePickerEleShortcuts') &&
+        format === 'timestamp'
       ) {
         this.formData[name] = value || undefined
         if (value && value.length > 0) {
           // 开始结束字段，有传入开始结束日期字段就使用传入的，没有就默认 startDate, endDate
-          this.formData[startDate || 'startDate'] = value[0]
-          this.formData[endDate || 'endDate'] = value[1] + 86399000
+          this.formData[startDate || 'startDate'] = Number(value[0])
+          this.formData[endDate || 'endDate'] = Number(value[1]) + 86399000
         } else {
           this.formData[startDate || 'startDate'] = undefined
           this.formData[endDate || 'endDate'] = undefined
         }
-        this.search()
+        shouldSearch = true
       } else if (type && type === 'SelectAnInput') {
         if (e.childType === 'select') {
           this.formData[selectName] = value
@@ -636,7 +564,7 @@ export default {
           childType: e.childType,
           value: value || []
         })
-        this.search()
+        shouldSearch = e.childType === 'input'
       } else if (type && type === 'SelectAnPickerEle') {
         if (e.childType === 'select') {
           this.formData[name] = value
@@ -645,8 +573,8 @@ export default {
         } else {
           if (value && value.length > 0) {
             // 开始结束字段，有传入开始结束日期字段就使用传入的，没有就默认 startDate, endDate
-            this.formData[startDate || 'startDate'] = value[0]
-            this.formData[endDate || 'endDate'] = value[1] + 86399000
+            this.formData[startDate || 'startDate'] = Number(value[0])
+            this.formData[endDate || 'endDate'] = Number(value[1]) + 86399000
           } else {
             this.formData[startDate || 'startDate'] = undefined
             this.formData[endDate || 'endDate'] = undefined
@@ -664,12 +592,11 @@ export default {
           type === 'SelectEle' ||
           type === 'ElcascaderEle'
         ) {
-          this.search()
+          shouldSearch = true
         }
       }
-      // if (index >= this.topShowCount) {
-      //   this.allSelectTag(name, e, index, label);
-      // }
+      if (shouldSearch) this.search()
+      else this.emitForm()
     },
     // 所有折叠选项中已选中的值
     allSelectTag(name, e, index, label) {
@@ -749,7 +676,6 @@ export default {
         })
       }
       if (type === 'ElcascaderEle') {
-        // console.log(this.searchData[index], '===')
         let ids = []
         if (checkStrictly && multiple === false) {
           ids = [value[value.length - 1]]
@@ -856,9 +782,6 @@ export default {
           }
         })
       }
-      setTimeout(() => {
-        this.calcRate()
-      }, 500)
     },
     closeTag(e) {
       const { name, type, inputName } = e
@@ -869,6 +792,11 @@ export default {
         }
       })
       this.formData[name] = undefined
+      if (type === 'DatePickerEle' || type === 'DatePickerEleShortcuts') {
+        const field = this.searchData.find(item => item.name === name)
+        this.formData[field.startDate || 'startDate'] = undefined
+        this.formData[field.endDate || 'endDate'] = undefined
+      }
       if (type === 'SelectAnInput') {
         this.formData[inputName] = ''
         const index = this.searchData.findIndex(x => x.name === name)
@@ -892,9 +820,6 @@ export default {
         this.searchData[index].callback('clear')
       }
       this.search()
-      setTimeout(() => {
-        this.calcRate()
-      }, 500)
     },
     clickTag() {},
     showCustomSearch() {
@@ -932,7 +857,9 @@ export default {
     },
     customSearch() {
       const { pageNum, pageSize } = this.formData
-      this.formData = { pageNum, pageSize }
+      const model = { pageNum, pageSize }
+      this.$emit('update:modelValue', model)
+      this.$emit('update:value', model)
       const params = this.clearEmptyPro(this.$refs.customSearchDlg.optional)
       params.conditions = params.conditions.map((x, i) => {
         const obj = JSON.parse(JSON.stringify(x))
@@ -983,7 +910,6 @@ export default {
       const searchBox = this.$refs.searchBox || {}
       const searchBoxWidth = searchBox.clientWidth
       this.searchBoxWidth = searchBoxWidth
-      this.selectWidth = searchBoxWidth - 500
       clearTimeout(this.drawTiming)
       if (this.runTime) {
         const nowTime = +new Date()
@@ -998,32 +924,14 @@ export default {
       }, 500)
     }
   },
-  emits: ['updateSearchData', 'update:value']
+  emits: ['updateSearchData', 'update:modelValue', 'update:value']
 }
 </script>
-
-<style lang="scss">
-.top-row-content .search-content {
-  .el-form-item:nth-child(1) {
-    margin-right: 4px;
-    .custom-input {
-      .el-input__inner {
-        // border-bottom-right-radius: 0;
-        // border-top-right-radius: 0;
-        // border-right: 0;
-      }
-    }
-  }
-}
-</style>
 
 <style lang="scss" scoped>
 .search-warp {
   // background-color: #61616110;
   // background-color: #99999910;
-  &:deep(.el-form-item__label) {
-    line-height: 32px;
-  }
   padding-left: 8px;
   padding-right: 8px;
   display: flex;
@@ -1032,6 +940,7 @@ export default {
   }
   .search-content-warp {
     flex: 1;
+    min-width: 0;
   }
   .search-content-warp.hide-search {
     overflow: hidden;
@@ -1042,7 +951,8 @@ export default {
     flex: 1;
   }
   :deep(.el-form-item__label) {
-    line-height: 32px;
+    align-items: center;
+    white-space: nowrap;
   }
 }
 .top-row {
@@ -1056,6 +966,19 @@ export default {
     display: flex;
     justify-content: space-between;
     min-height: 30px;
+    align-items: center;
+    gap: 40px;
+  }
+  .search-fields {
+    flex-direction: row-reverse;
+    row-gap: 10px;
+  }
+  .search-tags {
+    flex: 1;
+    min-width: 0;
+  }
+  .search-top-fields {
+    flex-shrink: 0;
   }
   :deep(.el-form-item) {
     margin-bottom: 0;

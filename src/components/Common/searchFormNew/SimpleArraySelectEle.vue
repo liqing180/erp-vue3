@@ -2,7 +2,7 @@
   <el-select
     :size="size"
     :style="{ width: '100%' }"
-    v-model:value="val"
+    :model-value="value"
     :placeholder="placeholder || ''"
     clearable
     @change="$emit('updateForm', { value: $event })"
@@ -30,16 +30,6 @@ export default {
     'width',
     'size'
   ],
-  data() {
-    return {
-      val: this.value
-    }
-  },
-  watch: {
-    value: function (newVal, oldVal) {
-      this.val = newVal
-    }
-  },
   emits: ['updateForm']
 }
 </script>

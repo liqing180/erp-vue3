@@ -54,14 +54,14 @@ export default {
     }
   },
   methods: {
-    input() {
+    input(value) {
       if (this.disabled) return
       this.disabled = true
       setTimeout(() => {
         this.disabled = false
       }, 200)
       this.$emit('updateForm', {
-        value: this.dateRange,
+        value: Array.isArray(value) ? value.map(Number) : undefined,
         format: this.format,
         type: this.type,
         startDate: this.startDate,
@@ -69,6 +69,6 @@ export default {
       })
     }
   },
-  emits: ['updateForm', 'update:value', 'update:value']
+  emits: ['updateForm']
 }
 </script>

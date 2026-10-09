@@ -11,122 +11,16 @@
       </el-tab-pane>
     </el-tabs>
 
-    <el-card v-show="showSearch" shadow="never" class="mb10">
-      <div class="pr-search-grid">
-        <el-input
-          v-model="queryParams.condition"
-          clearable
-          :placeholder="`${$t('PURCHASE.projectCode')} / ${$t('ui.productSearch')}`"
-          @keyup.enter="search"
-          @clear="search"
-        />
-
-        <el-select
-          v-if="activeName === '0'"
-          v-model="queryParams.purchaseRequisiteStatusList"
-          multiple
-          collapse-tags
-          clearable
-          :placeholder="$t('ui.status')"
-        >
-          <el-option
-            v-for="item in statusOptions"
-            :key="item.dictValue"
-            :label="item.dictLabel"
-            :value="item.dictValue"
-          />
-        </el-select>
-
-        <el-select
-          v-if="activeName === '0'"
-          v-model="queryParams.approvedStatusList"
-          multiple
-          collapse-tags
-          clearable
-          :placeholder="$t('ui.processStatus')"
-        >
-          <el-option
-            v-for="item in approvedStatusOptions"
-            :key="item.dictValue"
-            :label="item.dictLabel"
-            :value="item.dictValue"
-          />
-        </el-select>
-
-        <el-select
-          v-model="queryParams.receiveAddressNameList"
-          multiple
-          collapse-tags
-          filterable
-          clearable
-          :placeholder="$t('PURCHASE.deliveryAddress')"
-        >
-          <el-option
-            v-for="item in receiveAddressOptions"
-            :key="item.receiveAddressName"
-            :label="item.receiveAddressName"
-            :value="item.receiveAddressName"
-          />
-        </el-select>
-
-        <el-cascader
-          v-model="queryParams.departmentIdList"
-          :options="departmentOptions"
-          :props="departmentProps"
-          clearable
-          collapse-tags
-          filterable
-          :placeholder="$t('PURCHASE.department')"
-        />
-
-        <el-select
-          v-model="queryParams.requiredIdList"
-          multiple
-          collapse-tags
-          filterable
-          clearable
-          :placeholder="$t('PURCHASE.requiredBy')"
-        >
-          <el-option
-            v-for="item in requiredByOptions"
-            :key="item.requiredId"
-            :label="item.requiredBy"
-            :value="item.requiredId"
-          />
-        </el-select>
-
-        <el-select
-          v-model="queryParams.dropShippingList"
-          multiple
-          collapse-tags
-          clearable
-          :placeholder="$t('PURCHASE.dropShipping')"
-        >
-          <el-option :label="$t('uiBtn.active')" value="1" />
-          <el-option :label="$t('uiBtn.inactive')" value="0" />
-        </el-select>
-
-        <el-date-picker
-          v-model="queryParams.dateRange"
-          type="daterange"
-          value-format="x"
-          unlink-panels
-          range-separator="-"
-          :start-placeholder="$t('ui.startDate')"
-          :end-placeholder="$t('ui.endDate')"
-          style="width: 100%"
-        />
-
-        <div class="pr-search-actions">
-          <el-button type="primary" size="small" @click="search">{{
-            $t('uiBtn.search')
-          }}</el-button>
-          <el-button size="small" @click="resetSearch">{{
-            $t('uiBtn.reset')
-          }}</el-button>
-        </div>
-      </div>
-    </el-card>
+    <search-form
+      ref="searchForm"
+      v-model="queryParams"
+      :searchData="searchData"
+      :handleQuery="handleSearchForm"
+      :resetQuery="resetSearchForm"
+      :showCustom="false"
+      :topShowCount="1"
+      v-show="showSearch"
+    />
 
     <div class="pr-toolbar mb10">
       <div class="pr-toolbar-left">
@@ -302,13 +196,6 @@ export default {
       receiveAddressOptions: [],
       departmentOptions: [],
       requiredByOptions: [],
-      departmentProps: {
-        multiple: true,
-        emitPath: true,
-        value: 'value',
-        label: 'label',
-        children: 'children'
-      },
       queryParams: {
         pageNum: 1,
         pageSize: 25,
@@ -493,6 +380,91 @@ export default {
     }
   },
   computed: {
+    searchData() {
+      const statusFields =
+        this.activeName === '0'
+          ? [
+              {
+                name: 'purchaseRequisiteStatusList',
+                label: this.$t('ui.status'),
+                type: 'MultipleSelectEle',
+                width: '200px',
+                selectValue: 'dictValue',
+                selectLabel: 'dictLabel',
+                selectData: this.statusOptions
+              },
+              {
+                name: 'approvedStatusList',
+                label: this.$t('ui.processStatus'),
+                type: 'MultipleSelectEle',
+                width: '200px',
+                selectValue: 'dictValue',
+                selectLabel: 'dictLabel',
+                selectData: this.approvedStatusOptions
+              }
+            ]
+          : []
+      return [
+        {
+          name: 'condition',
+          type: 'InputEle',
+          placeholder:
+            this.$t('PURCHASE.projectCode') +
+            ' / ' +
+            this.$t('ui.productSearch')
+        },
+        ...statusFields,
+        {
+          name: 'receiveAddressNameList',
+          label: this.$t('PURCHASE.deliveryAddress'),
+          type: 'MultipleSelectEle',
+          filterable: true,
+          width: '200px',
+          selectValue: 'receiveAddressName',
+          selectLabel: 'receiveAddressName',
+          selectData: this.receiveAddressOptions
+        },
+        {
+          name: 'departmentIdList',
+          label: this.$t('PURCHASE.department'),
+          type: 'ElcascaderEle',
+          width: '230px',
+          mapValue: 'value',
+          mapLabel: 'label',
+          selectData: this.departmentOptions
+        },
+        {
+          name: 'requiredIdList',
+          label: this.$t('PURCHASE.requiredBy'),
+          type: 'MultipleSelectEle',
+          filterable: true,
+          width: '200px',
+          selectValue: 'requiredId',
+          selectLabel: 'requiredBy',
+          selectData: this.requiredByOptions
+        },
+        {
+          name: 'dropShippingList',
+          label: this.$t('PURCHASE.dropShipping'),
+          type: 'MultipleSelectEle',
+          width: '200px',
+          selectValue: 'dictValue',
+          selectLabel: 'dictLabel',
+          selectData: [
+            { dictValue: '1', dictLabel: this.$t('uiBtn.active') },
+            { dictValue: '0', dictLabel: this.$t('uiBtn.inactive') }
+          ]
+        },
+        {
+          name: 'dateRange',
+          label: this.$t('ui.createdTime'),
+          type: 'DatePickerEleShortcuts',
+          format: 'timestamp',
+          startDate: 'startDateCreatedTime',
+          endDate: 'endDateCreatedTime'
+        }
+      ]
+    },
     visibleColumns() {
       let result = this.columns
         .filter(column => column.visible)
@@ -551,11 +523,13 @@ export default {
     },
     setDefaultDateRange() {
       const endDate = new Date()
-      endDate.setHours(23, 59, 59, 999)
+      endDate.setHours(23, 59, 59, 0)
       const startDate = new Date(endDate)
       startDate.setDate(startDate.getDate() - 179)
       startDate.setHours(0, 0, 0, 0)
       this.queryParams.dateRange = [startDate.getTime(), endDate.getTime()]
+      this.queryParams.startDateCreatedTime = startDate.getTime()
+      this.queryParams.endDateCreatedTime = endDate.getTime()
     },
     dictLabel(options, value) {
       const item = options.find(
@@ -585,13 +559,6 @@ export default {
     },
     normalizeParams() {
       const params = JSON.parse(JSON.stringify(this.queryParams))
-      const dateRange = params.dateRange || []
-      params.startDateCreatedTime = dateRange[0]
-        ? Number(dateRange[0])
-        : undefined
-      params.endDateCreatedTime = dateRange[1]
-        ? Number(dateRange[1])
-        : undefined
       delete params.dateRange
       params.departmentIdList = (params.departmentIdList || []).map(path =>
         Array.isArray(path) ? path[path.length - 1] : path
@@ -611,7 +578,7 @@ export default {
       }
       params.labelType = this.activeName
       params.menuPerms = menuKey.PR
-      return params
+      return this.$trimOfObj(params)
     },
     async getList(options = {}) {
       const token = ++this.queryToken
@@ -674,7 +641,8 @@ export default {
     },
     async tabChange() {
       const pageSize = this.queryParams.pageSize
-      const dateRange = this.queryParams.dateRange
+      const { dateRange, startDateCreatedTime, endDateCreatedTime } =
+        this.queryParams
       this.queryParams = {
         pageNum: 1,
         pageSize,
@@ -686,6 +654,8 @@ export default {
         requiredIdList: [],
         dropShippingList: [],
         dateRange,
+        startDateCreatedTime,
+        endDateCreatedTime,
         deliveryStatus: '0',
         orderByColumn: undefined,
         isAsc: undefined
@@ -696,11 +666,11 @@ export default {
       this.queryParams.pageNum = 1
       this.getList()
     },
-    search() {
+    handleSearchForm() {
       this.queryParams.pageNum = 1
       this.getList()
     },
-    resetSearch() {
+    resetSearchForm(isGetList = true) {
       const pageSize = this.queryParams.pageSize
       this.queryParams = {
         pageNum: 1,
@@ -719,7 +689,7 @@ export default {
       }
       this.setDefaultDateRange()
       this.$refs.tables?.clearSort?.()
-      this.getList()
+      if (isGetList) this.getList()
     },
     pageSizeChange() {
       this.queryParams.pageNum = 1
@@ -801,18 +771,6 @@ export default {
   gap: 8px;
 }
 
-.pr-search-grid {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(180px, 1fr));
-  gap: 10px;
-  align-items: center;
-}
-
-.pr-search-actions {
-  display: flex;
-  gap: 8px;
-}
-
 .pr-toolbar {
   display: flex;
   justify-content: space-between;
@@ -838,11 +796,5 @@ export default {
   display: flex;
   justify-content: flex-end;
   margin-top: 14px;
-}
-
-@media (max-width: 1400px) {
-  .pr-search-grid {
-    grid-template-columns: repeat(3, minmax(180px, 1fr));
-  }
 }
 </style>

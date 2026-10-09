@@ -2,7 +2,7 @@
   <el-select
     :size="size"
     :style="{ width: '100%' }"
-    v-model:value="val"
+    :model-value="value"
     :placeholder="placeholder || ''"
     multiple
     collapse-tags
@@ -35,23 +35,12 @@ export default {
     'filterable',
     'size'
   ],
-  data() {
-    return {
-      val: this.value
-    }
-  },
-  watch: {
-    value: function (newVal, oldVal) {
-      this.val = newVal
-    }
-  },
   emits: ['updateForm']
 }
 </script>
 
 <style lang="scss" scoped>
-.select :deep(.el-select__tags > span) {
-  display: flex;
+.select :deep(.el-select__selected-item .el-tag__content) {
   max-width: 120px;
 }
 </style>

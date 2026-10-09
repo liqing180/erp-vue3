@@ -68,13 +68,12 @@ export default {
       default: 'small'
     }
   },
-  emits: ['updateForm', 'update:value', 'update:value']
+  emits: ['updateForm']
 }
 </script>
 
 <style lang="scss" scoped>
-.select :deep(.el-select__tags > span) {
-  display: flex;
+.select :deep(.el-select__selected-item .el-tag__content) {
   max-width: 120px;
 }
 </style>
