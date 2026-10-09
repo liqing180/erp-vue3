@@ -228,13 +228,23 @@ function menuItemClick(menuItem) {
 
 <style scoped>
 .erp-menu-item {
-  position: relative;
+  padding-right: 6px;
 }
 
 .menu-title {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.erp-menu-item > .menu-title {
+  flex: 1;
+  min-width: 0;
+}
+
+.erp-menu-item > .erp-menu-badge {
+  position: static;
+  margin-left: 2px;
 }
 
 .erp-menu-badge {

@@ -17,6 +17,159 @@
         @contextmenu.prevent="openMenu(tag, $event)"
       >
         {{ getMenuTitle(tag.title) }}
+        <el-badge
+          v-if="tag.name === 'ToDoTask' && bpmTaskCountData.myTodoTaskCount"
+          :max="99"
+          :value="bpmTaskCountData.myTodoTaskCount"
+          is-dot
+          class="mark-badge"
+        ></el-badge>
+        <el-badge
+          v-if="
+            tag.name === 'ProcessPendingAction' &&
+            bpmTaskCountData.systemTodoTaskCount
+          "
+          :max="99"
+          :value="bpmTaskCountData.systemTodoTaskCount"
+          is-dot
+          class="mark-badge"
+        ></el-badge>
+        <el-badge
+          v-if="
+            tag.name === 'InventoryAudit' &&
+            inventoryCountData.auditPendingCount
+          "
+          :max="99"
+          :value="inventoryCountData.auditPendingCount"
+          is-dot
+          class="mark-badge"
+        ></el-badge>
+        <el-badge
+          v-if="
+            tag.name === 'StoreIssueChit' &&
+            inventoryCountData.storeIssueChitPendingCount
+          "
+          :max="99"
+          :value="inventoryCountData.storeIssueChitPendingCount"
+          is-dot
+          class="mark-badge"
+        ></el-badge>
+        <el-badge
+          v-if="
+            tag.name === 'EmergencyGoodsReceipt' &&
+            inventoryCountData.egrPendingCount
+          "
+          :max="99"
+          :value="inventoryCountData.egrPendingCount"
+          is-dot
+          class="mark-badge"
+        ></el-badge>
+        <!-- 销售模块 -->
+        <el-badge
+          v-if="tag.name === 'SalesInquiry' && salesCountData.siPendingCount"
+          :max="99"
+          :value="salesCountData.siPendingCount"
+          is-dot
+          class="mark-badge"
+        ></el-badge>
+        <el-badge
+          v-if="tag.name === 'SalesQuotation' && salesCountData.sqPendingCount"
+          :max="99"
+          :value="salesCountData.sqPendingCount"
+          is-dot
+          class="mark-badge"
+        ></el-badge>
+        <el-badge
+          v-if="tag.name === 'SalesOrder' && salesCountData.soPendingCount"
+          :max="99"
+          :value="salesCountData.soPendingCount"
+          is-dot
+          class="mark-badge"
+        ></el-badge>
+        <el-badge
+          v-if="
+            tag.name === 'PreDeliveryNotice' && salesCountData.pdnPendingCount
+          "
+          :max="99"
+          :value="salesCountData.pdnPendingCount"
+          is-dot
+          class="mark-badge"
+        ></el-badge>
+        <el-badge
+          v-if="
+            tag.name === 'SalesGoodsReturn' && salesCountData.sgrPendingCount
+          "
+          :max="99"
+          :value="salesCountData.sgrPendingCount"
+          is-dot
+          class="mark-badge"
+        ></el-badge>
+        <!-- 采购模块 -->
+        <el-badge
+          v-if="
+            tag.name === 'PurchaseRequisition' &&
+            purchaseCountData.prPendingCount
+          "
+          :max="99"
+          :value="purchaseCountData.prPendingCount"
+          is-dot
+          class="mark-badge"
+        ></el-badge>
+        <el-badge
+          v-if="
+            tag.name === 'RequestForQuotation' &&
+            purchaseCountData.rfqPendingCount
+          "
+          :max="99"
+          :value="purchaseCountData.rfqPendingCount"
+          is-dot
+          class="mark-badge"
+        ></el-badge>
+        <el-badge
+          v-if="
+            tag.name === 'PurchaseQuotation' && purchaseCountData.pqPendingCount
+          "
+          :max="99"
+          :value="purchaseCountData.pqPendingCount"
+          is-dot
+          class="mark-badge"
+        ></el-badge>
+        <el-badge
+          v-if="
+            tag.name === 'PurchaseOrder' && purchaseCountData.poPendingCount
+          "
+          :max="99"
+          :value="purchaseCountData.poPendingCount"
+          is-dot
+          class="mark-badge"
+        ></el-badge>
+        <el-badge
+          v-if="
+            tag.name === 'PurchaseReturnOrder' &&
+            purchaseCountData.purchaseReturnPendingCount
+          "
+          :max="99"
+          :value="purchaseCountData.purchaseReturnPendingCount"
+          is-dot
+          class="mark-badge"
+        ></el-badge>
+        <el-badge
+          v-if="
+            tag.name === 'ConsignmentOrder' &&
+            purchaseCountData.consignmentOrderPendingCount
+          "
+          :max="99"
+          :value="purchaseCountData.consignmentOrderPendingCount"
+          is-dot
+          class="mark-badge"
+        ></el-badge>
+        <el-badge
+          v-if="tag.name === 'ProformaInvoice' && salesCountData.piPendingCount"
+          :max="99"
+          :value="salesCountData.piPendingCount"
+          is-dot
+          class="mark-badge"
+        ></el-badge>
         <span v-if="!isAffix(tag)" @click.prevent.stop="closeSelectedTag(tag)">
           <close
             class="el-icon-close"
@@ -80,6 +233,12 @@ const router = useRouter()
 const visitedViews = computed(() => useTagsViewStore().visitedViews)
 const routes = computed(() => store.state.permission.routes)
 const theme = computed(() => useSettingsStore().theme)
+const bpmTaskCountData = computed(() => store.getters.bpmTaskCountData || {})
+const inventoryCountData = computed(
+  () => store.getters.inventoryCountData || {}
+)
+const salesCountData = computed(() => store.getters.salesCountData || {})
+const purchaseCountData = computed(() => store.getters.purchaseCountData || {})
 
 watch(route, () => {
   addTags()
@@ -296,6 +455,13 @@ function handleScroll() {
 </script>
 
 <style lang="scss" scoped>
+.mark-badge {
+  position: relative;
+  top: 4px !important;
+  margin-left: 4px;
+  margin-right: 4px;
+}
+
 .tags-view-container {
   height: 34px;
   width: 100%;

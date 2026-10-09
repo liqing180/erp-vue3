@@ -112,6 +112,10 @@ onMounted(() => {
   display: none !important;
 }
 
+.el-badge__content {
+  border: none !important;
+}
+
 /* 数字输入框内容固定左对齐 */
 .el-input-number .el-input__inner {
   text-align: left !important;
