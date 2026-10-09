@@ -217,6 +217,7 @@ import useTagsViewStore from '@/Pinia/modules/tagsView'
 import useSettingsStore from '@/Pinia/modules/settings'
 import Sortable from 'sortablejs'
 import { useStore } from 'vuex'
+import { formDirtyClass } from '@/mixins/formDirtyClass'
 const store = useStore()
 
 const visible = ref(false)
@@ -371,7 +372,18 @@ function refreshSelectedTag(view) {
   }
 }
 
-function closeSelectedTag(view) {
+async function closeSelectedTag(view) {
+  const currentRoute = { ...route }
+  const action = await formDirtyClass.showNotify(view.name)
+  if (action === 'save') {
+    const pageItem = formDirtyClass.routeStatusData[view.name]
+    await router.push(view)
+    await nextTick()
+    await pageItem?.saveOrSubmitFn?.(currentRoute)
+    return
+  }
+  if (action === 'stop') return
+
   proxy.$tab.closePage(view).then(({ visitedViews }) => {
     if (isActive(view)) {
       toLastView(visitedViews, view)

@@ -1,8 +1,9 @@
 <template>
   <PurchaseRequisitionForm
-    :key="$route.query.timeId || $route.query.id"
+    :key="pageRoute.query.timeId || pageRoute.query.id"
+    :page-route="pageRoute"
     mode="revise"
-    :id="$route.query.id || ''"
+    :id="pageRoute.query.id || ''"
   />
 </template>
 
@@ -11,6 +12,12 @@ import PurchaseRequisitionForm from './PurchaseRequisitionForm.vue'
 
 export default {
   name: 'RevisePurchaseRequisition',
-  components: { PurchaseRequisitionForm }
+  components: { PurchaseRequisitionForm },
+  props: {
+    pageRoute: {
+      type: Object,
+      required: true
+    }
+  }
 }
 </script>

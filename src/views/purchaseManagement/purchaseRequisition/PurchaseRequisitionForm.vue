@@ -647,6 +647,10 @@ export default {
     RevisionCompareDialog
   },
   props: {
+    pageRoute: {
+      type: Object,
+      required: true
+    },
     mode: {
       type: String,
       required: true,
@@ -692,10 +696,10 @@ export default {
   },
   computed: {
     dataType() {
-      return String(this.$route.query.dataType || '1')
+      return String(this.pageRoute.query.dataType || '1')
     },
     taskId() {
-      return String(this.$route.query.taskId || this.form.taskId || '')
+      return String(this.pageRoute.query.taskId || this.form.taskId || '')
     },
     editPermission() {
       return checkPermi(['purchaseManagement:purchaseRequisition:edit'])
@@ -757,7 +761,7 @@ export default {
         this.mode === 'edit' &&
         this.editPermission &&
         this.buttonAuthMsg.isCanRevise === '1' &&
-        String(this.$route.query.comeFrom || '1') === '1'
+        String(this.pageRoute.query.comeFrom || '1') === '1'
       )
     },
     canCompare() {
@@ -805,8 +809,8 @@ export default {
     this.initialize()
   },
   beforeUnmount() {
-    if (formDirtyClass.routeStatusData[this.$route.name]?.$vm === this) {
-      delete formDirtyClass.routeStatusData[this.$route.name]
+    if (formDirtyClass.routeStatusData[this.pageRoute.name]?.$vm === this) {
+      delete formDirtyClass.routeStatusData[this.pageRoute.name]
     }
   },
   methods: {
@@ -1404,7 +1408,7 @@ export default {
     },
     goRevise() {
       this.markDirtySaved()
-      this.$store.dispatch('tagsView/delView', this.$route)
+      this.$store.dispatch('tagsView/delView', this.pageRoute)
       this.$router.push({
         path: '/purchaseManagement/revisePurchaseRequisition',
         query: {
@@ -1424,7 +1428,7 @@ export default {
     registerDirtyState() {
       if (!['add', 'edit'].includes(this.mode)) return
       this.$nextTick(() => {
-        formDirtyClass.routeStatusData[this.$route.name] = {
+        formDirtyClass.routeStatusData[this.pageRoute.name] = {
           $vm: this,
           saveShow: this.canSaveDraft,
           submitShow: this.canSubmit,
@@ -1436,12 +1440,12 @@ export default {
       })
     },
     markDirtySaved() {
-      const state = formDirtyClass.routeStatusData[this.$route.name]
+      const state = formDirtyClass.routeStatusData[this.pageRoute.name]
       if (state) state.isSaveSuccess = true
     },
     async back() {
       if (['add', 'edit'].includes(this.mode)) {
-        const result = await formDirtyClass.showNotify(this.$route.name)
+        const result = await formDirtyClass.showNotify(this.pageRoute.name)
         if (result === 'save') {
           await this.submitForm('save')
           return
@@ -1452,8 +1456,8 @@ export default {
     },
     leavePage() {
       this.$emit('back')
-      this.$store.dispatch('tagsView/delView', this.$route)
-      if (this.$route.query.backType === '2') {
+      this.$store.dispatch('tagsView/delView', this.pageRoute)
+      if (this.pageRoute.query.backType === '2') {
         this.$router.back()
         return
       }

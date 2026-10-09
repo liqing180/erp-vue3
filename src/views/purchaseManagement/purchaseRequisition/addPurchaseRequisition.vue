@@ -1,5 +1,9 @@
 <template>
-  <PurchaseRequisitionForm :key="$route.query.timeId || 'add'" mode="add" />
+  <PurchaseRequisitionForm
+    :key="pageRoute.query.timeId || 'add'"
+    :pageRoute="pageRoute"
+    mode="add"
+  />
 </template>
 
 <script>
@@ -7,6 +11,12 @@ import PurchaseRequisitionForm from './PurchaseRequisitionForm.vue'
 
 export default {
   name: 'AddPurchaseRequisition',
-  components: { PurchaseRequisitionForm }
+  components: { PurchaseRequisitionForm },
+  props: {
+    pageRoute: {
+      type: Object,
+      required: true
+    }
+  }
 }
 </script>
