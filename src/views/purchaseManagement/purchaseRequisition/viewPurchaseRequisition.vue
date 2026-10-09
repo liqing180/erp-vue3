@@ -1,18 +1,19 @@
 <template>
-  <PurchaseRequisitionForm
+  <reviseFromPage
     :key="pageRoute.query.timeId || pageRoute.query.id"
     :page-route="pageRoute"
-    mode="view"
-    :id="pageRoute.query.id || ''"
+    :prop-row-id="String(pageRoute.query.id || '')"
+    :prop-time-id="String(pageRoute.query.timeId || '')"
+    :is-view="true"
   />
 </template>
 
 <script>
-import PurchaseRequisitionForm from './PurchaseRequisitionForm.vue'
+import reviseFromPage from './reviseFromPage.vue'
 
 export default {
   name: 'ViewPurchaseRequisition',
-  components: { PurchaseRequisitionForm },
+  components: { reviseFromPage },
   props: {
     pageRoute: {
       type: Object,

@@ -5,7 +5,7 @@
       placeholder=""
       readonly
       :disabled="disabled"
-      :value="value"
+      :model-value="value"
       :title="title"
     >
       <template v-slot:suffix>

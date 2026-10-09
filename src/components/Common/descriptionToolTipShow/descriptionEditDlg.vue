@@ -11,48 +11,54 @@
       </div>
 
       <template #reference>
-        <el-popover
-          :visible="editPopShow"
-          placement="top"
-          :width="600"
-          trigger="click"
-        >
-          <div class="editor-body">
-            <el-input
-              ref="textareaRef"
-              v-model="editValue"
-              type="textarea"
-              :autosize="{ minRows: 1, maxRows: 8 }"
-              resize="none"
-              show-word-limit
-              :maxlength="normalizedMaxlength"
-              @input="handleInput"
-            />
-          </div>
-          <div class="editor-footer">
-            <el-button size="small" @click="hidePop('cancel')">
-              {{ $t('menu.cancel') }}
-            </el-button>
-            <el-button type="primary" size="small" @click="hidePop('confirm')">
-              {{ $t('uiBtn.confirm1') }}
-            </el-button>
-          </div>
+        <div class="description-editor-reference">
+          <el-popover
+            :visible="editPopShow"
+            placement="top"
+            :width="600"
+            trigger="click"
+          >
+            <div class="editor-body">
+              <el-input
+                ref="textareaRef"
+                v-model="editValue"
+                type="textarea"
+                :autosize="{ minRows: 1, maxRows: 8 }"
+                resize="none"
+                show-word-limit
+                :maxlength="normalizedMaxlength"
+                @input="handleInput"
+              />
+            </div>
+            <div class="editor-footer">
+              <el-button size="small" @click="hidePop('cancel')">
+                {{ $t('menu.cancel') }}
+              </el-button>
+              <el-button
+                type="primary"
+                size="small"
+                @click="hidePop('confirm')"
+              >
+                {{ $t('uiBtn.confirm1') }}
+              </el-button>
+            </div>
 
-          <template #reference>
-            <slot>
-              <div v-if="!disabled" class="editable-row" @click="showPop">
-                <div class="primary-pointer tooltip-row flex-value">
-                  <span v-if="sourceText.trim()">{{ sourceText }}</span>
-                  <span v-else class="transparent-placeholder">
-                    -------------
-                  </span>
+            <template #reference>
+              <slot>
+                <div v-if="!disabled" class="editable-row" @click="showPop">
+                  <div class="primary-pointer tooltip-row flex-value">
+                    <span v-if="sourceText.trim()">{{ sourceText }}</span>
+                    <span v-else class="transparent-placeholder">
+                      -------------
+                    </span>
+                  </div>
+                  <el-icon class="edit-icon"><Edit /></el-icon>
                 </div>
-                <el-icon class="edit-icon"><Edit /></el-icon>
-              </div>
-              <div v-else class="tooltip-row">{{ sourceText }}</div>
-            </slot>
-          </template>
-        </el-popover>
+                <div v-else class="tooltip-row">{{ sourceText }}</div>
+              </slot>
+            </template>
+          </el-popover>
+        </div>
       </template>
     </el-popover>
   </div>

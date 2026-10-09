@@ -1,21 +1,27 @@
 <template>
-  <PurchaseRequisitionForm
+  <addFromPage
+    ref="FromPage"
     :key="pageRoute.query.timeId || 'add'"
     :pageRoute="pageRoute"
-    mode="add"
+    :prop-time-id="String(pageRoute.query.timeId || '')"
   />
 </template>
 
 <script>
-import PurchaseRequisitionForm from './PurchaseRequisitionForm.vue'
+import addFromPage from './addFromPage.vue'
 
 export default {
   name: 'AddPurchaseRequisition',
-  components: { PurchaseRequisitionForm },
+  components: { addFromPage },
   props: {
     pageRoute: {
       type: Object,
       required: true
+    }
+  },
+  methods: {
+    handleSave() {
+      return this.$refs.FromPage.handleSaveDraft()
     }
   }
 }
