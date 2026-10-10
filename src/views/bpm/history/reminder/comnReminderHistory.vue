@@ -44,12 +44,13 @@
           <template v-else-if="item.prop === 'participant'">
             <el-popover
               :key="scope.$index"
+              width="auto"
               trigger="hover"
               placement="bottom"
               effect="light"
               :show-after="500"
               :disabled="!scope.row.participant"
-              popper-class="td-proper-box"
+              popper-class="td-proper-box bpm-participant-popover"
             >
               <div class="pp-title">
                 {{ $t('reminder.approvalParticipant') }}

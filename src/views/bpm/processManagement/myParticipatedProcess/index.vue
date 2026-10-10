@@ -68,6 +68,8 @@
           <template v-else-if="item.prop === 'handleUserNameListShowStr'">
             <el-popover
               :key="scope.$index"
+              width="auto"
+              popper-class="bpm-participant-popover"
               trigger="hover"
               placement="bottom"
               effect="light"

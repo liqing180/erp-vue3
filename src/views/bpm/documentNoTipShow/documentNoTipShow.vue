@@ -12,9 +12,9 @@
     :offset="0"
   >
     <div
-      @mouseenter="mouseenterCur($event)"
+      @mouseenter="mouseenterCur"
+      @mouseleave="hidePop"
       class="pop-box"
-      :style="`width: ${comPopWidth}px`"
       v-loading="popoverData.loading"
     >
       <el-table :show-header="false" :data="popoverData.topShowData || []">
@@ -90,14 +90,9 @@
         v-show="comShowBottom && (popoverData.bottomShowData || []).length > 0"
       ></div>
       <div
-        class="flex"
         v-show="comShowBottom && (popoverData.bottomShowData || []).length > 0"
       >
-        <el-table
-          class="flex-1"
-          max-height="300"
-          :data="popoverData.bottomShowData || []"
-        >
+        <el-table max-height="300" :data="popoverData.bottomShowData || []">
           <el-table-column
             v-for="item in comColumns2"
             :key="item.prop + params.businessId"
@@ -339,7 +334,6 @@ export default {
       ) {
         return
       }
-      this.popoverData.hide = false
       this.popoverData.loading = true
       this.popoverData.topShowData = []
       this.popoverData.bottomShowData = []
@@ -1631,19 +1625,15 @@ export default {
         })
     },
     hidePop() {
-      if (this.popoverData) {
-        this.popoverData.hide = true
-      }
       clearTimeout(this.hideTimer)
       this.hideTimer = setTimeout(() => {
-        if (this.popoverData.hide) this.visible = false
+        this.visible = false
+        this.hideTimer = undefined
       }, 300)
     },
     mouseenterCur() {
       clearTimeout(this.hideTimer)
-      if (this.popoverData) {
-        this.popoverData.hide = false
-      }
+      this.hideTimer = undefined
     }
   }
 }
@@ -1653,7 +1643,9 @@ export default {
   border: 1px solid #efefef;
   border-bottom: 0px solid #efefef;
   border-radius: 4px;
-  width: 400px;
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
 }
 .item-label {
   // font-size: 13px;

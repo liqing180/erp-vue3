@@ -333,3 +333,12 @@ h6 {
   text-decoration: underline;
   text-underline-offset: 3px;
 }
+
+/* BPM 参与人悬浮列表：恢复 ERP 按姓名内容撑开、每人一行的展示。 */
+.bpm-participant-popover {
+  max-width: calc(100vw - 24px);
+
+  .pp-item {
+    white-space: nowrap;
+  }
+}
