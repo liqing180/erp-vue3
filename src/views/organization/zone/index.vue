@@ -1,5 +1,15 @@
 <template>
   <div class="app-container">
+    <search-form
+      ref="searchForm"
+      v-model="queryParams"
+      :searchData="searchData"
+      :handleQuery="handleSearchForm"
+      :resetQuery="resetSearchForm"
+      :showCustom="false"
+      v-show="showSearch"
+    />
+
     <el-row :gutter="10" class="mb8">
       <el-col :span="1.5">
         <el-button
@@ -7,10 +17,11 @@
           icon="Plus"
           size="small"
           @click="handleAdd"
-          v-hasPermi="['organization:departmentManagement:add']"
+          v-hasPermi="['organization:zone:add']"
           >{{ $t('uiBtn.add') }}</el-button
         >
       </el-col>
+
       <right-toolbar
         :saveKey="saveKey"
         v-model:showSearch="showSearch"
@@ -21,12 +32,13 @@
     </el-row>
 
     <el-table
-      ref="tables"
       border
+      ref="tables"
+      :row-class-name="tableRowClassName"
       v-loading="loading"
       :data="tableList"
       @sort-change="handleSortChange"
-      @row-dblclick="handleUpdate"
+      @row-dblclick="rowDblclick"
       style="cursor: pointer"
     >
       <el-table-column
@@ -52,8 +64,7 @@
         :show-overflow-tooltip="item.tooltip"
         :fixed="item.fixed"
         :sortable="item.sortable"
-        :align="item.align || 'left'"
-        header-align="center"
+        :align="item.align || 'center'"
       >
         <template #default="scope">
           <template v-if="item.prop === 'isActive'">
@@ -68,33 +79,32 @@
         </template>
       </el-table-column>
       <el-table-column
+        v-for="item in customColumns"
+        :key="item.prop"
+        :prop="item.prop"
+        :label="item.label"
+        :width="item.width"
+        :min-width="getMinWidth(item)"
+        :show-overflow-tooltip="item.tooltip"
+        :sortable="item.sortable"
+        :align="item.align || 'center'"
+      >
+      </el-table-column>
+      <el-table-column
         :label="$t('ui.action')"
-        key="action"
         align="center"
+        min-width="80"
         class-name="small-padding fixed-width"
-        width="100"
         fixed="right"
-        v-if="editAuth"
       >
         <template #default="scope">
-          <div class="flexCen">
-            <el-icon
-              class="pointer mr5"
-              style="font-size: 20px; color: #409eff"
-              :title="$t('uiBtn.edit')"
-              v-hasPermi="['organization:departmentManagement:edit']"
-              @click="handleUpdate(scope.row)"
-              ><Edit
-            /></el-icon>
-            <el-icon
-              class="pointer"
-              style="font-size: 20px; color: #f56c6c"
-              :title="$t('uiBtn.delete')"
-              v-if="deleteAuth"
-              @click="handleDelRow(scope.row)"
-              ><Delete
-            /></el-icon>
-          </div>
+          <el-icon
+            class="pointer mr5"
+            style="font-size: 20px; color: #409eff"
+            :title="$t('uiBtn.edit')"
+            @click="handleUpdate(scope.row)"
+            ><Edit
+          /></el-icon>
         </template>
       </el-table-column>
     </el-table>
@@ -111,14 +121,10 @@
 </template>
 
 <script>
-import {
-  queryDepartmentList,
-  deleteDepartment
-} from '@/api/organization/department'
+import { queryZoneList } from '@/api/organization/zone'
 import pageMixin from '@/mixins/tableMinx'
-
 export default {
-  name: 'Post',
+  name: 'Zone',
   mixins: [pageMixin],
   data() {
     const vm = this
@@ -132,23 +138,73 @@ export default {
       showSearch: true,
       // 总条数
       total: 0,
-      // 岗位表格数据
+      // 角色表格数据
       tableList: [],
+      // 查询参数
+      queryParams: {
+        pageNum: 1,
+        pageSize: 25,
+        condition: undefined,
+        isActive: undefined
+      },
+      searchData: [
+        {
+          name: 'condition',
+          type: 'InputEle',
+          placeholder: `${vm.$t('organization.zoneName')} / ${vm.$t('organization.code')}`
+        },
+        {
+          name: 'isActive',
+          label: vm.$t('ui.isActive'),
+          type: 'SelectEle',
+          selectValue: 'value',
+          selectLabel: 'label',
+          selectData: [
+            { label: vm.$t('uiBtn.active'), value: '1' },
+            { label: vm.$t('uiBtn.inactive'), value: '0' }
+          ]
+        }
+      ],
+      // 列信息
       columns: [
         {
-          prop: 'allSuperiorNames',
-          label: vm.$t('organization.parentStructure'),
+          prop: 'zoneName',
+          label: vm.$t('organization.zoneName'),
           visible: true,
-          minWidth: 170,
+          minWidth: 160,
+          tooltip: true,
+          fixed: true,
+          sortable: 'custom'
+        },
+        {
+          prop: 'zoneCode',
+          label: vm.$t('organization.zoneCode'),
+          visible: true,
+          minWidth: 180,
+          tooltip: true,
+          sortable: 'custom'
+        },
+        {
+          prop: 'description',
+          label: vm.$t('ui.description'),
+          minWidth: 180,
+          visible: true,
           tooltip: true
         },
         {
-          prop: 'departmentName',
-          label: vm.$t('organization.departmentName'),
-          visible: true,
-          sortable: 'custom',
+          prop: 'remarks',
+          label: vm.$t('ui.remarks'),
           minWidth: 200,
+          visible: true,
           tooltip: true
+        },
+        {
+          prop: 'isActive',
+          label: vm.$t('ui.isActive'),
+          minWidth: 140,
+          visible: true,
+          tooltip: true,
+          sortable: 'custom'
         },
         {
           prop: 'createdBy',
@@ -169,25 +225,21 @@ export default {
         {
           prop: 'modifiedBy',
           label: vm.$t('ui.modifiedBy'),
-          minWidth: 170,
+          minWidth: 160,
           visible: true,
-          sortable: 'custom',
-          tooltip: true
+          tooltip: true,
+          sortable: 'custom'
         },
         {
           prop: 'modifiedTime',
           label: vm.$t('ui.modifiedTime'),
-          minWidth: 170,
-          sortable: 'custom',
-          visible: true
+          minWidth: 160,
+          visible: true,
+          tooltip: true,
+          sortable: 'custom'
         }
       ],
-      // 查询参数
-      queryParams: {
-        pageNum: 1,
-        pageSize: 25,
-        condition: undefined
-      }
+      customColumns: []
     }
   },
   created() {
@@ -203,24 +255,25 @@ export default {
   computed: {
     fmtForYmdhms() {
       return this.$store.getters.fmtForYmdhms
-    },
-    editAuth() {
-      return this.checkPermi(['organization:departmentManagement:edit'])
-    },
-    deleteAuth() {
-      return this.checkPermi(['organization:departmentManagement:delete'])
     }
   },
   methods: {
-    /** 查询岗位列表 */
+    tableRowClassName({ row }) {
+      let color = ''
+      for (const item of this.ids.values()) {
+        if (item === row.zoneId) {
+          color = 'table-SelectedRow-bgcolor'
+        }
+      }
+      return color
+    },
+    /** 查询角色列表 */
     getList() {
       this.loading = true
       let params = { ...this.queryParams }
       params = this.$trimOfObj(params)
-      queryDepartmentList(params)
+      queryZoneList(params)
         .then(response => {
-          this.total = response.total
-          this.loading = false
           const rows = response.rows || []
           rows.forEach(item => {
             item.createdTime = this.parseTime(
@@ -234,6 +287,8 @@ export default {
           })
           this.tableList = rows
           this.$$getColumnContentMaxWidth(this.columns, this.tableList)
+          this.total = response.total
+          this.loading = false
         })
         .finally(() => {
           this.loading = false
@@ -251,42 +306,22 @@ export default {
       this.$refs.tables.clearSort()
       this.getList()
     },
-
     /** 新增按钮操作 */
     handleAdd() {
       this.$router.push({
-        path: '/organization/addDepartment',
-        query: {
-          timeId: Date.now()
-        }
+        path: '/organization/addZone',
+        query: { timeId: +new Date() }
       })
     },
     /** 修改按钮操作 */
-    handleUpdate(row, column) {
-      if (column && column.type === 'selection') {
-        return
-      }
-      this.$router.push({
-        path: '/organization/editDepartment',
-        query: {
-          timeId: Date.now(),
-          departmentId: row.departmentId
-        }
-      })
+    rowDblclick(row) {
+      this.handleUpdate(row)
     },
-    /** 删除按钮操作 */
-    handleDelRow(row) {
-      const departmentId = row.departmentId || this.ids
-      this.$modal
-        .confirm(this.$t('ui.delConfirm'))
-        .then(function () {
-          return deleteDepartment({ departmentId })
-        })
-        .then(() => {
-          this.getList()
-          this.$modal.msgSuccess(this.$t('ui.deleteSuccess'))
-        })
-        .catch(() => {})
+    handleUpdate(row) {
+      this.$router.push({
+        path: '/organization/editZone',
+        query: { id: row.zoneId, timeId: +new Date() }
+      })
     }
   }
 }

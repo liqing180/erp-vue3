@@ -1,11 +1,10 @@
 <template>
-  <FormPageLayout>
+  <FormPageLayout v-loading="submitLoading">
     <template v-slot:btn>
       <el-button
         type="primary"
         size="small"
         v-if="!comDisFrom"
-        :disabled="fullscreenLoading"
         @click="submitForm"
         >{{ $t('uiBtn.submit') }}
       </el-button>
@@ -17,7 +16,7 @@
       <el-collapse v-model="activeNames">
         <div class="form-card">
           <el-collapse-item name="1">
-            <template v-slot:title>
+            <template #title>
               <FormCollapseItemTitle
                 :title="$t('ui.basicInfo')"
                 :warning="collapseWarningForBasicInfo"
@@ -77,14 +76,14 @@
               <el-row>
                 <el-col :span="24">
                   <el-form-item :label="`${$t('ui.remarks')}`" prop="remarks">
-                    <el-input
+                    <MyInput
                       type="textarea"
                       v-model="createForm.remarks"
                       :autosize="{ minRows: 2, maxRows: 4 }"
                       resize="none"
                       show-word-limit
                       :maxlength="3000"
-                    ></el-input>
+                    ></MyInput>
                   </el-form-item>
                 </el-col>
               </el-row>
@@ -94,7 +93,7 @@
 
         <div class="form-card mt10">
           <el-collapse-item name="2">
-            <template v-slot:title>
+            <template #title>
               <FormCollapseItemTitle
                 :title="$t('menu.accessPermissions')"
                 :warning="collapseWarningForAccessPermissions"
@@ -115,23 +114,16 @@
                       :label="`${$t('ui.position')}`"
                       prop="postIdList"
                     >
-                      <el-select
-                        v-model="createForm.postIdList"
-                        :title="getSelectedPostNames"
-                        multiple
-                        collapse-tags
-                        placeholder=""
-                        style="width: 100%"
-                        class="log-msg-ellipsis"
+                      <ToolTipShowList
+                        :list="createForm.postNameList || []"
+                        popoverTitle=""
                       >
-                        <el-option
-                          v-for="dict in positionOptions"
-                          :key="dict.postId"
-                          :label="dict.postName"
-                          :value="dict.postId"
-                          :disabled="dict.disabled"
-                        ></el-option>
-                      </el-select>
+                        <SelectInput
+                          :value="createForm.postNames"
+                          @click="openSelectPostDlg"
+                          :disabled="comDisFrom"
+                        />
+                      </ToolTipShowList>
                     </el-form-item>
                   </el-col>
                 </el-row>
@@ -142,7 +134,7 @@
 
         <div class="form-card mt10">
           <el-collapse-item name="3">
-            <template v-slot:title>
+            <template #title>
               <FormCollapseItemTitle :title="$t('ui.systemOperationLog')">
                 <template v-if="createForm.operationLogForLast">
                   <span
@@ -173,12 +165,17 @@
       </el-collapse>
     </template>
     <selectPicTable ref="selectPicTable" @updatePic="updatePic" />
+
+    <selectPostDlg
+      ref="selectPostDlg"
+      :query="createForm"
+      @onSuccess="updatePost"
+      :enterpriseIds="enterpriseIds"
+    />
   </FormPageLayout>
 </template>
 
 <script>
-import { queryAllSysPost } from '@/api/organization/corporate'
-
 import {
   updateDepartment,
   queryDepartmentById
@@ -186,17 +183,19 @@ import {
 
 import selectPicTable from '@/views/organization/corporate/selectPicTable.vue'
 import SystemOperationLogTable from '@/views/components/systemOperationLog/systemOperationLogTable.vue'
+import selectPostDlg from './selectPostDlg.vue'
 
 export default {
   name: 'EditDepartment',
   components: {
     selectPicTable,
-    SystemOperationLogTable
+    SystemOperationLogTable,
+    selectPostDlg
   },
   data() {
     const vm = this
     return {
-      fullscreenLoading: false,
+      submitLoading: false,
       activeNames: ['1', '2', '3'],
       createForm: {
         departmentName: '',
@@ -214,8 +213,7 @@ export default {
               .$t('ui.reqMsg')
               .replace('$1', vm.$t('organization.departmentName')),
             trigger: ['blur', 'change'],
-
-            pattern: new RegExp(/^(?!(\s+$))/g)
+            pattern: /^(?!(\s+$))/
           }
         ],
         postIdList: [
@@ -224,53 +222,41 @@ export default {
             required: false,
             message: vm.$t('ui.reqMsg'),
             trigger: ['blur', 'change'],
-
-            pattern: new RegExp(/^(?!(\s+$))/g)
+            pattern: /^(?!(\s+$))/
           }
         ]
       },
-      positionOptions: [],
+      enterpriseIds: [],
       collapseWarningForBasicInfo: false,
       collapseWarningForAccessPermissions: false,
-      isView: undefined
+      isView: undefined,
+      timeId: ''
     }
   },
 
   computed: {
-    fmtForYmd() {
-      return this.$store.getters.fmtForYmd
-    },
-    fmtForYmdhms() {
-      return this.$store.getters.fmtForYmdhms
-    },
     editAuth() {
       return this.checkPermi(['organization:corporate:edit'])
-    },
-    sysDockingSwitch() {
-      return this.$store.getters.sysDockingSwitch
     },
     comDisFrom() {
       if (this.isView === '1') {
         return true
       }
-      return !this.editAuth || this.sysDockingSwitch
-    },
-    getSelectedPostNames() {
-      return this.positionOptions
-        .filter(item =>
-          (this.createForm.postIdList || []).includes(item.postId)
-        )
-        .map(item => item.postName)
-        .join(' ,')
+      return !this.editAuth
     }
   },
 
   created() {
     const vm = this
+    vm.createForm.creatorName = this.$store.state.user.nickName
     const query = vm.$route.query
+    this.timeId = query.timeId
     this.isView = query.view
     vm.createForm = Object.assign(vm.createForm, query)
     this.queryDepartmentById()
+    setTimeout(() => {
+      this.setRouteTitleView(this.comDisFrom)
+    }, 0)
   },
   activated() {
     if (this.$route.query.timeId !== this.timeId) {
@@ -284,25 +270,22 @@ export default {
   },
 
   methods: {
-    // 查询职位
-    queryAllSysPost() {
-      queryAllSysPost().then(res => {
-        this.positionOptions = res.data || []
-        this.positionOptions.forEach(x => {
-          if (this.createForm.postIdList.indexOf(x.postId) !== -1) {
-            x['disabled'] = true
-          }
-        })
-      })
+    openSelectPostDlg() {
+      this.$refs.selectPostDlg.handleOpen()
+    },
+    updatePost(ids, names) {
+      this.createForm.postIdList = ids
+      this.createForm.postNameList = names
+      this.createForm.postNames = names.join(', ')
     },
     // 清空pic
     picUserNameClear() {
-      this.createForm['picUserName'] = undefined
-      this.createForm['picUserId'] = undefined
-      this.createForm['mobilePhone'] = undefined
-      this.createForm['mobileCode'] = undefined
-      this.createForm['mobileNum'] = undefined
-      this.createForm['email'] = undefined
+      this.createForm.picUserName = undefined
+      this.createForm.picUserId = undefined
+      this.createForm.mobilePhone = undefined
+      this.createForm.mobileCode = undefined
+      this.createForm.mobileNum = undefined
+      this.createForm.email = undefined
     },
     // 打开pic弹窗
     openPicTable() {
@@ -311,28 +294,31 @@ export default {
     updatePic(row) {
       const { nickName, userId, mobilePhone, mobileCode, mobileNum, email } =
         row
-      this.createForm['picUserName'] = nickName
-      this.createForm['picUserId'] = userId
-      this.createForm['mobilePhone'] = mobilePhone
-      this.createForm['mobileCode'] = mobileCode
-      this.createForm['mobileNum'] = mobileNum
-      this.createForm['email'] = email
+      this.createForm.picUserName = nickName
+      this.createForm.picUserId = userId
+      this.createForm.mobilePhone = mobilePhone
+      this.createForm.mobileCode = mobileCode
+      this.createForm.mobileNum = mobileNum
+      this.createForm.email = email
     },
     queryDepartmentById() {
       queryDepartmentById({ departmentId: this.createForm.departmentId }).then(
         res => {
           const data = res.data
           data.postIdList = data.postIdList || []
+          data.postNameList = (data.postList || []).map(item => item.postName)
+          data.postNames = data.postNameList.join(', ')
           this.createForm = data
-
+          this.enterpriseIds = JSON.parse(
+            JSON.stringify(this.createForm.postIdList)
+          )
           this.createForm = Object.assign(this.createForm, this.$route.query)
-          this.queryAllSysPost()
         }
       )
     },
     saveBusinessGroup(param) {
       const vm = this
-      vm.fullscreenLoading = true
+      vm.submitLoading = true
       updateDepartment(param)
         .then(() => {
           vm.$message.success(
@@ -341,10 +327,10 @@ export default {
               .replace('$1', `${param.departmentName}`)}`
           )
           this.cancel()
-          vm.fullscreenLoading = false
+          vm.submitLoading = false
         })
         .catch(() => {
-          vm.fullscreenLoading = false
+          vm.submitLoading = false
         })
     },
     reset() {
@@ -368,6 +354,7 @@ export default {
       this.resetForm('accessPermissionsForm')
     },
     submitForm() {
+      if (this.submitLoading) return
       const vm = this
       this.$refs.createForm.validate(valid => {
         this.collapseWarningForBasicInfo = !valid
@@ -385,7 +372,7 @@ export default {
                   vm.saveBusinessGroup(param)
                 })
             } else {
-              this.$message.error(
+              this.$modal.msgError(
                 this.$t('ui.fromIncomplete').replace(
                   '$1',
                   this.$t('menu.accessPermissions')
@@ -394,7 +381,7 @@ export default {
             }
           })
         } else {
-          this.$message.error(
+          this.$modal.msgError(
             this.$t('ui.fromIncomplete').replace('$1', this.$t('ui.basicInfo'))
           )
         }
@@ -402,7 +389,7 @@ export default {
     },
     // 取消按钮
     cancel() {
-      if (this.isView) {
+      if (this.isView === '1') {
         this.$tab.closePage()
         return
       }
@@ -410,8 +397,7 @@ export default {
         this.$tab.closePage()
         return
       }
-      const obj = { path: '/organization/departmentManagement' }
-      this.$tab.closeOpenPage(obj)
+      this.$tab.closeOpenPage({ path: '/organization/departmentManagement' })
     }
   }
 }

@@ -4,7 +4,7 @@
       <div class="con-left">
         <el-input
           :disabled="true"
-          :value="showText"
+          :model-value="showText"
           :title="showText"
           maxlength="200"
           :size="size"
@@ -88,6 +88,7 @@ import MapClass from './mapClass'
 const mapClass = new MapClass()
 import { useFormItem } from 'element-plus'
 export default {
+  emits: ['change'],
   props: {
     // input 显示文本为空时默认展示geofenceType对应的字典值
     inputText: {

@@ -1,11 +1,7 @@
 <template>
-  <FormPageLayout>
+  <FormPageLayout v-loading="submitLoading">
     <template v-slot:btn>
-      <el-button
-        type="primary"
-        size="small"
-        :disabled="fullscreenLoading"
-        @click="submitForm"
+      <el-button type="primary" size="small" @click="submitForm"
         >{{ $t('uiBtn.submit') }}
       </el-button>
       <el-button type="primary" @click="cancel" size="small">{{
@@ -16,7 +12,7 @@
       <el-collapse v-model="activeNames">
         <div class="form-card">
           <el-collapse-item name="1">
-            <template v-slot:title>
+            <template #title>
               <FormCollapseItemTitle
                 :title="$t('ui.basicInfo')"
                 :warning="collapseWarningForBasicInfo"
@@ -43,7 +39,7 @@
                       clearable
                       :show-all-levels="false"
                       style="width: 100%"
-                      placeholder=" "
+                      placeholder=""
                       popper-class="hide-cascader-scrollbar"
                     ></el-cascader>
                   </el-form-item>
@@ -81,14 +77,14 @@
               <el-row>
                 <el-col :span="24">
                   <el-form-item :label="`${$t('ui.remarks')}`" prop="remarks">
-                    <el-input
+                    <MyInput
                       type="textarea"
                       v-model="createForm.remarks"
                       :autosize="{ minRows: 2, maxRows: 4 }"
                       resize="none"
                       show-word-limit
                       :maxlength="3000"
-                    ></el-input>
+                    ></MyInput>
                   </el-form-item>
                 </el-col>
               </el-row>
@@ -98,7 +94,7 @@
 
         <div class="form-card mt10">
           <el-collapse-item name="2">
-            <template v-slot:title>
+            <template #title>
               <FormCollapseItemTitle
                 :title="$t('menu.accessPermissions')"
                 :warning="collapseWarningForAccessPermissions"
@@ -118,22 +114,15 @@
                       :label="`${$t('ui.position')}`"
                       prop="postIdList"
                     >
-                      <el-select
-                        v-model="createForm.postIdList"
-                        :multiple="true"
-                        :collapse-tags="true"
-                        clearable
-                        placeholder=""
-                        style="width: 100%"
-                        class="log-msg-ellipsis"
+                      <ToolTipShowList
+                        :list="createForm.postNameList || []"
+                        popoverTitle=""
                       >
-                        <el-option
-                          v-for="dict in positionOptions"
-                          :key="dict.postId"
-                          :label="dict.postName"
-                          :value="dict.postId"
-                        ></el-option>
-                      </el-select>
+                        <SelectInput
+                          :value="createForm.postNames"
+                          @click="openSelectPostDlg"
+                        />
+                      </ToolTipShowList>
                     </el-form-item>
                   </el-col>
                 </el-row>
@@ -144,28 +133,34 @@
       </el-collapse>
     </template>
     <selectPicTable ref="selectPicTable" @updatePic="updatePic" />
+
+    <selectPostDlg
+      ref="selectPostDlg"
+      :query="createForm"
+      @onSuccess="updatePost"
+    />
   </FormPageLayout>
 </template>
 
 <script>
-import { queryAllSysPost } from '@/api/organization/corporate'
 import {
   saveDepartment,
   queryNowLegalEntityCascade
 } from '@/api/organization/department'
 
 import selectPicTable from '@/views/organization/corporate/selectPicTable.vue'
+import selectPostDlg from './selectPostDlg.vue'
 
 export default {
   name: 'AddDepartment',
   components: {
-    selectPicTable
+    selectPicTable,
+    selectPostDlg
   },
   data() {
     const vm = this
     return {
-      fullscreenLoading: false,
-      propVal: 'currencyCode',
+      submitLoading: false,
       activeNames: ['1', '2'],
       createForm: {
         departmentName: '',
@@ -190,8 +185,7 @@ export default {
               .$t('ui.reqMsg')
               .replace('$1', vm.$t('organization.departmentName')),
             trigger: ['blur', 'change'],
-
-            pattern: new RegExp(/^(?!(\s+$))/g)
+            pattern: /^(?!(\s+$))/
           }
         ],
         postIdList: [
@@ -200,12 +194,10 @@ export default {
             required: false,
             message: vm.$t('ui.reqMsg'),
             trigger: ['blur', 'change'],
-
-            pattern: new RegExp(/^(?!(\s+$))/g)
+            pattern: /^(?!(\s+$))/
           }
         ]
       },
-      positionOptions: [],
       timeId: '',
       collapseWarningForBasicInfo: false,
       collapseWarningForAccessPermissions: false,
@@ -220,21 +212,13 @@ export default {
       departmentList: []
     }
   },
-  computed: {
-    fmtForYmd() {
-      return this.$store.getters.fmtForYmd
-    },
-    fmtForYmdhms() {
-      return this.$store.getters.fmtForYmdhms
-    }
-  },
+
   created() {
     const vm = this
     vm.createForm.creatorName = this.$store.state.user.nickName
     const query = vm.$route.query
     this.timeId = this.$route.query.timeId
     vm.createForm = Object.assign(vm.createForm, query)
-    this.queryAllSysPost()
     this.queryNowLegalEntityCascade()
   },
   activated() {
@@ -243,16 +227,17 @@ export default {
       this.reset()
       const query = this.$route.query
       this.createForm = Object.assign(this.createForm, query)
-      this.queryAllSysPost()
       this.queryNowLegalEntityCascade()
     }
   },
   methods: {
-    // 查询职位
-    queryAllSysPost() {
-      queryAllSysPost().then(res => {
-        this.positionOptions = res.data || []
-      })
+    openSelectPostDlg() {
+      this.$refs.selectPostDlg.handleOpen()
+    },
+    updatePost(ids, names) {
+      this.createForm.postIdList = ids
+      this.createForm.postNameList = names
+      this.createForm.postNames = names.join(', ')
     },
     // 查可以选择的上一级
     queryNowLegalEntityCascade() {
@@ -263,12 +248,12 @@ export default {
     },
     // 清空pic
     picUserNameClear() {
-      this.createForm['picUserName'] = undefined
-      this.createForm['picUserId'] = undefined
-      this.createForm['mobilePhone'] = undefined
-      this.createForm['mobileCode'] = undefined
-      this.createForm['mobileNum'] = undefined
-      this.createForm['email'] = undefined
+      this.createForm.picUserName = undefined
+      this.createForm.picUserId = undefined
+      this.createForm.mobilePhone = undefined
+      this.createForm.mobileCode = undefined
+      this.createForm.mobileNum = undefined
+      this.createForm.email = undefined
     },
     // 打开pic弹窗
     openPicTable() {
@@ -277,17 +262,17 @@ export default {
     updatePic(row) {
       const { nickName, userId, mobilePhone, mobileCode, mobileNum, email } =
         row
-      this.createForm['picUserName'] = nickName
-      this.createForm['picUserId'] = userId
-      this.createForm['mobilePhone'] = mobilePhone
-      this.createForm['mobileCode'] = mobileCode
-      this.createForm['mobileNum'] = mobileNum
-      this.createForm['email'] = email
+      this.createForm.picUserName = nickName
+      this.createForm.picUserId = userId
+      this.createForm.mobilePhone = mobilePhone
+      this.createForm.mobileCode = mobileCode
+      this.createForm.mobileNum = mobileNum
+      this.createForm.email = email
     },
 
     saveBusinessGroup(param) {
       const vm = this
-      vm.fullscreenLoading = true
+      vm.submitLoading = true
       param.isTopDepartment = 1
       saveDepartment(param)
         .then(() => {
@@ -297,10 +282,10 @@ export default {
               .replace('$1', `${param.departmentName}`)}`
           )
           this.cancel()
-          vm.fullscreenLoading = false
+          vm.submitLoading = false
         })
         .catch(() => {
-          vm.fullscreenLoading = false
+          vm.submitLoading = false
         })
     },
     reset() {
@@ -325,6 +310,7 @@ export default {
       this.resetForm('accessPermissionsForm')
     },
     submitForm() {
+      if (this.submitLoading) return
       const vm = this
       this.$refs.createForm.validate(valid => {
         this.collapseWarningForBasicInfo = !valid
@@ -340,7 +326,7 @@ export default {
                   vm.saveBusinessGroup(param)
                 })
             } else {
-              this.$message.error(
+              this.$modal.msgError(
                 this.$t('ui.fromIncomplete').replace(
                   '$1',
                   this.$t('menu.accessPermissions')
@@ -349,7 +335,7 @@ export default {
             }
           })
         } else {
-          this.$message.error(
+          this.$modal.msgError(
             this.$t('ui.fromIncomplete').replace('$1', this.$t('ui.basicInfo'))
           )
         }
@@ -357,10 +343,8 @@ export default {
     },
     // 取消按钮
     cancel() {
-      const obj = { path: '/organization/departmentManagement' }
-      this.$tab.closeOpenPage(obj)
+      this.$tab.closeOpenPage({ path: '/organization/departmentManagement' })
     }
-  },
-  emits: ['update:value']
+  }
 }
 </script>

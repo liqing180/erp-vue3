@@ -75,6 +75,18 @@ const organization = {
       }
     },
     {
+      path: 'addZone',
+      component: () => import('@/views/organization/zone/addZone'),
+      name: 'AddZone',
+      meta: { title: 'addZone', activeMenu: '/organization/zone' }
+    },
+    {
+      path: 'editZone',
+      component: () => import('@/views/organization/zone/editZone'),
+      name: 'EditZone',
+      meta: { title: 'editZone', activeMenu: '/organization/zone' }
+    },
+    {
       path: 'addSonDepartment',
       component: () =>
         import('@/views/organization/corporate/addSonDepartment'),

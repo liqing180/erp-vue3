@@ -5,7 +5,7 @@
       v-bind="$attrs"
       :model-value="sourceValue"
       :size="inputSize"
-      :disabled="disabled"
+      :disabled="inputDisabled"
       :autocomplete="resolvedAutocomplete"
       :aria-label="label || undefined"
       @update:model-value="handleModelValue"
@@ -29,7 +29,7 @@
 </template>
 
 <script>
-import { ElInput as ElementPlusInput } from 'element-plus'
+import { ElInput as ElementPlusInput, useFormItem } from 'element-plus'
 
 export default {
   name: 'MyInput',
@@ -37,6 +37,10 @@ export default {
     ElementPlusInput
   },
   inheritAttrs: false,
+  setup() {
+    const { form } = useFormItem()
+    return { form }
+  },
   props: {
     modelValue: {
       type: [String, Number],
@@ -91,6 +95,9 @@ export default {
     'compositionend'
   ],
   computed: {
+    inputDisabled() {
+      return this.disabled || this.form?.disabled || false
+    },
     sourceValue() {
       const value = this.modelValue !== undefined ? this.modelValue : this.value
       return value ?? ''
