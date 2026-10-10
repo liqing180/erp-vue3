@@ -1,11 +1,11 @@
 <template>
   <div class="dashboard-header">
-    <div class="dashboard-layout flex">
+    <div class="dashboard-layout">
       <div
         class="dashboard-card task-card"
         :style="{ height: `${isExpand ? 180 : 48}px` }"
       >
-        <div class="card-title task-card-title">
+        <div class="card-title">
           <el-button
             class="expand-button"
             link
@@ -19,7 +19,7 @@
             </el-icon>
             {{ isExpand ? $t('ui.minimise') : $t('ui.expand') }}
           </el-button>
-          <span class="ml20">{{ $t('DASHBOARD.taskCenter') }}</span>
+          <span class="task-title">{{ $t('DASHBOARD.taskCenter') }}</span>
 
           <div class="report-switcher">
             <span>{{ $t('DASHBOARD.reportSwitching') }}</span>
@@ -36,17 +36,13 @@
           </div>
         </div>
 
-        <div v-if="isExpand" class="task-list flexSa">
-          <div
-            v-for="item in taskItems"
-            :key="item.key"
-            class="task-item flex fs-0"
-          >
+        <div v-if="isExpand" class="task-list">
+          <div v-for="item in taskItems" :key="item.key" class="task-item">
             <div class="task-icon-box">
               <img class="card-img" :src="item.icon" :alt="item.label" />
             </div>
             <div class="task-data-box">
-              <div>{{ item.label }}</div>
+              <div class="task-label">{{ item.label }}</div>
               <div
                 class="tab-num"
                 :class="{ pointer: item.value > 0 }"
@@ -64,7 +60,7 @@
         :style="{ height: `${isExpand ? 180 : 48}px` }"
       >
         <div class="card-title">
-          {{ $t('DASHBOARD.todayTransactions') }}
+          <span>{{ $t('DASHBOARD.todayTransactions') }}</span>
           <el-select
             v-if="isExpand"
             :model-value="formData.todaysDataActive"
@@ -82,14 +78,14 @@
           </el-select>
         </div>
 
-        <div v-if="isExpand">
+        <div v-if="isExpand" class="today-list">
           <div
             v-for="(item, index) in comTodaysData"
             :key="`today-${index}`"
-            class="today-row flexSa"
+            class="today-row"
           >
             <div class="today-label">{{ item.label }}</div>
-            <div class="flex-1">
+            <div class="today-progress">
               <el-progress
                 :percentage="item.percentage"
                 :stroke-width="16"
@@ -245,79 +241,122 @@ export default {
 }
 
 .dashboard-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(340px, 1fr);
+  gap: 12px;
   padding: 0 20px;
 }
 
 .dashboard-card {
   box-sizing: border-box;
+  min-width: 0;
+  padding: 6px 20px;
   background-color: #fff;
+  border: 1px solid #ebeef5;
   border-radius: 8px;
-  box-shadow: rgba(0, 0, 0, 0.13) 0 1px 3px 1px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
 }
 
 .task-card {
-  width: 66%;
-  padding: 6px;
-  margin-right: 6px;
-}
-
-.today-card {
-  width: 34%;
-  padding: 6px 20px;
+  padding-right: 16px;
+  padding-left: 16px;
 }
 
 .card-title {
-  height: 30px;
-  line-height: 30px;
-  font-size: 20px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  height: 34px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  font-size: 17px;
   font-weight: 600;
+  color: #303133;
+  white-space: nowrap;
 }
 
-.task-card-title {
-  padding: 0 20px;
+.today-card .card-title {
+  gap: 8px;
 }
 
+.card-title,
+.task-list {
+  scrollbar-width: thin;
+
+  &::-webkit-scrollbar {
+    height: 4px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background-color: #dcdfe6;
+    border-radius: 2px;
+  }
+}
+
+.card-title > span,
 .expand-button {
-  vertical-align: 1px;
+  flex-shrink: 0;
+}
+
+.task-title {
+  margin-left: 4px;
 }
 
 .report-switcher {
-  float: right;
   display: flex;
   align-items: center;
-  gap: 4px;
+  flex-shrink: 0;
+  gap: 8px;
+  margin-left: auto;
   font-size: 14px;
   font-weight: 400;
 }
 
 .report-select {
-  width: 160px;
+  flex: 0 0 180px;
+  width: 180px;
 }
 
 .task-list {
-  width: 100%;
+  display: grid;
+  grid-template-columns: repeat(5, minmax(max-content, 1fr));
+  align-items: center;
+  gap: 12px;
   height: 130px;
+  overflow-x: auto;
 }
 
 .task-item {
+  display: flex;
   align-items: center;
-  max-width: 20%;
+  justify-content: center;
+  gap: 8px;
 }
 
-.task-icon-box,
+.task-icon-box {
+  flex: 0 0 48px;
+}
+
 .task-data-box {
-  width: 50%;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.task-label {
+  line-height: 20px;
+  font-size: 14px;
+  color: #606266;
 }
 
 .card-img {
   display: block;
-  width: 60px;
-  height: 60px;
+  width: 48px;
+  height: 48px;
 }
 
 .tab-num {
-  margin-top: 12px;
-  text-align: center;
+  margin-top: 8px;
+  line-height: 24px;
   font-size: 20px;
   font-weight: 600;
   color: #1890ff;
@@ -325,27 +364,39 @@ export default {
 }
 
 .today-select {
-  float: right;
-  width: 140px;
+  flex: 0 0 112px;
+  width: 112px;
+  margin-left: auto;
+}
+
+.today-list {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr) max-content;
+  align-items: center;
+  gap: 12px 10px;
+  margin-top: 12px;
 }
 
 .today-row {
-  margin-top: 10px;
+  display: contents;
 }
 
 .today-label {
-  width: 110px;
-  padding-right: 10px;
   text-align: right;
   font-size: 12px;
+  color: #606266;
+  white-space: nowrap;
+}
+
+.today-progress {
+  min-width: 0;
 }
 
 .today-value {
-  width: 60px;
-  padding-left: 10px;
-}
-
-.ml20 {
-  margin-left: 20px;
+  min-width: 24px;
+  text-align: right;
+  font-size: 14px;
+  color: #303133;
+  white-space: nowrap;
 }
 </style>
