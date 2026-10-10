@@ -1,5 +1,4 @@
 <template>
-  <!-- formClass="form-page-btn--hide" -->
   <FormPageLayout>
     <template v-slot:btn>
       <el-button type="primary" size="small" @click="submitForm"
@@ -13,14 +12,14 @@
       <el-collapse v-model="activeNames">
         <div class="form-card">
           <el-collapse-item name="1">
-            <template v-slot:title>
-              <FormCollapseItemTitle
+            <template #title
+              ><FormCollapseItemTitle
                 :title="$t('ui.basicInfo')"
                 :warning="collapseWarningForBasicInfo"
               >
-              </FormCollapseItemTitle>
-            </template>
-            <basicForm ref="basicForm" />
+              </FormCollapseItemTitle
+            ></template>
+            <basicForm ref="basicForm" :form="form" />
           </el-collapse-item>
         </div>
         <div
@@ -28,11 +27,16 @@
           v-hasPermi="['organization:role:assignRule:list']"
         >
           <el-collapse-item name="2">
-            <template v-slot:title>
-              <FormCollapseItemTitle :title="$t('organization.assignRule')">
-              </FormCollapseItemTitle>
-            </template>
-            <AssignRule ref="AssignRule"></AssignRule>
+            <template #title
+              ><FormCollapseItemTitle :title="$t('organization.assignRule')">
+              </FormCollapseItemTitle
+            ></template>
+            <AssignRule
+              ref="AssignRule"
+              :key="timeId"
+              :companyList="companyList"
+              :form="form"
+            ></AssignRule>
           </el-collapse-item>
         </div>
       </el-collapse>
@@ -43,32 +47,42 @@
 <script>
 import basicForm from '@/views/organization/role/basicForm'
 import AssignRule from '@/views/organization/role/AssignRule'
-import { saveRole } from '@/api/organization/role'
+import {
+  saveRole,
+  getBranchCompanyList,
+  getRole
+} from '@/api/organization/role'
 
 export default {
   name: 'AddRole',
   dicts: ['sys_user_sex'],
-  components: {
-    basicForm,
-    AssignRule
-  },
+  components: { basicForm, AssignRule },
   data() {
     return {
       timeId: '',
       activeNames: ['1', '2'],
       form: {},
-      collapseWarningForBasicInfo: false
+      collapseWarningForBasicInfo: false,
+      companyList: [],
+      roleId: undefined
     }
   },
-  beforeCreate() {},
   created() {
     this.timeId = this.$route.query.timeId
+    this.roleId = this.$route.query.roleId
     this.init()
+    if (this.roleId) {
+      this.getRole()
+    }
   },
   activated() {
     if (this.$route.query.timeId !== this.timeId) {
       this.timeId = this.$route.query.timeId
+      this.roleId = this.$route.query.roleId
       this.init()
+      if (this.roleId) {
+        this.getRole()
+      }
     }
   },
   computed: {
@@ -81,13 +95,25 @@ export default {
   },
   methods: {
     init() {
+      this.form = { isActive: '1', createdBy: this.$store.state.user.nickName }
       this.collapseWarningForBasicInfo = false
       this.$refs.basicForm && this.$refs.basicForm.reset()
+      this.getBranchCompanyList()
+    },
+    getRole() {
+      getRole(this.roleId).then(res => {
+        this.form = res.data
+        this.form.roleName = undefined
+      })
+    },
+    getBranchCompanyList() {
+      getBranchCompanyList().then(res => {
+        this.companyList = res.data || []
+      })
     },
     // 取消按钮
     cancel() {
-      const obj = { path: '/organization/role' }
-      this.$tab.closeOpenPage(obj)
+      this.$tab.closeOpenPage({ path: '/organization/role' })
     },
     async submitForm() {
       const res = await this.$refs.basicForm.submit()
@@ -99,6 +125,7 @@ export default {
         }
         const param = this.$trimOfObj(JSON.parse(JSON.stringify(this.form)))
         this.$refs.AssignRule.getFromData(param)
+
         let content = this.$t('organization.addRoleConfirm')
         if (
           param.functionalPermissionsLeftCheckedKeys &&
@@ -106,7 +133,6 @@ export default {
           param.assignUserLeftCheckedKeys &&
           param.assignUserLeftCheckedKeys.length > 0
         ) {
-          console.log(param.functionalPermissionsLeftCheckedKeys)
           content = this.$t('organization.notAddCheckData').replace(
             '$1',
             this.$t('organization.functionalPermissions') +
@@ -121,6 +147,11 @@ export default {
             '$1',
             this.$t('organization.functionalPermissions')
           )
+          param.menuIdList = [
+            ...param.menuIdList,
+            ...param.functionalPermissionsLeftCheckedKeys
+          ]
+          param.menuIdList = [...new Set(param.menuIdList)]
         } else if (
           param.assignUserLeftCheckedKeys &&
           param.assignUserLeftCheckedKeys.length > 0
@@ -130,24 +161,22 @@ export default {
             this.$t('organization.assignUser')
           )
         }
+        param.roleId = undefined
         this.$modal
           .confirm(content)
           .then(() => {
             return saveRole(param)
           })
-          .then(response => {
+          .then(() => {
             this.$modal.msgSuccess(
-              `${this.$t('organization.savedSuccess').replace(
-                '$1',
-                `${param.roleName}`
-              )}`
+              `${this.$t('organization.savedSuccess').replace('$1', `${param.roleName}`)}`
             )
             this.cancel()
           })
           .catch(() => {})
       } else {
         this.collapseWarningForBasicInfo = true
-        this.$message.error(
+        this.$modal.msgError(
           this.$t('ui.fromIncomplete').replace('$1', this.$t('ui.basicInfo'))
         )
       }

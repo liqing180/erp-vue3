@@ -232,6 +232,14 @@ export default {
     companySeal: 'Company Seal',
     trademark: 'Trademark',
     notAddCheckData:
-      '[$1] have not been added. Please confirm if you want to continue submitting.'
+      '[$1] have not been added. Please confirm if you want to continue submitting.',
+    copyRole: 'Copy Role',
+    salesPriceControl: 'Sales Price Control',
+    priceUpwardLimit: 'Price Markup Limit',
+    priceDownwardLimit: 'Price Markdown Limit',
+    priceUpwardLimitTip:
+      'Defines the maximum allowed markup percentage above the “Sales Price.” Orders exceeding this limit cannot be submitted.',
+    priceDownwardLimitTip:
+      'Sets the maximum allowable discount percentage for an order. The system calculates both “unit price reduction” and “discount amount” to ensure the final transaction price does not fall below this threshold'
   }
 }

@@ -104,6 +104,25 @@ const organization = {
       component: () => import('@/views/organization/role/editRole'),
       name: 'EditRole',
       meta: { title: 'editRole', activeMenu: '/organization/role' }
+    },
+    {
+      path: 'functionalPermissions',
+      component: () =>
+        import('@/views/organization/role/functionalPermissions'),
+      name: 'FunctionalPermissions',
+      meta: { title: 'functionalPermissions', activeMenu: '/organization/role' }
+    },
+    {
+      path: 'assignUser',
+      component: () => import('@/views/organization/role/assignUser'),
+      name: 'AssignUser',
+      meta: { title: 'assignUser', activeMenu: '/organization/role' }
+    },
+    {
+      path: 'accessPermissions',
+      component: () => import('@/views/organization/role/accessPermissions'),
+      name: 'AccessPermissions',
+      meta: { title: 'accessPermissions', activeMenu: '/organization/role' }
     }
   ]
 }

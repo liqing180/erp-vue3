@@ -74,35 +74,32 @@
           header-align="center"
         >
           <template #default="scope">
-            <el-switch
-              v-if="item.prop === 'isActive'"
-              v-model="scope.row.isActive"
-              active-value="1"
-              inactive-value="0"
-              :disabled="true"
-            ></el-switch>
-            <template v-else-if="item.prop === 'isCompetitor'">
-              <el-tag v-if="scope.row.isCompetitor === '1'">{{
+            <template v-if="item.prop === 'isActive'">
+              <el-tag v-if="scope.row.isActive === '1'">{{
                 $t('ui.y')
               }}</el-tag>
-              <el-tag v-if="scope.row.isCompetitor === '0'" type="danger">{{
+              <el-tag v-if="scope.row.isActive === '0'" type="danger">{{
                 $t('ui.n')
               }}</el-tag>
             </template>
-            <template v-else-if="item.prop === 'businessPartnerStatus'"
-              >{{
-                selectDictLabel(
-                  dict.type.bp_business_partner_status,
-                  scope.row.businessPartnerStatus
-                )
-              }}
+            <template v-else-if="item.prop === 'isDefault'">
+              <el-tag v-if="scope.row.isDefault === '1'">{{
+                $t('ui.y')
+              }}</el-tag>
+              <el-tag v-if="scope.row.isDefault === '0'" type="danger">{{
+                $t('ui.n')
+              }}</el-tag>
             </template>
-            <template v-else-if="item.prop === 'createdTime'">{{
-              parseTime(scope.row.createdTime, fmtForYmdhms)
-            }}</template>
-            <template v-else-if="item.prop === 'modifiedTime'">{{
-              parseTime(scope.row.modifiedTime, fmtForYmdhms)
-            }}</template>
+            <template v-else-if="item.prop === 'paymentTermType'">
+              <ToolTipPaymentTerm :paymentTermObj="scope.row.paymentTerm || {}">
+                {{
+                  selectDictLabel(
+                    dict.type.payment_term_type,
+                    scope.row[item.prop]
+                  )
+                }}
+              </ToolTipPaymentTerm>
+            </template>
             <template v-else>{{ scope.row[item.prop] }}</template>
           </template>
         </el-table-column>
@@ -128,9 +125,10 @@
         </el-table-column>
       </el-table>
     </div>
+
     <div v-if="radioValue === '2'">
       <el-checkbox-group
-        v-model="vendorBranchCompanyIdList"
+        v-model="paymentTermBranchCompanyIdList"
         :disabled="!editAuth"
       >
         <el-checkbox
@@ -142,9 +140,8 @@
         >
       </el-checkbox-group>
     </div>
-
-    <vendorTable
-      ref="vendorTable"
+    <paymentTermTable
+      ref="paymentTermTable"
       :alreadyIdList="curIdList"
       @onSuccess="updateTable"
     />
@@ -153,13 +150,12 @@
 
 <script>
 import pageMixin from '@/mixins/tableMinx'
-import { queryAlreadyHaveVendorListNoPage } from '@/api/organization/role'
-import vendorTable from '@/views/organization/role/vendorTable'
+import paymentTermTable from '@/views/organization/role/paymentTermTable'
 
 export default {
   mixins: [pageMixin],
-  dicts: ['bp_business_partner_status', 'dp_type_vendor'],
-  components: { vendorTable },
+  dicts: ['dp_type_vendor', 'payment_term_type'],
+  components: { paymentTermTable },
   props: {
     comDisFrom: Boolean,
     formData: {
@@ -175,7 +171,7 @@ export default {
     const vm = this
     return {
       radioValue: '0',
-      saveKey: '2',
+      saveKey: '4',
       searchFormKey: Date.now(),
       // 总条数
       total: 0,
@@ -193,109 +189,87 @@ export default {
       },
       columns: [
         {
-          prop: 'businessPartnerNo',
-          label: vm.$t('organization.businessPartnerNo'),
+          prop: 'paymentTermNo',
+          label: vm.$t('ui.paymentTermNo'),
+          visible: true,
+          minWidth: 200,
+          tooltip: true,
+          fixed: true
+        },
+        {
+          prop: 'paymentTermName',
+          label: vm.$t('menu.paymentTerm'),
           visible: true,
           minWidth: 200,
           tooltip: true
         },
         {
-          prop: 'businessPartnerName',
-          label: vm.$t('organization.businessPartnerName'),
-          visible: true,
-          minWidth: 200,
-          tooltip: true
-        },
-        {
-          prop: 'country',
-          label: vm.$t('organization.country'),
-          minWidth: 170,
+          prop: 'paymentTermType',
+          label: vm.$t('ui.type'),
+          minWidth: 160,
           visible: true,
           tooltip: true
         },
+
         {
-          prop: 'businessPartnerStatus',
-          label: vm.$t('ui.status'),
-          minWidth: 170,
+          prop: 'description',
+          label: vm.$t('ui.description'),
+          minWidth: 160,
           visible: true,
           tooltip: true
         },
         {
-          prop: 'currency',
-          label: vm.$t('organization.currency'),
-          minWidth: 170,
+          prop: 'isDefault',
+          label: vm.$t('ui.isDefault'),
+          minWidth: 160,
           visible: true,
           tooltip: true
         },
         {
-          prop: 'isCompetitor',
-          label: vm.$t('organization.isCompetitor'),
-          minWidth: 170,
+          prop: 'isActive',
+          label: vm.$t('ui.isActive'),
+          minWidth: 160,
           visible: true,
           tooltip: true
         }
       ],
-      roleId: '',
-      timeId: '',
-      vendorBranchCompanyIdList: []
+      paymentTermBranchCompanyIdList: []
     }
   },
   computed: {
     curIdList() {
-      return this.tableList.map(item => item.businessPartnerId)
+      return this.tableList.map(item => item.paymentTermId)
     },
     editAuth() {
       if (this.comDisFrom) {
         return false
       }
-      return this.checkPermi(['organization:role:vendor:edit'])
+      return this.checkPermi(['organization:role:paymentTerm:edit'])
     }
   },
   watch: {
     formData: {
       immediate: true,
       handler: function () {
-        const { roleId, dpTypeVendor, vendorBranchCompanyIdList } =
-          this.formData
+        const {
+          roleId,
+          dpTypePaymentTerm,
+          paymentTermList,
+          paymentTermBranchCompanyIdList
+        } = this.formData
         if (roleId) {
-          this.radioValue = dpTypeVendor || '0'
-          this.vendorBranchCompanyIdList = vendorBranchCompanyIdList || []
+          this.radioValue = dpTypePaymentTerm || '0'
+          this.tableList = paymentTermList || []
+          this.paymentTermBranchCompanyIdList =
+            paymentTermBranchCompanyIdList || []
         }
       }
-    }
-  },
-  created() {
-    this.roleId = this.$route.query.roleId
-    this.timeId = this.$route.query.timeId
-    this.getList()
-  },
-  activated() {
-    if (this.$route.query.timeId !== this.timeId) {
-      this.timeId = this.$route.query.timeId
-      this.roleId = this.$route.query.roleId
-      this.getList()
     }
   },
   methods: {
     handleAdd() {
       const tableList = JSON.parse(JSON.stringify(this.tableList))
-      this.$refs.vendorTable.handleOpen(tableList)
-    },
-    getList() {
-      if (this.roleId) {
-        const param = this.queryParams
-        this.$trimOfObj(param)
-        param.roleId = this.roleId
-        this.loading = true
-        queryAlreadyHaveVendorListNoPage(param)
-          .then(response => {
-            this.tableList = response.data || []
-            this.loading = false
-          })
-          .catch(() => {
-            this.loading = false
-          })
-      }
+      this.$refs.paymentTermTable.handleOpen(tableList)
     },
     updateTable(list) {
       this.tableList = list
@@ -316,8 +290,8 @@ export default {
       return {
         dpTypeVendor: this.radioValue,
         vendorIdList: this.radioValue === '1' ? this.curIdList : [],
-        vendorBranchCompanyIdList:
-          this.radioValue === '2' ? this.vendorBranchCompanyIdList : []
+        paymentTermBranchCompanyIdList:
+          this.radioValue === '2' ? this.paymentTermBranchCompanyIdList : []
       }
     }
   }

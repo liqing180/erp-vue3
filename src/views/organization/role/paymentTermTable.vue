@@ -1,9 +1,7 @@
 <template>
   <el-dialog
     draggable
-    :title="
-      isCustomer === '1' ? $t('menu.customer') : $t('organization.vendor')
-    "
+    :title="$t('menu.paymentTerm')"
     v-model="visible"
     width="1200px"
     :modal="true"
@@ -41,7 +39,6 @@
       @select="handleSelectionChange"
       @select-all="handleSelectAll"
       @row-click="handleRowClick"
-      max-height="600px"
     >
       <el-table-column
         type="selection"
@@ -76,35 +73,28 @@
         header-align="center"
       >
         <template #default="scope">
-          <el-switch
-            v-if="item.prop === 'isActive'"
-            v-model="scope.row.isActive"
-            active-value="1"
-            inactive-value="0"
-            :disabled="true"
-          ></el-switch>
-          <template v-else-if="item.prop === 'isCompetitor'">
-            <el-tag v-if="scope.row.isCompetitor === '1'">{{
-              $t('ui.y')
-            }}</el-tag>
-            <el-tag v-if="scope.row.isCompetitor === '0'" type="danger">{{
+          <template v-if="item.prop === 'isActive'">
+            <el-tag v-if="scope.row.isActive === '1'">{{ $t('ui.y') }}</el-tag>
+            <el-tag v-if="scope.row.isActive === '0'" type="danger">{{
               $t('ui.n')
             }}</el-tag>
           </template>
-          <template v-else-if="item.prop === 'businessPartnerStatus'"
-            >{{
-              selectDictLabel(
-                dict.type.bp_business_partner_status,
-                scope.row.businessPartnerStatus
-              )
-            }}
+          <template v-else-if="item.prop === 'isDefault'">
+            <el-tag v-if="scope.row.isDefault === '1'">{{ $t('ui.y') }}</el-tag>
+            <el-tag v-if="scope.row.isDefault === '0'" type="danger">{{
+              $t('ui.n')
+            }}</el-tag>
           </template>
-          <template v-else-if="item.prop === 'createdTime'">{{
-            parseTime(scope.row.createdTime, fmtForYmdhms)
-          }}</template>
-          <template v-else-if="item.prop === 'modifiedTime'">{{
-            parseTime(scope.row.modifiedTime, fmtForYmdhms)
-          }}</template>
+          <template v-else-if="item.prop === 'paymentTermType'">
+            <ToolTipPaymentTerm :paymentTermObj="scope.row.paymentTerm || {}">
+              {{
+                selectDictLabel(
+                  dict.type.payment_term_type,
+                  scope.row[item.prop]
+                )
+              }}
+            </ToolTipPaymentTerm>
+          </template>
           <template v-else>{{ scope.row[item.prop] }}</template>
         </template>
       </el-table-column>
@@ -131,31 +121,24 @@
 
 <script>
 import pageMixin from '@/mixins/tableMinx'
-import {
-  queryCanAddVendorList,
-  queryCanAddCustomerList
-} from '@/api/organization/role'
+import { queryCanAddPaymentTermList } from '@/api/organization/role'
 
 export default {
   mixins: [pageMixin],
   emits: ['onSuccess'],
-  dicts: ['bp_business_partner_status'],
+  dicts: ['payment_term_type'],
   props: {
     alreadyIdList: {
       type: Array,
       default() {
         return []
       }
-    },
-    isCustomer: {
-      type: String,
-      default: ''
     }
   },
   data() {
     const vm = this
     return {
-      saveKey: '12',
+      saveKey: '11',
       searchFormKey: Date.now(),
       // 总条数
       total: 0,
@@ -181,62 +164,63 @@ export default {
       searchData: [
         {
           name: 'condition',
-          placeholder: `${vm.$t('organization.businessPartnerNo')} / ${vm.$t(
-            'organization.businessPartnerName'
-          )} `,
-          type: 'InputEle'
+          type: 'InputEle',
+          placeholder: `${vm.$t('menu.paymentTerm')} / ${vm.$t('ui.description')}`
         }
       ],
       columns: [
         {
-          prop: 'businessPartnerNo',
-          label: vm.$t('organization.businessPartnerNo'),
+          prop: 'paymentTermNo',
+          label: vm.$t('ui.paymentTermNo'),
           visible: true,
           sortable: 'custom',
           minWidth: 200,
-          tooltip: true
+          tooltip: true,
+          fixed: true
         },
         {
-          prop: 'businessPartnerName',
-          label: vm.$t('organization.businessPartnerName'),
+          prop: 'paymentTermName',
+          label: vm.$t('menu.paymentTerm'),
           visible: true,
-          sortable: 'custom',
           minWidth: 200,
-          tooltip: true
+          tooltip: true,
+          sortable: 'custom'
         },
         {
-          prop: 'country',
-          label: vm.$t('organization.country'),
-          minWidth: 170,
+          prop: 'paymentTermType',
+          label: vm.$t('ui.type'),
+          minWidth: 160,
           visible: true,
-          sortable: 'custom',
-          tooltip: true
+          tooltip: true,
+          sortable: 'custom'
+        },
+
+        {
+          prop: 'description',
+          label: vm.$t('ui.description'),
+          minWidth: 160,
+          visible: true,
+          tooltip: true,
+          sortable: 'custom'
         },
         {
-          prop: 'businessPartnerStatus',
-          label: vm.$t('ui.status'),
-          minWidth: 170,
-          sortable: 'custom',
+          prop: 'isDefault',
+          label: vm.$t('ui.isDefault'),
+          minWidth: 160,
           visible: true,
-          tooltip: true
+          tooltip: true,
+          sortable: 'custom'
         },
         {
-          prop: 'currency',
-          label: vm.$t('organization.currency'),
-          minWidth: 170,
+          prop: 'isActive',
+          label: vm.$t('ui.isActive'),
+          minWidth: 160,
           visible: true,
-          // sortable: 'custom',
-          tooltip: true
-        },
-        {
-          prop: 'isCompetitor',
-          label: vm.$t('organization.isCompetitor'),
-          minWidth: 170,
-          visible: true,
-          tooltip: true
+          tooltip: true,
+          sortable: 'custom'
         }
       ],
-      rowIdKey: 'businessPartnerId'
+      rowIdKey: 'paymentTermId'
     }
   },
   computed: {
@@ -255,12 +239,9 @@ export default {
     },
     getList() {
       const param = this.queryParams
+      this.$trimOfObj(param)
       this.loading = true
-      let api = queryCanAddVendorList
-      if (this.isCustomer === '1') {
-        api = queryCanAddCustomerList
-      }
-      api(param)
+      queryCanAddPaymentTermList(param)
         .then(response => {
           this.tableList = response.rows || []
           this.total = response.total
@@ -283,7 +264,7 @@ export default {
     tableRowClassName({ row }) {
       let color = 'pointer'
       for (const item of this.comIds.values()) {
-        if (item === row.businessPartnerId) {
+        if (item === row.paymentTermId) {
           color = 'pointer table-SelectedRow-bgcolor'
         }
       }
@@ -322,7 +303,7 @@ export default {
     },
     handleRowClick(row) {
       const index = this.selectList.findIndex(
-        item => item.businessPartnerId === row.businessPartnerId
+        item => item.paymentTermId === row.paymentTermId
       )
       const isSelected = index > -1
       if (isSelected) {

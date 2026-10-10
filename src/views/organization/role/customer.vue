@@ -128,9 +128,10 @@
         </el-table-column>
       </el-table>
     </div>
+
     <div v-if="radioValue === '2'">
       <el-checkbox-group
-        v-model="vendorBranchCompanyIdList"
+        v-model="customerBranchCompanyIdList"
         :disabled="!editAuth"
       >
         <el-checkbox
@@ -142,10 +143,10 @@
         >
       </el-checkbox-group>
     </div>
-
     <vendorTable
       ref="vendorTable"
       :alreadyIdList="curIdList"
+      isCustomer="1"
       @onSuccess="updateTable"
     />
   </div>
@@ -153,7 +154,6 @@
 
 <script>
 import pageMixin from '@/mixins/tableMinx'
-import { queryAlreadyHaveVendorListNoPage } from '@/api/organization/role'
 import vendorTable from '@/views/organization/role/vendorTable'
 
 export default {
@@ -175,7 +175,7 @@ export default {
     const vm = this
     return {
       radioValue: '0',
-      saveKey: '2',
+      saveKey: '3',
       searchFormKey: Date.now(),
       // 总条数
       total: 0,
@@ -235,9 +235,7 @@ export default {
           tooltip: true
         }
       ],
-      roleId: '',
-      timeId: '',
-      vendorBranchCompanyIdList: []
+      customerBranchCompanyIdList: []
     }
   },
   computed: {
@@ -248,54 +246,31 @@ export default {
       if (this.comDisFrom) {
         return false
       }
-      return this.checkPermi(['organization:role:vendor:edit'])
+      return this.checkPermi(['organization:role:customer:edit'])
     }
   },
   watch: {
     formData: {
       immediate: true,
       handler: function () {
-        const { roleId, dpTypeVendor, vendorBranchCompanyIdList } =
-          this.formData
+        const {
+          roleId,
+          dpTypeCustomer,
+          customerList,
+          customerBranchCompanyIdList
+        } = this.formData
         if (roleId) {
-          this.radioValue = dpTypeVendor || '0'
-          this.vendorBranchCompanyIdList = vendorBranchCompanyIdList || []
+          this.radioValue = dpTypeCustomer || '0'
+          this.tableList = customerList || []
+          this.customerBranchCompanyIdList = customerBranchCompanyIdList || []
         }
       }
-    }
-  },
-  created() {
-    this.roleId = this.$route.query.roleId
-    this.timeId = this.$route.query.timeId
-    this.getList()
-  },
-  activated() {
-    if (this.$route.query.timeId !== this.timeId) {
-      this.timeId = this.$route.query.timeId
-      this.roleId = this.$route.query.roleId
-      this.getList()
     }
   },
   methods: {
     handleAdd() {
       const tableList = JSON.parse(JSON.stringify(this.tableList))
       this.$refs.vendorTable.handleOpen(tableList)
-    },
-    getList() {
-      if (this.roleId) {
-        const param = this.queryParams
-        this.$trimOfObj(param)
-        param.roleId = this.roleId
-        this.loading = true
-        queryAlreadyHaveVendorListNoPage(param)
-          .then(response => {
-            this.tableList = response.data || []
-            this.loading = false
-          })
-          .catch(() => {
-            this.loading = false
-          })
-      }
     },
     updateTable(list) {
       this.tableList = list
@@ -316,8 +291,8 @@ export default {
       return {
         dpTypeVendor: this.radioValue,
         vendorIdList: this.radioValue === '1' ? this.curIdList : [],
-        vendorBranchCompanyIdList:
-          this.radioValue === '2' ? this.vendorBranchCompanyIdList : []
+        customerBranchCompanyIdList:
+          this.radioValue === '2' ? this.customerBranchCompanyIdList : []
       }
     }
   }

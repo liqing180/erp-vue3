@@ -1,5 +1,4 @@
 <template>
-  <!-- formClass="form-page-btn--hide" -->
   <FormPageLayout>
     <template v-slot:btn>
       <el-button
@@ -17,13 +16,13 @@
       <el-collapse v-model="activeNames">
         <div class="form-card">
           <el-collapse-item name="1">
-            <template v-slot:title>
-              <FormCollapseItemTitle
+            <template #title
+              ><FormCollapseItemTitle
                 :title="$t('ui.basicInfo')"
                 :warning="collapseWarningForBasicInfo"
               >
-              </FormCollapseItemTitle>
-            </template>
+              </FormCollapseItemTitle
+            ></template>
             <basicForm ref="basicForm" :comDisFrom="comDisFrom" :form="form" />
           </el-collapse-item>
         </div>
@@ -32,18 +31,24 @@
           v-hasPermi="['organization:role:assignRule:list']"
         >
           <el-collapse-item name="2">
-            <template v-slot:title>
-              <FormCollapseItemTitle :title="$t('organization.assignRule')">
-              </FormCollapseItemTitle>
-            </template>
-            <AssignRule ref="AssignRule" :comDisFrom="comDisFrom"></AssignRule>
+            <template #title
+              ><FormCollapseItemTitle :title="$t('organization.assignRule')">
+              </FormCollapseItemTitle
+            ></template>
+            <AssignRule
+              ref="AssignRule"
+              :key="timeId"
+              :comDisFrom="comDisFrom"
+              :form="form"
+              :companyList="companyList"
+            ></AssignRule>
           </el-collapse-item>
         </div>
 
         <div class="form-card mt10">
           <el-collapse-item name="3">
-            <template v-slot:title>
-              <FormCollapseItemTitle :title="$t('ui.systemOperationLog')">
+            <template #title
+              ><FormCollapseItemTitle :title="$t('ui.systemOperationLog')">
                 <template v-if="form.operationLogForLast">
                   <span
                     v-if="form.operationLogForLast.operatorBy"
@@ -61,8 +66,8 @@
                     {{ parseTime(form.operationLogForLast.operatorTime) }}
                   </span>
                 </template>
-              </FormCollapseItemTitle>
-            </template>
+              </FormCollapseItemTitle></template
+            >
             <div class="pb20">
               <SystemOperationLogTable
                 :tableList="form.operationLogList || []"
@@ -79,7 +84,11 @@
 import basicForm from '@/views/organization/role/basicForm'
 import AssignRule from '@/views/organization/role/AssignRule'
 
-import { getRole, updateNewRole } from '@/api/organization/role'
+import {
+  getRole,
+  updateNewRole,
+  getBranchCompanyList
+} from '@/api/organization/role'
 import SystemOperationLogTable from '@/views/components/systemOperationLog/systemOperationLogTable.vue'
 
 export default {
@@ -94,15 +103,18 @@ export default {
       roleId: '',
       parentsId: '',
       collapseWarningForBasicInfo: false,
-      isView: undefined
+      isView: undefined,
+      companyList: []
     }
   },
-  beforeCreate() {},
   created() {
     this.timeId = this.$route.query.timeId
     this.roleId = this.$route.query.roleId
     this.isView = this.$route.query.isView === '1'
     this.init()
+    setTimeout(() => {
+      this.setRouteTitleView(this.comDisFrom)
+    }, 0)
   },
   activated() {
     if (this.$route.query.timeId !== this.timeId) {
@@ -131,13 +143,20 @@ export default {
   },
   methods: {
     init() {
+      this.form = { isActive: '1', createdBy: this.$store.state.user.nickName }
       this.collapseWarningForBasicInfo = false
       this.$refs.basicForm && this.$refs.basicForm.reset()
       this.getRole()
+      this.getBranchCompanyList()
     },
     getRole() {
       getRole(this.roleId).then(res => {
         this.form = res.data
+      })
+    },
+    getBranchCompanyList() {
+      getBranchCompanyList().then(res => {
+        this.companyList = res.data || []
       })
     },
     // 取消按钮
@@ -147,11 +166,11 @@ export default {
         return
       }
       if (this.$route.query.backType === '2') {
-        this.$tab.closePage()
+        this.$store.dispatch('tagsView/delView', this.$route)
+        this.$router.back()
         return
       }
-      const obj = { path: '/organization/role' }
-      this.$tab.closeOpenPage(obj)
+      this.$tab.closeOpenPage({ path: '/organization/role' })
     },
     async submitForm() {
       const res = await this.$refs.basicForm.submit()
@@ -170,7 +189,6 @@ export default {
           param.assignUserLeftCheckedKeys &&
           param.assignUserLeftCheckedKeys.length > 0
         ) {
-          console.log(param.functionalPermissionsLeftCheckedKeys)
           content = this.$t('organization.notAddCheckData').replace(
             '$1',
             this.$t('organization.functionalPermissions') +
@@ -185,6 +203,11 @@ export default {
             '$1',
             this.$t('organization.functionalPermissions')
           )
+          param.menuIdList = [
+            ...param.menuIdList,
+            ...param.functionalPermissionsLeftCheckedKeys
+          ]
+          param.menuIdList = [...new Set(param.menuIdList)]
         } else if (
           param.assignUserLeftCheckedKeys &&
           param.assignUserLeftCheckedKeys.length > 0
@@ -200,19 +223,16 @@ export default {
           .then(() => {
             return updateNewRole(param)
           })
-          .then(response => {
+          .then(() => {
             this.$modal.msgSuccess(
-              `${this.$t('organization.savedSuccess').replace(
-                '$1',
-                `${param.roleName}`
-              )}`
+              `${this.$t('organization.savedSuccess').replace('$1', `${param.roleName}`)}`
             )
             this.cancel()
           })
           .catch(() => {})
       } else {
         this.collapseWarningForBasicInfo = true
-        this.$message.error(
+        this.$modal.msgError(
           this.$t('ui.fromIncomplete').replace('$1', this.$t('ui.basicInfo'))
         )
       }

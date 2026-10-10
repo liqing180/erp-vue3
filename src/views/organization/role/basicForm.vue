@@ -18,38 +18,18 @@
           ></el-input>
         </el-form-item>
       </el-col>
-      <template v-if="false">
-        <el-col :span="8">
-          <el-form-item :label="`${$t('ui.createdBy')}`" prop="createdBy">
-            <el-input
-              :value="createForm.createdBy || userName"
-              disabled
-              class="form-wd"
-            ></el-input>
-          </el-form-item>
-        </el-col>
-        <el-col :span="8">
-          <el-form-item :label="`${$t('ui.createdBy')}`" prop="createdBy">
-            <el-input
-              :value="createForm.createdBy || userName"
-              disabled
-              class="form-wd"
-            ></el-input>
-          </el-form-item>
-        </el-col>
-      </template>
     </el-row>
     <el-row>
       <el-col :span="24">
         <el-form-item :label="`${$t('ui.description')}`" prop="description">
-          <el-input
+          <MyInput
             type="textarea"
             v-model="createForm.description"
             :autosize="{ minRows: 2, maxRows: 4 }"
             resize="none"
             show-word-limit
             :maxlength="3000"
-          ></el-input>
+          ></MyInput>
         </el-form-item>
       </el-col>
     </el-row>
@@ -72,14 +52,13 @@ export default {
   props: {
     form: {
       type: Object,
-      default: () => {}
+      default: () => ({})
     },
     comDisFrom: {
       type: Boolean,
       default: false
     }
   },
-  components: {},
   data() {
     return {
       createForm: {
@@ -97,35 +76,20 @@ export default {
             trigger: ['change', 'blur'],
             pattern: new RegExp(/^(?!(\s+$))/g)
           }
-        ],
-        status: [
-          {
-            required: true
-          }
         ]
       }
     }
   },
   watch: {
     form: {
-      handler(newVal, oldVal) {
+      handler() {
         this.createForm = JSON.parse(JSON.stringify(this.form))
       },
       deep: true
     }
   },
-  computed: {
-    fmtForYmd() {
-      return this.$store.getters.fmtForYmd
-    },
-    fmtForYmdhms() {
-      return this.$store.getters.fmtForYmdhms
-    }
-  },
-  created() {},
   methods: {
     reset() {
-      console.log('???')
       this.resetForm('createForm')
     },
     async submit() {
@@ -135,7 +99,7 @@ export default {
           JSON.parse(JSON.stringify(this.createForm))
         )
         return param
-      } catch (err) {
+      } catch {
         return false
       }
     }

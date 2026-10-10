@@ -223,6 +223,14 @@ export default {
     legalEntityCode: '法人实体编号',
     companySeal: '公司印章',
     trademark: '商标',
-    notAddCheckData: '[$1]未添加，请确认是否继续提交.'
+    notAddCheckData: '[$1]未添加，请确认是否继续提交.',
+    copyRole: '复制',
+    salesPriceControl: '销售价格管控',
+    priceUpwardLimit: '价格上浮限度',
+    priceDownwardLimit: '价格下浮限度',
+    priceUpwardLimitTip:
+      '设定单价最多可以高于“销售定价”的溢价比例. 超过此上限将无法提交.',
+    priceDownwardLimitTip:
+      '设定订单允许的最大让利比例. 系统会分别计算“单价下调”和“优惠金额”, 确保最终成交价不低于该底线.'
   }
 }

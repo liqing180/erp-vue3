@@ -2,7 +2,7 @@
   <div class="app-container">
     <search-form
       ref="searchForm"
-      :value="queryParams"
+      v-model="queryParams"
       :searchData="searchData"
       :handleQuery="handleSearchForm"
       :resetQuery="resetSearchForm"
@@ -11,7 +11,7 @@
     />
 
     <el-row :gutter="10">
-      <el-col :span="1.5">
+      <el-col :span="2">
         <el-button
           type="primary"
           icon="Plus"
@@ -27,6 +27,7 @@
         :showSearchBtn="false"
         @queryTable="queryTable"
         :columns="configColumn"
+        :columnsInit="columns"
       ></right-toolbar>
     </el-row>
 
@@ -39,6 +40,7 @@
       :data="tableList"
       @sort-change="handleSortChange"
       @row-dblclick="handleRowDbclick"
+      style="cursor: pointer"
     >
       <el-table-column
         type="index"
@@ -47,7 +49,7 @@
         fixed="left"
         align="center"
       >
-        <template v-slot="scope">
+        <template #default="scope">
           <span>{{
             scope.$index + (queryParams.pageNum - 1) * queryParams.pageSize + 1
           }}</span>
@@ -66,7 +68,7 @@
         :align="item.align || 'left'"
         header-align="center"
       >
-        <template v-slot="scope">
+        <template #default="scope">
           <template v-if="item.prop === 'isActive'">
             <el-tag v-if="scope.row.isActive === '1'">{{
               $t('uiBtn.active')
@@ -84,40 +86,23 @@
           <template v-else>{{ scope.row[item.prop] }}</template>
         </template>
       </el-table-column>
-      <!-- <el-table-column
-              :label="$t('ui.action')"
-              align="center"
-              min-width="200"
-              class-name="small-padding fixed-width"
-              fixed="right"
-            >
-              <template slot-scope="scope">
-                <el-button
-                  type="primary"
-                  icon="el-icon-setting"
-                  size="small"
-                  v-hasPermi="['organization:role:functionalPermissions']"
-                  :title="$t('organization.functionalPermissions')"
-                  @click="handleFunctionalPermissions(scope.row)"
-                ></el-button>
-                <el-button
-                  type="primary"
-                  icon="el-icon-folder-opened"
-                  size="small"
-                  v-hasPermi="['organization:role:accessPermissions']"
-                  :title="$t('organization.accessPermissions')"
-                  @click="handleAccessPermissions(scope.row)"
-                ></el-button>
-                <el-button
-                  type="primary"
-                  icon="el-icon-user"
-                  size="small"
-                  v-hasPermi="['organization:role:assignUser']"
-                  :title="$t('organization.assignUser')"
-                  @click="handleAssignUser(scope.row)"
-                ></el-button>
-              </template>
-            </el-table-column> -->
+      <el-table-column
+        :label="$t('ui.action')"
+        align="center"
+        min-width="120"
+        class-name="small-padding fixed-width"
+        fixed="right"
+      >
+        <template #default="scope">
+          <el-icon
+            class="primary-pointer mr10"
+            style="font-size: 20px"
+            :title="$t('organization.copyRole')"
+            @click="copyRole(scope.row)"
+            ><DocumentCopy
+          /></el-icon>
+        </template>
+      </el-table-column>
     </el-table>
     <pagination
       :saveKey="saveKey"
@@ -133,14 +118,11 @@
 <script>
 import pageMixin from '@/mixins/tableMinx'
 import { queryRoleList } from '@/api/organization/role'
-// import accessPermissionsDlg from '@/views/system/role/accessPermissionsDlg'
 
 export default {
   name: 'Role',
+  dicts: ['role_status'],
   mixins: [pageMixin],
-  components: {
-    // accessPermissionsDlg
-  },
   data() {
     const vm = this
     return {
@@ -217,15 +199,14 @@ export default {
           label: vm.$t('ui.isActive'),
           type: 'SelectEle',
           width: '200px',
-          selectValue: 'value',
-          selectLabel: 'label',
+          selectValue: 'dictValue',
+          selectLabel: 'dictLabel',
           dict: 'system_active',
           selectData: []
         }
       ]
     }
   },
-  watch: {},
   computed: {
     fmtForYmdhms() {
       return this.$store.getters.fmtForYmdhms
@@ -234,7 +215,6 @@ export default {
       return this.checkPermi(['organization:role:edit'])
     }
   },
-  beforeCreate() {},
   created() {
     this.createdInitTimer = Date.now()
     this.queryParams.pageSize = this.$$initPageSize(this.saveKey)
@@ -246,6 +226,12 @@ export default {
     this.getList()
   },
   methods: {
+    copyRole(row) {
+      this.$router.push({
+        path: '/organization/addRole',
+        query: { timeId: +new Date(), roleId: row.roleId }
+      })
+    },
     getList() {
       let param = { ...this.queryParams }
       param = this.$trimOfObj(param)
@@ -260,7 +246,7 @@ export default {
           this.loading = false
         })
     },
-    tableRowClassName({ row, rowIndex }) {
+    tableRowClassName({ row }) {
       let color = ''
       for (const item of this.ids.values()) {
         if (item === row.salesOrderId) {
@@ -269,7 +255,7 @@ export default {
       }
       return color
     },
-    hanldeCreateVisible(row) {
+    hanldeCreateVisible() {
       this.$router.push({
         path: '/organization/addRole',
         query: { timeId: +new Date() }

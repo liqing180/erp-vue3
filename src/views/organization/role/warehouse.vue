@@ -15,7 +15,7 @@
       <el-checkbox
         v-for="(item, index) in checkboxList"
         :key="index"
-        :label="item.warehouseId"
+        :value="item.warehouseId"
         class="mt10"
         >{{ item.warehouseName }}</el-checkbox
       >
@@ -25,15 +25,18 @@
 
 <script>
 import {
-  getRoleDpForWarehouse,
-  getRoleDataPermissionsType
+  getRoleDpForWarehouse
+  //  getRoleDataPermissionsType
 } from '@/api/organization/role'
 export default {
   dicts: ['dp_type_vendor'],
   props: {
-    comDisFrom: Boolean
+    comDisFrom: Boolean,
+    formData: {
+      type: Object,
+      default: () => ({})
+    }
   },
-  components: {},
   data() {
     return {
       radioValue: '0',
@@ -52,6 +55,17 @@ export default {
       return this.checkPermi(['organization:role:warehouse:edit'])
     }
   },
+  watch: {
+    'formData.dpTypeWarehouse': {
+      immediate: true,
+      handler: function (newVal) {
+        // this.radioValue = newVal || '0'
+        if (this.formData && this.formData.roleId) {
+          this.isAll = newVal === '0'
+        }
+      }
+    }
+  },
   created() {
     this.roleId = this.$route.query.roleId
     this.timeId = this.$route.query.timeId
@@ -60,32 +74,21 @@ export default {
   activated() {
     if (this.$route.query.timeId !== this.timeId) {
       this.timeId = this.$route.query.timeId
+      this.roleId = this.$route.query.roleId
       this.getList()
     }
   },
   methods: {
     getList() {
-      if (this.roleId) {
-        getRoleDataPermissionsType(this.roleId).then(res => {
-          const data = res.data || {}
-          // this.radioValue = data.dpTypeWarehouse
-          this.isAll = data.dpTypeWarehouse === '0'
-        })
-      }
-
-      // getRoleDpForWarehouse({ roleId: this.roleId }).then(res => {
-      //   const { warehouseList, warehouseIdList } = res.data
-      //   this.checkboxList = warehouseList || []
-      //   this.checkedValue = warehouseIdList || []
-      //   if (!this.roleId) {
-      //     this.isAll = true
-      //     this.allChange(true)
-      //   }
-      // })
-    },
-    radioChange(e) {},
-    selectChange(e) {
-      this.value = e
+      getRoleDpForWarehouse({ roleId: this.roleId }).then(res => {
+        const { warehouseList, warehouseIdList } = res.data
+        this.checkboxList = warehouseList || []
+        this.checkedValue = warehouseIdList || []
+        if (!this.roleId) {
+          this.isAll = true
+          this.allChange(true)
+        }
+      })
     },
     allChange(e) {
       if (e) {
@@ -94,7 +97,7 @@ export default {
         this.checkedValue = []
       }
     },
-    checkboxChange(e) {
+    checkboxChange() {
       this.isAll = this.checkboxList.length === this.checkedValue.length
     },
     submitForm() {

@@ -1,12 +1,11 @@
 <template>
   <div class="tree-page">
-    <el-input placeholder="" v-model:value="filterText" clearable> </el-input>
+    <el-input placeholder="" v-model="filterText" clearable> </el-input>
     <el-tree
       ref="tree"
       :data="fromData"
       show-checkbox
       :default-expand-all="false"
-      :default-expanded-keys="fromData[0] && [fromData[0].id]"
       node-key="id"
       :check-strictly="true"
       empty-text="No Data"
@@ -18,6 +17,7 @@
       class="tree"
       :filter-node-method="filterNode"
       style="font-size: 14px; padding-bottom: 20px"
+      :default-expanded-keys="checkedKeys || []"
     ></el-tree>
   </div>
 </template>
@@ -30,17 +30,12 @@ export default {
   props: {
     comDisFrom: Boolean
   },
-  components: {},
   data() {
     return {
-      visible: false,
-      activeName: '0',
       fromData: [],
-      row: '',
       roleId: '',
-      form: {},
-      query: {},
       filterText: '',
+      checkedKeys: [],
       timeId: ''
     }
   },
@@ -53,11 +48,13 @@ export default {
     }
   },
   watch: {
+    editAuth() {
+      this.fromData.forEach(item => this.findPid(item))
+    },
     filterText(val) {
       this.$refs.tree.filter(val)
     }
   },
-  beforeCreate() {},
   created() {
     this.roleId = this.$route.query.roleId
     this.timeId = this.$route.query.timeId
@@ -66,13 +63,16 @@ export default {
   activated() {
     if (this.$route.query.timeId !== this.timeId) {
       this.timeId = this.$route.query.timeId
+      this.roleId = this.$route.query.roleId
       this.getAccessPermissions()
     }
   },
   methods: {
     filterNode(value, data) {
       if (!value) return true
-      return data.name.indexOf(value) !== -1
+      // return data.name.indexOf(value) !== -1
+      const text = value.toUpperCase()
+      return data.name.toUpperCase().indexOf(text) !== -1
     },
     getAccessPermissions() {
       getAccessPermissions({ roleId: this.roleId }).then(res => {
@@ -84,13 +84,8 @@ export default {
         this.checkedKeys = res.checkedKeys || []
 
         this.$nextTick(() => {
-          this.$refs.tree.setCheckedKeys(this.checkedKeys)
+          this.$refs.tree?.setCheckedKeys(this.checkedKeys)
         })
-        if (this.checkedKeys.length > 0) {
-          this.checkedKeys.forEach(x => {
-            this.getToLeftData(this.fromData, x)
-          })
-        }
       })
     },
 
@@ -102,55 +97,14 @@ export default {
         })
       }
     },
-    getToLeftData(tree, value) {
-      for (let i = 0; i < tree.length; i++) {
-        const item = tree[i]
-        if (tree[i].id === value) {
-          return item
-        } else if (tree[i].children) {
-          const result = this.getToLeftData(tree[i].children, value)
-          if (result) {
-            return result
-          }
-        }
-      }
-    },
-    powerRenderContent(h, { node, data, store }) {
-      const iconClass = ''
+    powerRenderContent(h, { node, data }) {
       let style = ''
-      if (data.type === 0) {
-        // iconClass = 'el-icon-message'
-      } else if (data.type === 1) {
-        // iconClass = 'el-icon-document'
+      if (data.type === 1) {
         style = 'color:#20A0FF'
       } else if (data.type === 2) {
-        // iconClass = 'el-icon-star-off'
         style = 'color:#FF4949'
       }
-
-      // const content = (
-      //   <span>
-      //     <span>
-      //       <span>
-      //         <i class={iconClass} style={style}></i>&ensp;{node.label}
-      //       </span>
-      //     </span>
-      //   </span>
-      // )
-      // return content
-      return node.label
-    },
-    queryTableList() {},
-    handleBack() {
-      const vm = this
-      this.reset()
-      vm.visible = false
-    },
-    close() {
-      this.reset()
-    },
-    reset() {
-      this.activeName = '0'
+      return h('span', [h('i', { style }), '\u2002' + node.label])
     },
     // 所有部门节点数据
     getDeptAllCheckedKeys() {
@@ -163,8 +117,7 @@ export default {
     },
     // 取消按钮
     cancel() {
-      const obj = { path: '/organization/role' }
-      this.$tab.closeOpenPage(obj)
+      this.$tab.closeOpenPage({ path: '/organization/role' })
     },
     submitForm() {
       const ids = this.getDeptAllCheckedKeys()
@@ -182,7 +135,6 @@ export default {
   display: none;
 }
 .tree-page {
-  /*// height: 600px;*/
   height: calc(100vh - 260px);
   padding: 0 20px 20px;
   .tree {
