@@ -78,6 +78,7 @@ export default {
       columns: [],
       colTextMaxWidth: 300,
       tableMaxHeight: 390,
+      indexTableMaxHeight: 390,
       tableScrollTop: undefined,
       tableKey: Date.now(),
       resizeFn: undefined
@@ -378,7 +379,9 @@ export default {
     },
     setTableMaxHeight() {
       this.$nextTick(() => {
-        this.tableMaxHeight = Math.max(window.innerHeight * 0.88 - 260, 390)
+        const height = window.innerHeight * 0.88 - 260
+        this.tableMaxHeight = Math.max(height, 390)
+        this.indexTableMaxHeight = Math.max(height, 300)
       })
     },
     scrollToErrorColumn() {

@@ -110,6 +110,19 @@ export const constantRoutes = [
       }
     ]
   },
+  {
+    path: '/bpm',
+    component: Layout,
+    hidden: true,
+    children: [
+      {
+        path: 'history',
+        component: () => import('@/views/bpm/history/history.vue'),
+        name: 'History',
+        meta: { title: 'history' }
+      }
+    ]
+  },
   system,
   organization,
   salesManagement,

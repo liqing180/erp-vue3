@@ -5,6 +5,7 @@ export function installDict(app, options = {}) {
   mergeOptions(options)
 
   app.mixin({
+    emits: ['dictReady'],
     data() {
       if (this.$options.dicts === undefined || this.$options.dicts === null) {
         return {}
