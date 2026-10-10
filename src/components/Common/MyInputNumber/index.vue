@@ -338,7 +338,8 @@ export default {
     },
     handleInputChange(value) {
       const splitType = getSplitType()
-      if (splitType === '2') {
+      // 聚焦后使用点号小数；带逗号时才按本地化格式解析。
+      if (splitType === '2' && value.includes(',')) {
         value = value.replace(/\./g, '')
         value = value.replace(',', '.')
       } else {

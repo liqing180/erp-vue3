@@ -1,5 +1,12 @@
 export default {
   system: {
+    total: 'Total',
+    automatically:
+      'Payment percentage is calculated automatically from the sub-stages. To modify it, adjust the sub-stage percentages.',
+    amountMust100: 'Payment stage percentages must total 100%.',
+    parentPercentageCalculated:
+      'The parent payment percentage is calculated from the sub-stages. Adjust the sub-stage percentages to update the parent percentage automatically.',
+    automaticallyCalculated: 'Auto-calculated from sub-stages：',
     fieldExists: 'The field cannot be the same.',
     delSalesGroupConfirm: 'Please confirm whether to delete sales group [$1].',
     isDefaultDepartment: 'Is Default Department',

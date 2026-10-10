@@ -1,5 +1,11 @@
 export default {
   system: {
+    total: '汇总',
+    automatically: '付款百分比由子阶段自动计算。如需修改，请调整子阶段百分比.',
+    amountMust100: '付款阶段百分比合计必须为 100%.',
+    parentPercentageCalculated:
+      '父级付款百分比由子阶段自动汇总。请修改子阶段百分比，系统将自动更新父级百分比.',
+    automaticallyCalculated: '由子级付款百分比自动计算：',
     fieldExists: '字段不能相同.',
     delSalesGroupConfirm: '请确认是否要删除销售小组[$1].',
     isDefaultDepartment: '是否默认部门',

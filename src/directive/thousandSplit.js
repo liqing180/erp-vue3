@@ -18,8 +18,18 @@ export default {
       el = el.getElementsByTagName('input')[0]
     }
     el.title = ''
+    // 数字组件提供原始值；保留 text 类型，避免 Element Plus 聚焦时布局变化。
+    const rawValue = el.getAttribute('aria-valuenow')
+    if (rawValue !== null) {
+      el.value = rawValue === 'undefined' ? '' : formatNumStr(rawValue, params)
+    }
     // 获取焦点去除千分号
     el.onfocus = e2 => {
+      const rawValue = e2.target.getAttribute('aria-valuenow')
+      if (rawValue !== null) {
+        e2.target.value = rawValue === 'undefined' ? '' : rawValue
+        return
+      }
       let a = e2.target.value || ''
       const splitType = getSplitType()
       if (splitType === '2') {
@@ -29,27 +39,25 @@ export default {
         a = a.replace(/,/g, '') // 去除千分号的','
       }
       e2.target.value = a
-      if (e2.target.type !== 'number') {
-        e2.target.type = 'number'
-      }
     }
     // 失去焦点重新设置 千分号
     el.onblur = e3 => {
       setTimeout(() => {
         // 格式化为千分位
         /* 这个可以拿到输入的值 */
-        const num = e3.target.value
-        // console.log(e3.target.value)
-
-        if (num && num !== 'undefined') {
-          if (e3.target.type === 'number') {
-            e3.target.type = 'text'
-          }
-          const value23 = formatNumStr(num, params)
-          // console.log(num, value23)
-          e3.target.value = value23
+        if (document.activeElement === e3.target) return
+        const num = e3.target.getAttribute('aria-valuenow')
+        if (num !== null) {
+          e3.target.value = num === 'undefined' ? '' : formatNumStr(num, params)
+        } else if (e3.target.value) {
+          const splitType = getSplitType()
+          const value =
+            splitType === '2' && e3.target.value.includes(',')
+              ? e3.target.value.replace(/\./g, '').replace(',', '.')
+              : e3.target.value.replace(/,/g, '')
+          e3.target.value = formatNumStr(value, params)
         }
-      }, 50)
+      }, 0)
     }
   },
   updated(el, binding) {
@@ -59,24 +67,22 @@ export default {
     if (el.tagName.toLocaleUpperCase() !== 'INPUT') {
       el = el.getElementsByTagName('input')[0]
     }
-    const parentNode = el.parentNode
-    const isFocused = parentNode.classList.contains('is-focus')
-
-    if (!isFocused) {
+    setTimeout(() => {
+      if (document.activeElement === el) return
+      const rawValue = el.getAttribute('aria-valuenow')
+      if (rawValue !== null) {
+        el.value =
+          rawValue === 'undefined' ? '' : formatNumStr(rawValue, params)
+        return
+      }
       const num = el.value
-      // console.log('updated', num)
       const splitType = getSplitType()
       const splitStr = splitType === '2' ? '.' : ','
       if (num && num !== 'undefined') {
-        if (el.type === 'number') {
-          el.type = 'text'
+        if (!num.includes(splitStr)) {
+          el.value = formatNumStr(num, params)
         }
-        setTimeout(() => {
-          if (!num.includes(splitStr)) {
-            el.value = formatNumStr(num, params)
-          }
-        }, 100)
       }
-    }
+    }, 100)
   }
 }

@@ -6,6 +6,18 @@ const system = {
   hidden: true,
   children: [
     {
+      path: 'addPaymentTerm',
+      component: () => import('@/views/system/paymentTerm/addPaymentTerm'),
+      name: 'AddPaymentTerm',
+      meta: { title: 'addPaymentTerm', activeMenu: '/system/paymentTerm' }
+    },
+    {
+      path: 'editPaymentTerm',
+      component: () => import('@/views/system/paymentTerm/editPaymentTerm'),
+      name: 'EditPaymentTerm',
+      meta: { title: 'editPaymentTerm', activeMenu: '/system/paymentTerm' }
+    },
+    {
       path: 'addCodeRule',
       component: () => import('@/views/system/createCodeRule/addCodeRule'),
       name: 'AddCodeRule',
