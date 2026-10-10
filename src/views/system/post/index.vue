@@ -2,7 +2,7 @@
   <div class="app-container">
     <search-form
       ref="searchForm"
-      :value="queryParams"
+      v-model="queryParams"
       :searchData="searchData"
       :handleQuery="handleSearchForm"
       :resetQuery="resetSearchForm"
@@ -45,17 +45,11 @@
       :data="tableList"
       :default-expand-all="false"
       :tree-props="{ children: 'children', hasChildren: 'hasChildren' }"
-      @selection-change="handleSelectionChange"
       @sort-change="handleSortChange"
-      @row-dblclick="handleUpdate"
-      :max-height="tableMaxHeight"
+      @row-dblclick="handleDblclick"
+      :max-height="indexTableMaxHeight"
+      style="cursor: pointer"
     >
-      <!-- <el-table-column
-              type="selection"
-              width="55"
-              align="center"
-              v-if="checkPermi(['system:post:remove'])"
-            /> -->
       <el-table-column
         type="index"
         :label="$t('ui.sn')"
@@ -64,10 +58,9 @@
         align="center"
       >
         <template v-slot="scope">
-          <!-- <span>{{
+          <span>{{
             scope.$index + (queryParams.pageNum - 1) * queryParams.pageSize + 1
-          }}</span> -->
-          <span>{{ scope.$index + 1 }}</span>
+          }}</span>
         </template>
       </el-table-column>
       <el-table-column
@@ -86,9 +79,10 @@
         <template v-slot="scope">
           <ToolTipShowList
             v-if="item.prop === 'departmentNameListShowStr'"
-            showLabel="departmentName"
-            :list="scope.row.departmentList || []"
-          />
+            :list="scope.row.departmentNameList || []"
+          >
+            <div class="ellipsis-text">{{ scope.row[item.prop] }}</div>
+          </ToolTipShowList>
           <template v-else-if="item.prop === 'status'">
             <el-tag v-if="scope.row.status === '0'">{{
               $t('uiBtn.active')
@@ -142,27 +136,11 @@
         </template>
       </el-table-column>
     </el-table>
-
-    <!-- <pagination
-      :saveKey="saveKey"
-      v-show="total > 0"
-      :total="total"
-      v-model:page="queryParams.pageNum"
-      v-model:limit="queryParams.pageSize"
-      @pagination="getList"
-    /> -->
   </div>
 </template>
 
 <script>
-import {
-  queryPostTreeList,
-  delPost,
-  addPost,
-  updatePost,
-  exportPost,
-  queryPostCanSelectDepartment
-} from '@/api/system/post'
+import { queryPostTreeList } from '@/api/system/post'
 import pageMixin from '@/mixins/tableMinx'
 
 export default {
@@ -172,71 +150,20 @@ export default {
     const vm = this
     return {
       saveKey: '1',
-      btnLoading: false,
       // 遮罩层
       loading: true,
-      // 导出遮罩层
-      exportLoading: false,
-      // 选中数组
-      ids: [],
-      // 非单个禁用
-      single: true,
-      // 非多个禁用
-      multiple: true,
       // 显示搜索条件
       showSearch: true,
-      // 总条数
-      total: 0,
       // 岗位表格数据
       tableList: [],
-      // 弹出层标题
-      title: '',
-      // 是否显示弹出层
-      open: false,
       // 查询参数
       queryParams: {
-        // pageNum: 1,
-        // pageSize: 10,
+        pageNum: 1,
+        pageSize: 25,
         condition: undefined,
         postCode: undefined,
         postName: undefined,
         status: undefined
-      },
-      // 表单参数
-      form: {
-        departmentIdList: []
-      },
-      // 表单校验
-      rules: {
-        departmentIdList: [
-          {
-            type: 'array',
-            required: true,
-            message: this.$t('ui.reqMsg').replace('$1', this.$t('ui.postName')),
-            trigger: 'blur'
-          }
-        ],
-        postName: [
-          {
-            required: true,
-            message: this.$t('ui.reqMsg').replace('$1', this.$t('ui.postName')),
-            trigger: 'blur'
-          }
-        ],
-        postCode: [
-          {
-            required: true,
-            message: this.$t('ui.reqMsg').replace('$1', this.$t('ui.postCode')),
-            trigger: 'blur'
-          }
-        ],
-        postSort: [
-          {
-            required: true,
-            message: this.$t('ui.reqMsg').replace('$1', this.$t('ui.sort')),
-            trigger: 'blur'
-          }
-        ]
       },
       searchData: [
         {
@@ -288,22 +215,11 @@ export default {
           visible: true,
           tooltip: true
         }
-      ],
-      props: {
-        multiple: true,
-        value: 'id',
-        label: 'name',
-        children: 'child',
-        emitPath: false,
-        checkStrictly: true
-      },
-      departmentList: [],
-      buttonRef: undefined
+      ]
     }
   },
   created() {
     this.createdInitTimer = Date.now()
-    // this.queryParams.pageSize = this.$$initPageSize(this.saveKey)
     this.$$initColumnVisible(this.saveKey, this.columns)
     this.getList()
   },
@@ -320,12 +236,6 @@ export default {
     },
     addAuth() {
       return this.checkPermi(['system:post:add'])
-    },
-    comDisFrom() {
-      if (this.form.postId) {
-        return !this.editAuth
-      }
-      return false
     }
   },
   methods: {
@@ -337,43 +247,20 @@ export default {
         }
       })
     },
-    showPop(e, row, type) {
-      console.log(e, this.$refs.popoverRef)
-      this.buttonRef = e
-      this.$refs.popoverRef.delayHide()
-
-      const departmentNameList = row.departmentNameList || []
-      const list = departmentNameList.map(x => {
-        return {
-          label: x
-        }
-      })
-      const params = {
-        labelKey: 'label',
-        list
-      }
-      if (list.length > 0 && this.$refs.ToolTipShowList) {
-        this.$refs.ToolTipShowList.showPop(e, params)
-      }
-    },
-    hidePop(e) {
-      this.$refs.ToolTipShowList && this.$refs.ToolTipShowList.hidePop(e)
-    },
-
-    inputNumberChange(code) {
-      this.$refs.form.validateField(code)
-    },
     /** 查询岗位列表 */
     getList() {
       this.loading = true
       let params = { ...this.queryParams }
       params = this.$trimOfObj(params)
-      queryPostTreeList(params).then(response => {
-        this.tableList = response.data || []
-        this.handlerData(this.tableList)
-        this.total = response.total
-        this.loading = false
-      })
+      queryPostTreeList(params)
+        .then(response => {
+          this.tableList = response.rows || []
+          this.handlerData(this.tableList)
+          this.loading = false
+        })
+        .catch(() => {
+          this.loading = false
+        })
     },
     handlerData(data, index = 0) {
       data.forEach(x => {
@@ -383,34 +270,15 @@ export default {
         }
       })
     },
-    // 取消按钮
-    cancel() {
-      this.open = false
-      this.reset()
-    },
-    // 表单重置
-    reset() {
-      this.form = {
-        postId: undefined,
-        postCode: undefined,
-        postName: undefined,
-        postSort: 0,
-        status: '0',
-        remark: undefined,
-        createdBy: this.$store.state.user.nickName
-      }
-      this.resetForm('form')
-    },
     /** 搜索 */
     handleSearchForm() {
-      // this.queryParams.pageNum = 1
+      this.queryParams.pageNum = 1
       this.getList()
     },
     /** 重置 */
     resetSearchForm() {
-      // const { pageSize } = this.queryParams
-      // this.queryParams = { pageNum: 1, pageSize }
-      this.queryParams = {}
+      const { pageSize } = this.queryParams
+      this.queryParams = { pageNum: 1, pageSize }
       this.$refs.tables.clearSort()
       this.getList()
     },
@@ -422,19 +290,8 @@ export default {
         this.searchData[e.index].date = e.value
       }
     },
-    // 多选框选中数据
-    handleSelectionChange(selection) {
-      this.ids = selection.map(item => item.postId)
-
-      this.single = selection.length != 1
-      this.multiple = !selection.length
-    },
     /** 新增按钮操作 */
     handleAdd() {
-      // this.reset()
-      // this.open = true
-      // this.title = this.$t('ui.position')
-      // this.queryPostCanSelectDepartment()
       this.$router.push({
         path: '/organization/addPost',
         query: {
@@ -442,16 +299,21 @@ export default {
         }
       })
     },
-    /** 修改按钮操作 */
-    handleUpdate(row, column) {
+    handleDblclick(row, column, event) {
       if (column && column.type === 'selection') {
         return
       }
+      if (event?.target?.closest?.('.el-table__expand-icon')) {
+        return
+      }
+      this.handleUpdate(row)
+    },
+    /** 修改按钮操作 */
+    handleUpdate(row) {
       const list = this.treeFindPath(
         this.tableList,
         data => data.postId === row.postId
       )
-      console.log(list, '===')
       if (list.length >= 2) {
         this.$router.push({
           path: '/organization/editPost',
@@ -496,112 +358,7 @@ export default {
           deptIds: (row.departmentIdList || []).join(',')
         }
       })
-    },
-    // 查部门
-    queryPostCanSelectDepartment() {
-      queryPostCanSelectDepartment({}).then(res => {
-        const fromData = res.data || []
-        fromData.forEach(x => {
-          if (x.type !== 5 && x.type !== 6) {
-            x.disabled = true
-          }
-          if (
-            this.form.postId &&
-            this.form.departmentIdList.indexOf(x.id) !== -1
-          ) {
-            x.disabled = true
-          }
-          x.children = this.disabledId(x)
-        })
-        console.log(fromData, '===')
-        this.departmentList = JSON.parse(JSON.stringify(fromData))
-      })
-    },
-    disabledId(data) {
-      if (data.children && data.children.length > 0) {
-        data.children.forEach(k => {
-          if (k.type !== 5 && k.type !== 6) {
-            k.disabled = true
-          }
-          if (
-            this.form.postId &&
-            this.form.departmentIdList.indexOf(k.id) !== -1
-          ) {
-            k.disabled = true
-            console.log(k, '=====')
-          }
-          k.children = this.disabledId(k)
-        })
-        return data.children
-      }
-    },
-    /** 提交按钮 */
-    submitForm: function () {
-      this.$refs.form.validate(valid => {
-        if (valid) {
-          const params = JSON.parse(JSON.stringify(this.form))
-          // params.departmentIdList = params.departmentIdList.map((item) => {
-          //   return item[item.length - 1]
-          // })
-
-          if (params.postId != undefined) {
-            this.btnLoading = true
-            updatePost(params)
-              .then(response => {
-                this.btnLoading = false
-                this.$modal.msgSuccess(this.$t('ui.modifiedSuccess'))
-                this.open = false
-                this.getList()
-              })
-              .catch(() => {
-                this.btnLoading = false
-              })
-          } else {
-            this.btnLoading = true
-            addPost(params)
-              .then(response => {
-                this.btnLoading = false
-                this.$modal.msgSuccess(this.$t('ui.addSuccess'))
-                this.open = false
-                this.getList()
-              })
-              .catch(() => {
-                this.btnLoading = false
-              })
-          }
-        }
-      })
-    },
-    /** 删除按钮操作 */
-    handleDelete(row) {
-      const postIds = row.postId || this.ids
-      this.$modal
-        .confirm(this.$t('ui.delConfirm').replace('$1', postIds))
-        .then(function () {
-          return delPost(postIds)
-        })
-        .then(() => {
-          this.getList()
-          this.$modal.msgSuccess(this.$t('ui.deleteSuccess'))
-        })
-        .catch(() => {})
-    },
-    /** 导出按钮操作 */
-    handleExport() {
-      const queryParams = this.queryParams
-      this.$modal
-        .confirm(this.$t('ui.exportPostConfirm'))
-        .then(() => {
-          this.exportLoading = true
-          return exportPost(queryParams)
-        })
-        .then(response => {
-          this.$download.name(response.msg)
-          this.exportLoading = false
-        })
-        .catch(() => {})
     }
-  },
-  emits: ['update:value']
+  }
 }
 </script>

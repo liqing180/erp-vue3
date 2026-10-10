@@ -11,7 +11,7 @@
   >
     <search-form
       ref="searchForm"
-      :value="queryParams"
+      v-model="queryParams"
       :searchData="searchData"
       :handleQuery="handleSearchForm"
       :resetQuery="resetSearchForm"
@@ -33,7 +33,6 @@
       v-loading="loading"
       :data="tableList"
       @sort-change="handleSortChange"
-      @row-click="handleRowClick"
       :max-height="tableMaxHeight"
     >
       <el-table-column
@@ -82,10 +81,8 @@
       @pagination="getList"
     />
     <template v-slot:footer>
-      <div class="dialog-footer">
-        <el-button type="default" @click="handleBack">{{
-          $t('ui.back')
-        }}</el-button>
+      <div v-dialogDragWidth class="dialog-footer">
+        <el-button @click="handleBack">{{ $t('ui.back') }}</el-button>
       </div>
     </template>
   </el-dialog>
@@ -96,32 +93,18 @@ import pageMixin from '@/mixins/tableMinx'
 import { queryUserList } from '@/api/system/post'
 
 export default {
-  directives: {
-    // transferDom
-  },
   mixins: [pageMixin],
-  props: {},
-  inject: {
-    elForm: {
-      default: ''
-    },
-    elFormItem: {
-      default: ''
-    }
-  },
   data() {
     return {
       user_status: [],
       saveKey: 'selectPicTable',
-      searchFormKey: Date.now(),
       loading: false,
       // 显示搜索条件
       showSearch: true,
       // 总条数
       total: 0,
       tableList: [],
-      tableMaxHeightResize: true,
-      selected: '',
+      clickNode: {},
       visible: false,
       columns: [
         {
@@ -199,24 +182,9 @@ export default {
       ]
     }
   },
-  computed: {},
-  watch: {
-    value(selected) {
-      this.selected = selected
-    },
-    selected(selected) {
-      this.$emit('update:value', selected)
-      if (selected === undefined) return
-      this.dispatch('ElFormItem', 'el.form.change', [selected])
-    }
-  },
   created() {
-    this.selected = this.value
     const { user_status } = this.useDict('user_status')
     this.user_status = user_status || []
-  },
-  updated() {
-    this.selected = this.value
   },
   methods: {
     handleOpen(clickNode) {
@@ -230,22 +198,15 @@ export default {
     },
     getList() {
       const vm = this
-      const param = this.queryParams
+      const param = this.$trimOfObj({ ...this.queryParams })
       param.id = this.clickNode.id
       param.type = this.clickNode.type
       this.loading = true
       queryUserList(param)
         .then(response => {
           this.loading = false
-          this.total = response.total
-          this.tableList = response.rows
-          vm.tableList = this.tableList.map(item => {
-            const reg = /\(([\w]*)\)/g
-            if (reg.test(item.currency)) {
-              item.currencyCode = RegExp.$1
-            }
-            return item
-          })
+          this.total = response.total || 0
+          this.tableList = response.rows || []
         })
         .catch(() => {
           vm.loading = false
@@ -269,18 +230,7 @@ export default {
       this.queryParams = { pageNum: 1, pageSize }
       this.$refs.tables.clearSort()
       this.getList()
-    },
-    handleRowClick(row) {
-      // this.$emit('updatePic', row)
-      // this.visible = false
     }
-  },
-  emits: ['update:value']
+  }
 }
 </script>
-
-<style lang="scss" scoped>
-.txt-color {
-  color: #f66c6c !important;
-}
-</style>

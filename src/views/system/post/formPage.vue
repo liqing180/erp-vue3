@@ -1,5 +1,4 @@
 <template>
-  <!-- formClass="form-page-btn--hide" -->
   <FormPageLayout>
     <template v-slot:btn>
       <el-button
@@ -55,14 +54,13 @@
                     :label="`${$t('system.parentStructure')}`"
                     prop="postParentName"
                   >
-                    <!-- <el-input v-model="form.postParentName" :title="form.postParentName" disabled /> -->
                     <SelectInput
                       clearable
                       :value="form.postParentName"
                       :title="form.postParentName"
                       @click="openPostParentTable"
                       @clear="postParentClear"
-                      :disabled="!!postId || !!postParentId"
+                      :disabled="comDisFrom || !!postParentId"
                     />
                   </el-form-item>
                 </el-col>
@@ -94,66 +92,17 @@
               <el-row>
                 <el-col :span="24">
                   <el-form-item :label="$t('ui.remarks')" prop="remark">
-                    <el-input
+                    <MyInput
                       type="textarea"
                       v-model="form.remark"
                       :autosize="{ minRows: 2, maxRows: 4 }"
                       resize="none"
                       show-word-limit
                       :maxlength="3000"
-                    ></el-input>
+                    ></MyInput>
                   </el-form-item>
                 </el-col>
               </el-row>
-              <!-- <el-row>
-                <el-col :span="8">
-                  <el-form-item :label="'金额'">
-                    <el-input-number
-                      v-model="form.length"
-                      v-thousandSplit="{
-                        precision: 6,
-                        minPrecision: 2,
-                        keepDec: false
-                      }"
-                      :precision="6"
-                      :min-precision="2"
-                      :min="0"
-                      :max="99999999.99"
-                      style="width: 100%"
-                      controls-position="right"
-                    />
-                  </el-form-item>
-                </el-col>
-                <el-col :span="8">
-                  <el-form-item :label="`开始时间`">
-                    <my-date-picker
-                      v-model="form.startDateTime"
-                      :format="fmtForYmdhm"
-                      type="datetime"
-                      value-format="x"
-                      :default-time="getCurrentTime()"
-                      :style="{ width: '100%' }"
-                      placeholder=""
-                      clearable
-                    ></my-date-picker>
-                  </el-form-item>
-                </el-col>
-              </el-row> -->
-              <!-- <el-row>
-                <el-col :span="24">
-                  <el-form-item
-                    :label="`${$t('ui.attachment')}`"
-                    prop="fileIds"
-                  >
-                    <myUpload
-                      ref="uploadRef"
-                      :disabled="false"
-                      :limit="9"
-                      :singleFile="false"
-                    />
-                  </el-form-item>
-                </el-col>
-              </el-row> -->
             </el-form>
           </el-collapse-item>
         </div>
@@ -194,6 +143,7 @@
     <postParentDlg
       ref="postParentDlg"
       :query="form"
+      :postId="postId"
       @onSuccess="updatePostParent"
     />
   </FormPageLayout>
@@ -210,11 +160,11 @@ import SystemOperationLogTable from '@/views/components/systemOperationLog/syste
 import postParentDlg from './postParentDlg.vue'
 export default {
   name: 'EditPost',
-  dicts: ['sys_user_sex'],
   components: { SystemOperationLogTable, postParentDlg },
   data() {
     return {
       timeId: '',
+      postId: undefined,
       activeNames: ['1', '2'],
       form: {
         departmentIdList: []
@@ -268,8 +218,6 @@ export default {
         checkStrictly: true
       },
       departmentList: [],
-      parentStructureOptions: [],
-      postList: [],
       postParentId: undefined,
       isView: false
     }
@@ -283,15 +231,18 @@ export default {
     if (this.postId) {
       this.init()
     } else {
-      this.form['postParentId'] = this.$route.query.postParentId
-      this.form['postParentName'] = this.$route.query.postParentName
+      this.form.postParentId = this.$route.query.postParentId
+      this.form.postParentName = this.$route.query.postParentName
       const deptIds = this.$route.query.deptIds || ''
       if (deptIds) {
-        this.form['departmentIdList'] = deptIds.split(',')
+        this.form.departmentIdList = deptIds.split(',')
       }
       this.postParentId = this.$route.query.postParentId || undefined
       this.queryPostCanSelectDepartment()
     }
+    this.$nextTick(() => {
+      this.setRouteTitleView(this.comDisFrom)
+    })
   },
   activated() {
     if (this.$route.query.timeId !== this.timeId) {
@@ -303,28 +254,21 @@ export default {
       if (this.postId) {
         this.init()
       } else {
-        this.form['postParentId'] = this.$route.query.postParentId
-        this.form['postParentName'] = this.$route.query.postParentName
+        this.form.postParentId = this.$route.query.postParentId
+        this.form.postParentName = this.$route.query.postParentName
         const deptIds = this.$route.query.deptIds || ''
         if (deptIds) {
-          this.form['departmentIdList'] = deptIds.split(',')
+          this.form.departmentIdList = deptIds.split(',')
         }
         this.postParentId = this.$route.query.postParentId || undefined
         this.queryPostCanSelectDepartment()
       }
+      this.$nextTick(() => {
+        this.setRouteTitleView(this.comDisFrom)
+      })
     }
   },
   computed: {
-    fmtForYmd() {
-      return this.$store.getters.fmtForYmd
-    },
-    fmtForYmdhms() {
-      return this.$store.getters.fmtForYmdhms
-    },
-    fmtForYmdhm() {
-      return this.$store.getters.fmtForYmdhm
-    },
-
     editAuth() {
       return this.checkPermi(['system:post:edit'])
     },
@@ -339,13 +283,6 @@ export default {
     }
   },
   methods: {
-    getCurrentTime() {
-      const now = new Date()
-      const hours = now.getHours().toString().padStart(2, '0')
-      const minutes = now.getMinutes().toString().padStart(2, '0')
-      const seconds = now.getSeconds().toString().padStart(2, '0')
-      return `${hours}:${minutes}:${seconds}`
-    },
     init() {
       this.collapseWarningForBasicInfo = false
       this.handleUpdate()
@@ -358,10 +295,11 @@ export default {
         if (parentPost) {
           data.postParentName = parentPost.postName
         }
-        this.form = response.data
-        // this.$set(this.form, 'postParentId', this.$route.query.postParentId)
-        // this.$set(this.form, 'postParentName', this.$route.query.postParentName)
+        this.form = data
         this.queryPostCanSelectDepartment()
+        this.$nextTick(() => {
+          this.setRouteTitleView(this.comDisFrom)
+        })
       })
     },
     inputNumberChange(code) {
@@ -409,10 +347,12 @@ export default {
       this.activeNames = ['1', '2']
       this.form = {
         departmentIdList: [],
-        parentStructure: undefined,
+        postParentId: undefined,
+        postParentName: undefined,
         postName: undefined,
-        remarks: undefined
+        remark: undefined
       }
+      this.postParentId = undefined
       this.collapseWarningForBasicInfo = false
       this.resetForm('form')
     },
@@ -420,12 +360,12 @@ export default {
       this.$refs.postParentDlg.handleOpen()
     },
     updatePostParent(e = {}) {
-      this.form['postParentId'] = e.postId
-      this.form['postParentName'] = e.postName
+      this.form.postParentId = e.postId
+      this.form.postParentName = e.postName
     },
     postParentClear() {
-      this.form['postParentId'] = undefined
-      this.form['postParentName'] = undefined
+      this.form.postParentId = undefined
+      this.form.postParentName = undefined
     },
     // 取消按钮
     cancel() {
@@ -459,7 +399,7 @@ export default {
                 return addPost(params)
               }
             })
-            .then(response => {
+            .then(() => {
               this.$modal.msgSuccess(
                 this.$t('system.postSuccess').replace('$1', params.postName)
               )
@@ -469,7 +409,6 @@ export default {
         }
       })
     }
-  },
-  emits: ['update:value']
+  }
 }
 </script>

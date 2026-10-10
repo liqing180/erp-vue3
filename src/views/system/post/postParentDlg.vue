@@ -28,7 +28,7 @@
       ></el-tree>
     </el-row>
     <template v-slot:footer>
-      <div class="dialog-footer">
+      <div v-dialogDragWidth class="dialog-footer">
         <el-button @click="dialogTableVisible = false">{{
           $t('uiBtn.back')
         }}</el-button>
@@ -49,7 +49,11 @@ export default {
   props: {
     query: {
       type: Object,
-      default: () => {}
+      default: () => ({})
+    },
+    postId: {
+      type: [String, Number],
+      default: undefined
     }
   },
   data() {
@@ -63,16 +67,20 @@ export default {
   },
   watch: {
     filterText(val) {
-      this.$refs.tree.filter(val)
+      this.$refs.tree?.filter(val)
     }
   },
   methods: {
     filterNode(value, data) {
       if (!value) return true
-      return data.postName.indexOf(value) !== -1
+      return (
+        (data.postName || '').toUpperCase().indexOf(value.toUpperCase()) !== -1
+      )
     },
     closed() {
       this.postList = []
+      this.form = {}
+      this.filterText = ''
     },
     treeCheck(node, list) {
       // node 该节点所对应的对象、list 树目前的选中状态对象
@@ -88,42 +96,46 @@ export default {
       }
     },
     handleOpen() {
+      this.form = {}
+      this.filterText = ''
       this.dialogTableVisible = true
       this.getList()
     },
     getList() {
       this.loading = true
-      queryPostTreeList({})
+      queryPostTreeList({ pageNum: 1, pageSize: 25 })
         .then(response => {
-          this.postList = response.data || []
+          this.postList = response.rows || []
           this.handlerData(this.postList)
-          if (this.query && this.query.postParentId) {
-            this.$nextTick(() => {
-              // this.$refs.tree && this.$refs.tree.setCheckedKeys([this.query.postParentId])
-              // this.$refs.tree && this.$refs.tree.setCurrentKey(this.query.postParentId)
-            })
-            setTimeout(() => {
-              this.$refs.tree &&
-                this.$refs.tree.setCheckedKeys([this.query.postParentId])
-              this.$refs.tree &&
-                this.$refs.tree.setCurrentKey(this.query.postParentId)
-            }, 200)
-          }
-
+          this.$nextTick(() => {
+            const tree = this.$refs.tree
+            if (!tree) return
+            tree.filter(this.filterText)
+            const node = tree.getNode(this.query.postParentId)
+            if (node && !node.disabled) {
+              tree.setCheckedKeys([node.key])
+              tree.setCurrentKey(node.key)
+              this.form = node.data
+            }
+          })
           this.loading = false
         })
         .catch(() => {
           this.loading = false
         })
     },
-    handlerData(data, index = 0) {
+    handlerData(data, index = 0, disabled = false) {
       data.forEach(x => {
         x.customIndex = index + 1
+        x.disabled = disabled || undefined
         if (x.customIndex >= 30) {
           x.disabled = true
         }
+        if (this.postId != null && String(this.postId) === String(x.postId)) {
+          x.disabled = true
+        }
         if (x.children && x.children.length > 0) {
-          this.handlerData(x.children, x.customIndex)
+          this.handlerData(x.children, x.customIndex, x.disabled)
         } else {
           x.children = undefined
         }
