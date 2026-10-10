@@ -1,11 +1,10 @@
 <template>
-  <FormPageLayout>
+  <FormPageLayout v-loading="submitLoading">
     <template v-slot:btn>
       <el-button
         type="primary"
         size="small"
         v-if="!comDisFrom"
-        :disabled="fullscreenLoading"
         @click="submitForm"
         >{{ $t('uiBtn.submit') }}
       </el-button>
@@ -17,7 +16,7 @@
       <el-collapse v-model="activeNames">
         <div class="form-card">
           <el-collapse-item name="1">
-            <template v-slot:title>
+            <template #title>
               <FormCollapseItemTitle
                 :title="$t('ui.basicInfo')"
                 :warning="collapseWarningForBasicInfo"
@@ -55,7 +54,7 @@
                       v-model.trim="createForm.email"
                       :title="createForm.email"
                       class="form-wd"
-                      :maxlength="50"
+                      :maxlength="350"
                     />
                   </el-form-item>
                 </el-col>
@@ -78,17 +77,28 @@
               <el-row>
                 <el-col :span="8">
                   <el-form-item
-                    :label="`${$t('organization.pic')}`"
-                    prop="picUserName"
+                    :label="`${$t('organization.country')}`"
+                    prop="country"
                   >
-                    <SelectInput
-                      :value="createForm.picUserName"
-                      :title="createForm.picUserName"
-                      @clear="picUserNameClear"
-                      clearable
-                      @click="openPicTable"
+                    <country-select
+                      v-model:value="createForm.country"
                       class="form-wd"
+                      @select="handleCountrySelect"
                       :disabled="comDisFrom"
+                    />
+                  </el-form-item>
+                </el-col>
+                <el-col :span="8">
+                  <el-form-item
+                    :label="`${$t('organization.landlineNumber')}`"
+                    ref="landlineNumberRef"
+                  >
+                    <MobilePhoneInput
+                      v-model:mobileCode="createForm.landlineCode"
+                      v-model:mobileNum="createForm.landlineNumber"
+                      v-model:mobileNo="createForm.landlinePhone"
+                      @clearValidate="$refs.landlineNumberRef.clearValidate()"
+                      :clearableCode="true"
                     />
                   </el-form-item>
                 </el-col>
@@ -99,21 +109,12 @@
                     ref="faxRef"
                   >
                     <MobilePhoneInput
-                      :disabled="comDisFrom"
                       v-model:mobileCode="createForm.faxCode"
                       v-model:mobileNum="createForm.fax"
                       v-model:mobileNo="createForm.faxPhone"
                       @clearValidate="$refs.faxRef.clearValidate()"
-                    />
-                    <!-- <el-input v-model="createForm.fax" :maxlength="50" class="form-wd" /> -->
-                  </el-form-item>
-                </el-col>
-                <el-col :span="8">
-                  <el-form-item :label="`${$t('organization.landlineNumber')}`">
-                    <el-input
-                      v-model="createForm.landlineNumber"
-                      :maxlength="50"
-                      class="form-wd"
+                      :disabled="comDisFrom"
+                      :clearableCode="true"
                     />
                   </el-form-item>
                 </el-col>
@@ -125,11 +126,32 @@
                     :label="`${$t('organization.currency')}`"
                     prop="currency"
                   >
-                    <CountryCurrencySelect
-                      :value="createForm.currency"
+                    <CommonSelectAndList
+                      :id="createForm.currencyId"
+                      :label="createForm.currency"
+                      :title="createForm.currency"
+                      idKey="id"
+                      labelKey="currency"
+                      filterable
+                      :options="currencyOptions"
+                      :loading="currencyOptionsLoading"
+                      @change="handleCurrencyChange"
+                      @handleOpen="
+                        () => {
+                          $refs.currencySelectRef.handleClick()
+                        }
+                      "
+                      disabled
+                    />
+                    <country-currency-select
+                      :showInput="false"
+                      ref="currencySelectRef"
+                      v-model:value="createForm.currency"
                       class="form-wd"
+                      :props="propVal"
+                      :is-currency="true"
                       :cur-path="curPath"
-                      :disabled="true"
+                      disabled
                       @select="handleCurrencyChange"
                     />
                   </el-form-item>
@@ -146,13 +168,49 @@
                     />
                   </el-form-item>
                 </el-col>
+                <el-col :span="8">
+                  <el-form-item
+                    :label="`${$t('organization.pic')}`"
+                    prop="picUserName"
+                  >
+                    <div class="flexStart">
+                      <el-select
+                        v-model="createForm.title"
+                        placeholder=""
+                        style="width: 84px"
+                        class="fs-0"
+                        clearable
+                        filterable
+                        :disabled="comDisFrom"
+                      >
+                        <el-option
+                          v-for="dict in dict.type
+                            .business_contact_person_title"
+                          :key="dict.value"
+                          :label="dict.label"
+                          :value="dict.value"
+                        ></el-option>
+                      </el-select>
+                      <SelectInput
+                        :value="createForm.picUserName"
+                        :title="createForm.picUserName"
+                        @clear="picUserNameClear"
+                        clearable
+                        @click="openPicTable"
+                        class="form-wd"
+                        :disabled="comDisFrom"
+                        style="width: 100%"
+                      />
+                    </div>
+                  </el-form-item>
+                </el-col>
               </el-row>
             </el-form>
           </el-collapse-item>
         </div>
         <div class="form-card mt10">
           <el-collapse-item name="2">
-            <template v-slot:title>
+            <template #title>
               <FormCollapseItemTitle
                 :title="$t('organization.titleAddress')"
                 :warning="collapseWarningForTitleAddress"
@@ -168,7 +226,7 @@
                 :disabled="comDisFrom"
               >
                 <el-row class="mt22">
-                  <el-col :span="8">
+                  <el-col :span="24">
                     <el-form-item
                       :label="`${$t('organization.address1')}`"
                       prop="address1"
@@ -180,7 +238,9 @@
                       />
                     </el-form-item>
                   </el-col>
-                  <el-col :span="8">
+                </el-row>
+                <el-row>
+                  <el-col :span="24">
                     <el-form-item
                       :label="`${$t('organization.address2')}`"
                       prop="address2"
@@ -192,7 +252,9 @@
                       />
                     </el-form-item>
                   </el-col>
+                </el-row>
 
+                <el-row>
                   <el-col :span="8">
                     <el-form-item
                       :label="`${$t('organization.province')}`"
@@ -205,9 +267,6 @@
                       />
                     </el-form-item>
                   </el-col>
-                </el-row>
-
-                <el-row>
                   <el-col :span="8">
                     <el-form-item
                       :label="`${$t('organization.city')}`"
@@ -232,7 +291,8 @@
                       />
                     </el-form-item>
                   </el-col>
-
+                </el-row>
+                <el-row>
                   <el-col :span="8">
                     <el-form-item
                       :label="`${$t('organization.postalCode')}`"
@@ -246,15 +306,13 @@
                       />
                     </el-form-item>
                   </el-col>
-                </el-row>
-                <el-row>
                   <el-col :span="8">
                     <el-form-item
                       :label="`${$t('organization.country')}`"
                       prop="country"
                     >
                       <country-select
-                        v-model="addressForm.country"
+                        v-model:value="addressForm.country"
                         class="form-wd"
                         @select="handleCountrySelect2"
                       />
@@ -264,14 +322,14 @@
                 <el-row>
                   <el-col :span="24">
                     <el-form-item :label="`${$t('ui.remarks')}`" prop="remarks">
-                      <el-input
+                      <MyInput
                         type="textarea"
                         v-model="addressForm.remarks"
                         :autosize="{ minRows: 2, maxRows: 4 }"
                         resize="none"
                         show-word-limit
                         :maxlength="3000"
-                      ></el-input>
+                      ></MyInput>
                     </el-form-item>
                   </el-col>
                 </el-row>
@@ -282,7 +340,7 @@
 
         <div class="form-card mt10">
           <el-collapse-item name="3">
-            <template v-slot:title>
+            <template #title>
               <FormCollapseItemTitle :title="$t('ui.systemOperationLog')">
                 <template v-if="createForm.operationLogForLast">
                   <span
@@ -321,10 +379,11 @@ import {
   updateBranchCompany,
   queryBranchCompanyById
 } from '@/api/organization/corporate'
-import CountryCurrencySelect from '@/components/select/countryCurrencySelect.vue'
+import countryCurrencySelect from '@/components/select/countryCurrencySelect.vue'
 import countrySelect from '@/components/select/countrySelect'
 import selectPicTable from '@/views/organization/corporate/selectPicTable.vue'
 import SystemOperationLogTable from '@/views/components/systemOperationLog/systemOperationLogTable.vue'
+import { queryCurrencyListBySelect } from '@/api/basic/basic'
 
 function isWebsite(param) {
   const strRegex =
@@ -334,8 +393,9 @@ function isWebsite(param) {
 }
 export default {
   name: 'EditBranchCompany',
+  dicts: ['business_contact_person_title'],
   components: {
-    CountryCurrencySelect,
+    countryCurrencySelect,
     countrySelect,
     selectPicTable,
     SystemOperationLogTable
@@ -351,7 +411,7 @@ export default {
     }
 
     return {
-      fullscreenLoading: false,
+      submitLoading: false,
       // 一定要放在当前文件
       curPath: this.$options.__file,
 
@@ -360,6 +420,15 @@ export default {
       createForm: {},
       createRules: {
         branchCompanyName: [
+          {
+            required: true,
+            message: vm.$t('ui.reqMsg'),
+            trigger: ['blur', 'change'],
+
+            pattern: new RegExp(/^(?!(\s+$))/g)
+          }
+        ],
+        country: [
           {
             required: true,
             message: vm.$t('ui.reqMsg'),
@@ -415,7 +484,8 @@ export default {
           }
         ]
       },
-
+      currencyOptions: [],
+      currencyOptionsLoading: false,
       addressForm: {},
       addressRules: {
         address1: [
@@ -478,10 +548,7 @@ export default {
       if (this.isView) {
         return true
       }
-      return !this.editAuth || this.sysDockingSwitch
-    },
-    sysDockingSwitch() {
-      return this.$store.getters.sysDockingSwitch
+      return !this.editAuth
     }
   },
 
@@ -493,6 +560,9 @@ export default {
     vm.createForm = Object.assign(vm.createForm, query)
     this.isView = this.$route.query.isView === '1'
     this.queryBranchCompanyById()
+    setTimeout(() => {
+      this.setRouteTitleView(this.comDisFrom)
+    }, 0)
   },
   activated() {
     if (this.$route.query.timeId !== this.timeId) {
@@ -506,6 +576,7 @@ export default {
   },
   methods: {
     queryBranchCompanyById() {
+      this.queryCurrencyListBySelect()
       queryBranchCompanyById(this.createForm.id).then(res => {
         const { branchCompanyAddress, ...params } = res.data
         this.createForm = JSON.parse(JSON.stringify(params))
@@ -519,11 +590,11 @@ export default {
     },
     // 清空pic
     picUserNameClear() {
-      this.createForm['picUserName'] = undefined
-      this.createForm['picUserId'] = undefined
-      this.createForm['mobilePhone'] = undefined
-      this.createForm['mobileCode'] = undefined
-      this.createForm['mobileNum'] = undefined
+      this.createForm.picUserName = undefined
+      this.createForm.picUserId = undefined
+      this.createForm.mobilePhone = undefined
+      this.createForm.mobileCode = undefined
+      this.createForm.mobileNum = undefined
     },
     // 打开pic弹窗
     openPicTable() {
@@ -531,17 +602,34 @@ export default {
     },
     updatePic(row) {
       const { nickName, userId, mobilePhone, mobileCode, mobileNum } = row
-      this.createForm['picUserName'] = nickName
-      this.createForm['picUserId'] = userId
-      this.createForm['mobilePhone'] = mobilePhone
-      this.createForm['mobileCode'] = mobileCode
-      this.createForm['mobileNum'] = mobileNum
+      this.createForm.picUserName = nickName
+      this.createForm.picUserId = userId
+      this.createForm.mobilePhone = mobilePhone
+      this.createForm.mobileCode = mobileCode
+      this.createForm.mobileNum = mobileNum
+    },
+    handleCountrySelect(row) {
+      if (row) {
+        const { id, name, en } = row
+        this.createForm.country = name
+        this.createForm.countryId = id
+        this.createForm.countryEn = en
+        this.handleCountrySelect2(row)
+        if (row.mobileCode) {
+          this.createForm.landlineCode = row.mobileCode
+          this.createForm.faxCode = row.mobileCode
+        } else {
+          this.createForm.landlineCode = undefined
+          this.createForm.faxCode = undefined
+        }
+      }
     },
     handleCountrySelect2(row) {
       if (row) {
-        const { id, name } = row
-        this.addressForm['country'] = name
-        this.addressForm['countryId'] = id
+        const { id, name, en } = row
+        this.addressForm.country = name
+        this.addressForm.countryId = id
+        this.addressForm.countryEn = en
       }
     },
     reset() {
@@ -575,74 +663,98 @@ export default {
       this.resetForm('createForm')
       this.resetForm('addressForm')
     },
+    queryCurrencyListBySelect() {
+      this.currencyOptionsLoading = true
+      queryCurrencyListBySelect()
+        .then(res => {
+          this.currencyOptionsLoading = false
+          const list = res.data || []
+          this.currencyOptions = list.map(item => {
+            item.label = `${item.currencyCode} (${item.currencyDesc})`
+            return item
+          })
+        })
+        .catch(() => {
+          this.currencyOptionsLoading = false
+        })
+    },
     handleCurrencyChange(row) {
       this.$nextTick(() => {
-        this.createForm['currencyId'] = row.id || ''
-        this.createForm['currency'] =
-          `${row.currencyCode} (${row.currencyDesc})`
-        this.createForm['currencyCode'] = row.currencyCode
+        this.createForm.currencyId = row.id || ''
+        this.createForm.currency = row.currency
+        this.createForm.currencyCode = row.currencyCode
       })
     },
 
     updateBranchCompany(param) {
       const vm = this
-      vm.fullscreenLoading = true
+      vm.submitLoading = true
       updateBranchCompany(param)
-        .then(res => {
+        .then(() => {
           vm.$message.success(
-            `${vm
-              .$t('organization.branchCompanySuccess')
-              .replace('$1', param.branchCompanyName)}`
+            `${vm.$t('organization.branchCompanySuccess').replace('$1', param.branchCompanyName)}`
           )
           this.cancel()
-          vm.fullscreenLoading = false
+          vm.submitLoading = false
         })
         .catch(() => {
-          vm.fullscreenLoading = false
+          vm.submitLoading = false
         })
     },
     // 取消按钮
     cancel() {
       if (this.isView) {
-        this.$tab.closePage()
+        this.$store.dispatch('tagsView/delView', this.$route)
+        this.$router.back()
         return
       }
       if (this.$route.query.backType === '2') {
-        this.$tab.closePage()
+        this.$store.dispatch('tagsView/delView', this.$route)
+        this.$router.back()
         return
       }
-      const obj = { path: '/organization/corporate' }
-      this.$tab.closeOpenPage(obj)
+      this.$store.dispatch('tagsView/delView', this.$route)
+      this.$router.push({ path: '/organization/corporate' })
     },
     submitForm() {
       const vm = this
-      this.$refs.createForm.validate(valid => {
+      this.$refs.createForm.validate(async valid => {
         this.collapseWarningForBasicInfo = !valid
 
         if (valid) {
+          let createValid = false
           vm.$refs.addressForm.validate(addressFormValid => {
             this.collapseWarningForTitleAddress = !addressFormValid
-            if (!addressFormValid) {
-              this.$message.error(
-                this.$t('ui.fromIncomplete').replace(
-                  '$1',
-                  this.$t('organization.titleAddress')
-                )
-              )
-              return
-            }
-            this.$modal
-              .confirm(vm.$t('organization.branchCompanyConfirm'))
-              .then(() => {
-                const param = JSON.parse(JSON.stringify(vm.createForm))
-                param.branchCompanyAddress = JSON.parse(
-                  JSON.stringify(vm.addressForm)
-                )
-                vm.updateBranchCompany(param)
-              })
+            createValid = addressFormValid
           })
+          if (!createValid) {
+            this.$modal.msgError(
+              this.$t('ui.fromIncomplete').replace(
+                '$1',
+                this.$t('organization.titleAddress')
+              )
+            )
+            return
+          }
+          this.$modal
+            .confirm(vm.$t('organization.branchCompanyConfirm'))
+            .then(() => {
+              const param = JSON.parse(JSON.stringify(vm.createForm))
+              param.branchCompanyAddress = JSON.parse(
+                JSON.stringify(vm.addressForm)
+              )
+              if (!param.landlineNumber) {
+                param.landlineCode = ''
+                param.landlinePhone = ''
+              }
+              if (!param.fax) {
+                param.faxCode = ''
+                param.faxPhone = ''
+              }
+              vm.updateBranchCompany(param)
+            })
         } else {
-          this.$message.error(
+          this.$modal.msgError(
             this.$t('ui.fromIncomplete').replace('$1', this.$t('ui.basicInfo'))
           )
         }

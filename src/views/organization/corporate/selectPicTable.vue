@@ -8,79 +8,84 @@
     :modal="true"
     :close-on-click-modal="false"
   >
-    <search-form
-      ref="searchForm"
-      :value="queryParams"
-      :searchData="searchData"
-      :handleQuery="handleSearchForm"
-      :resetQuery="resetSearchForm"
-      :showCustom="false"
-      :showMenu="false"
-    >
-      <right-toolbar
+    <div v-dialogDragWidth>
+      <search-form
+        ref="searchForm"
+        v-model="queryParams"
+        :searchData="searchData"
+        :handleQuery="handleSearchForm"
+        :resetQuery="resetSearchForm"
+        :showCustom="false"
+        :showMenu="false"
+      >
+        <right-toolbar
+          :saveKey="saveKey"
+          @queryTable="queryTable"
+          :showRefreshBtn="true"
+          :columns="configColumn"
+        ></right-toolbar>
+      </search-form>
+
+      <el-table
+        border
+        ref="tables"
+        class="mt10"
+        v-loading="loading"
+        :data="tableList"
+        @sort-change="handleSortChange"
+        @row-click="handleRowClick"
+        :row-class-name="'pointer'"
+        :max-height="tableMaxHeight"
+      >
+        <el-table-column
+          type="index"
+          :label="$t('ui.sn')"
+          width="60"
+          fixed="left"
+          align="center"
+        >
+          <template #default="scope">
+            <span>{{
+              scope.$index +
+              (queryParams.pageNum - 1) * queryParams.pageSize +
+              1
+            }}</span>
+          </template>
+        </el-table-column>
+        <el-table-column
+          v-for="item in visibleColumn"
+          :key="item.prop + item.colSortIndex"
+          :prop="item.prop"
+          :label="item.label"
+          :width="item.width"
+          :min-width="item.minWidth"
+          :show-overflow-tooltip="item.tooltip"
+          :fixed="item.fixed"
+          :sortable="item.sortable"
+          :align="item.align || 'left'"
+          header-align="center"
+        >
+          <template #default="scope">
+            <dict-tag
+              v-if="item.prop === 'status'"
+              :options="dict.type.user_status"
+              :value="scope.row[item.prop]"
+            />
+            <template v-else>{{ scope.row[item.prop] }}</template>
+          </template>
+        </el-table-column>
+      </el-table>
+
+      <pagination
         :saveKey="saveKey"
-        @queryTable="queryTable"
-        :showRefreshBtn="true"
-        :columns="configColumn"
-      ></right-toolbar>
-    </search-form>
-
-    <el-table
-      border
-      ref="tables"
-      class="mt10"
-      v-loading="loading"
-      :data="tableList"
-      @sort-change="handleSortChange"
-      @row-click="handleRowClick"
-      :max-height="tableMaxHeight"
-    >
-      <el-table-column
-        type="index"
-        :label="$t('ui.sn')"
-        width="60"
-        fixed="left"
-        align="center"
-      >
-        <template v-slot="scope">
-          <span>{{
-            scope.$index + (queryParams.pageNum - 1) * queryParams.pageSize + 1
-          }}</span>
-        </template>
-      </el-table-column>
-      <el-table-column
-        v-for="item in visibleColumn"
-        :key="item.prop + item.colSortIndex"
-        :prop="item.prop"
-        :label="item.label"
-        :width="item.width"
-        :min-width="item.minWidth"
-        :show-overflow-tooltip="item.tooltip"
-        :fixed="item.fixed"
-        :sortable="item.sortable"
-        :align="item.align || 'left'"
-        header-align="center"
-      >
-        <template v-slot="scope">
-          <dict-tag
-            v-if="item.prop === 'status'"
-            :options="user_status"
-            :value="scope.row[item.prop]"
-          />
-          <template v-else>{{ scope.row[item.prop] }}</template>
-        </template>
-      </el-table-column>
-    </el-table>
-
-    <pagination
-      :saveKey="saveKey"
-      v-show="total > 0"
-      :total="total"
-      v-model:page="queryParams.pageNum"
-      v-model:limit="queryParams.pageSize"
-      @pagination="getList"
-    />
-    <template v-slot:footer>
+        v-show="total > 0"
+        :total="total"
+        v-model:page="queryParams.pageNum"
+        v-model:limit="queryParams.pageSize"
+        @pagination="getList"
+      />
+    </div>
+    <template #footer>
       <div class="dialog-footer">
         <el-button type="default" @click="handleBack">{{
           $t('ui.back')
@@ -95,11 +100,11 @@ import pageMixin from '@/mixins/tableMinx'
 import { queryUsers } from '@/api/organization/corporate'
 
 export default {
+  emits: ['updatePic'],
+  dicts: ['user_status'],
   mixins: [pageMixin],
-  props: {},
   data() {
     return {
-      user_status: [],
       saveKey: 'selectPicTable',
       searchFormKey: Date.now(),
       loading: false,
@@ -109,7 +114,6 @@ export default {
       total: 0,
       tableList: [],
       tableMaxHeightResize: true,
-      selected: '',
       visible: false,
       columns: [
         {
@@ -179,33 +183,13 @@ export default {
       searchData: [
         {
           name: 'condition',
-          placeholder: `${this.$t('organization.userId')} / ${this.$t(
-            'ui.userName1'
-          )} / ${this.$t('organization.employeeNo')}`,
+          placeholder: `${this.$t('organization.userId')} / ${this.$t('ui.userName1')} / ${this.$t(
+            'organization.employeeNo'
+          )}`,
           type: 'InputEle'
         }
       ]
     }
-  },
-  computed: {},
-  created() {
-    this.selected = this.value
-    const { user_status } = this.useDict('user_status')
-    this.user_status = user_status || []
-  },
-  watch: {
-    value(selected) {
-      this.selected = selected
-    },
-    selected(selected) {
-      this.$emit('update:value', selected)
-      if (selected === undefined) return
-      this.dispatch('ElFormItem', 'el.form.change', [selected])
-    }
-  },
-
-  updated() {
-    this.selected = this.value
   },
   methods: {
     handleOpen() {
@@ -219,6 +203,8 @@ export default {
     getList() {
       const vm = this
       const param = this.queryParams
+      this.loading = true
+      this.$trimOfObj(param)
       queryUsers(param)
         .then(response => {
           this.loading = false
@@ -233,7 +219,7 @@ export default {
           })
         })
         .catch(err => {
-          vm.table_loading = false
+          vm.loading = false
           window.console.error(err)
         })
     },
@@ -257,8 +243,7 @@ export default {
       this.$emit('updatePic', row)
       this.visible = false
     }
-  },
-  emits: ['update:value', 'updatePic']
+  }
 }
 </script>
 

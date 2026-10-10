@@ -1,5 +1,23 @@
 export default {
   organization: {
+    branchCode: '分行代码',
+    bankInfo: '银行信息',
+    accountName: '账户名称',
+    beneficiaryName: '收款账户名称',
+    bankName: '银行名称',
+    bankAccountNumber: '银行账号',
+    bankAddress: '银行地址',
+    accountCurrency: '账户币种',
+    bankCountry: '银行国家',
+    SWIFTCode: 'SWIFT代码',
+    bankCode: '银行编号',
+    businessRegNo: '公司注册号',
+    singaporeDollarAccount: '新币账户',
+    USDollarAccount: '美金账户',
+    chineseYuanAccount: '人民币账户',
+    noDefaultBank: '暂无默认的银行信息,是否需要把它设置成默认银行.',
+    replaceDefaultConfirm: '系统中已有一个默认银行账户，是否仍要将其设为默认？',
+    noDefaultBank1: '保存后没有默认银行. 是否继续保存？',
     /* zone 区域 */
     zone: '区域',
     zoneName: '区域名称',

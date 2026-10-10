@@ -1,11 +1,10 @@
 <template>
-  <FormPageLayout>
+  <FormPageLayout v-loading="submitLoading">
     <template v-slot:btn>
       <el-button
         type="primary"
         size="small"
         v-if="!comDisFrom"
-        :disabled="fullscreenLoading"
         @click="submitForm"
         >{{ $t('uiBtn.submit') }}
       </el-button>
@@ -17,7 +16,7 @@
       <el-collapse v-model="activeNames">
         <div class="form-card">
           <el-collapse-item name="1">
-            <template v-slot:title>
+            <template #title>
               <FormCollapseItemTitle
                 :title="$t('ui.basicInfo')"
                 :warning="collapseWarningForBasicInfo"
@@ -72,7 +71,7 @@
                       disabled
                     >
                       <el-option
-                        v-for="dict in sys_localization"
+                        v-for="dict in dict.type.sys_localization"
                         :key="dict.value"
                         :label="dict.label"
                         :value="dict.value"
@@ -80,59 +79,51 @@
                     </el-select>
                   </el-form-item>
                 </el-col>
-                <!-- <el-col :span="8">
-                        <el-form-item
-                          :label="`${$t('organization.legalEntityCode')}`"
-                          prop="legalEntityNo"
-                        >
-                          <el-input
-                            v-model="createForm.legalEntityNo"
-                            :title="createForm.legalEntityNo"
-                            class="form-wd"
-                            disabled
-                          />
-                        </el-form-item>
-                      </el-col> -->
               </el-row>
 
               <el-row>
                 <el-col :span="8">
                   <el-form-item
-                    :label="`${$t('organization.companyRegNo')}`"
-                    prop="companyRegNo"
+                    :label="`${$t('organization.country')}`"
+                    prop="country"
                   >
-                    <el-input
-                      v-model="createForm.companyRegNo"
-                      :title="createForm.companyRegNo"
-                      :maxlength="30"
+                    <country-select
+                      v-model:value="createForm.country"
                       class="form-wd"
-                      disabled
+                      @select="handleCountrySelect"
+                      :disabled="comDisFrom"
                     />
                   </el-form-item>
                 </el-col>
 
                 <el-col :span="8">
                   <el-form-item
-                    :label="`${$t('organization.pic')}`"
-                    prop="picUserName"
+                    :label="`${$t('organization.landlineNumber')}`"
+                    ref="landlineNumberRef"
                   >
-                    <SelectInput
-                      :value="createForm.picUserName"
-                      :title="createForm.picUserName"
-                      @clear="picUserNameClear"
-                      clearable
-                      @click="openPicTable"
-                      class="form-wd"
-                      :disabled="comDisFrom"
+                    <MobilePhoneInput
+                      v-model:mobileCode="createForm.landlineCode"
+                      v-model:mobileNum="createForm.landlineNumber"
+                      v-model:mobileNo="createForm.landlinePhone"
+                      @clearValidate="$refs.landlineNumberRef.clearValidate()"
+                      :clearableCode="true"
                     />
                   </el-form-item>
                 </el-col>
+
                 <el-col :span="8">
-                  <el-form-item :label="`${$t('organization.landlineNumber')}`">
-                    <el-input
-                      v-model="createForm.landlineNumber"
-                      :maxlength="50"
-                      class="form-wd"
+                  <el-form-item
+                    :label="`${$t('organization.fax')}`"
+                    prop="fax"
+                    ref="faxRef"
+                  >
+                    <MobilePhoneInput
+                      v-model:mobileCode="createForm.faxCode"
+                      v-model:mobileNum="createForm.fax"
+                      v-model:mobileNo="createForm.faxPhone"
+                      @clearValidate="$refs.faxRef.clearValidate()"
+                      :disabled="comDisFrom"
+                      :clearableCode="true"
                     />
                   </el-form-item>
                 </el-col>
@@ -148,25 +139,44 @@
                       v-model.trim="createForm.email"
                       :title="createForm.email"
                       class="form-wd"
-                      :maxlength="50"
+                      :maxlength="350"
                     />
                   </el-form-item>
                 </el-col>
-
                 <el-col :span="8">
                   <el-form-item
-                    :label="`${$t('organization.fax')}`"
-                    prop="fax"
-                    ref="faxRef"
+                    :label="`${$t('organization.pic')}`"
+                    prop="picUserName"
                   >
-                    <MobilePhoneInput
-                      :disabled="comDisFrom"
-                      v-model:mobileCode="createForm.faxCode"
-                      v-model:mobileNum="createForm.fax"
-                      v-model:mobileNo="createForm.faxPhone"
-                      @clearValidate="$refs.faxRef.clearValidate()"
-                    />
-                    <!-- <el-input v-model="createForm.fax" :maxlength="50" class="form-wd" /> -->
+                    <div class="flexStart">
+                      <el-select
+                        v-model="createForm.title"
+                        placeholder=""
+                        style="width: 84px"
+                        class="fs-0"
+                        clearable
+                        filterable
+                        :disabled="comDisFrom"
+                      >
+                        <el-option
+                          v-for="dict in dict.type
+                            .business_contact_person_title"
+                          :key="dict.value"
+                          :label="dict.label"
+                          :value="dict.value"
+                        ></el-option>
+                      </el-select>
+                      <SelectInput
+                        :value="createForm.picUserName"
+                        :title="createForm.picUserName"
+                        @clear="picUserNameClear"
+                        clearable
+                        @click="openPicTable"
+                        class="form-wd"
+                        :disabled="comDisFrom"
+                        style="width: 100%"
+                      />
+                    </div>
                   </el-form-item>
                 </el-col>
 
@@ -187,14 +197,49 @@
               <el-row>
                 <el-col :span="8">
                   <el-form-item
+                    :label="`${$t('organization.companyRegNo')}`"
+                    prop="companyRegNo"
+                  >
+                    <el-input
+                      v-model="createForm.companyRegNo"
+                      :title="createForm.companyRegNo"
+                      :maxlength="30"
+                      class="form-wd"
+                      disabled
+                    />
+                  </el-form-item>
+                </el-col>
+                <el-col :span="8">
+                  <el-form-item
                     :label="`${$t('organization.currency')}`"
                     prop="currency"
                   >
-                    <CountryCurrencySelect
-                      :value="createForm.currency"
-                      class="form-wd"
-                      :cur-path="curPath"
+                    <CommonSelectAndList
+                      :id="createForm.currencyId"
+                      :label="createForm.currency"
+                      :title="createForm.currency"
+                      idKey="id"
+                      labelKey="currency"
+                      filterable
+                      :options="currencyOptions"
+                      :loading="currencyOptionsLoading"
+                      @change="handleCurrencyChange"
+                      @handleOpen="
+                        () => {
+                          $refs.currencySelectRef.handleClick()
+                        }
+                      "
                       :disabled="true"
+                    />
+                    <country-currency-select
+                      :showInput="false"
+                      ref="currencySelectRef"
+                      v-model:value="createForm.currency"
+                      class="form-wd"
+                      :props="propVal"
+                      :is-currency="true"
+                      :cur-path="curPath"
+                      disabled
                       @select="handleCurrencyChange"
                     />
                   </el-form-item>
@@ -214,32 +259,53 @@
                 </el-col>
               </el-row>
               <el-row>
-                <el-col :span="24">
+                <el-col :span="8">
                   <el-form-item
                     :label="`${$t('organization.companySeal')}`"
                     prop="companySeal"
                   >
-                    <photo
-                      ref="companySealPhotoRef"
-                      :limit="1"
-                      :accept="['.jpg', '.jpeg', '.png', '.bmp', '.webp']"
-                      :disabled="comDisFrom"
-                    />
+                    <div class="text-center" style="width: 120px">
+                      <userAvatar
+                        :dlgTitle="$t('organization.companySeal')"
+                        :photoUrl="createForm.companySealUrl"
+                        @change="changeCompanySeal"
+                        :disabled="comDisFrom"
+                        :documentName="
+                          createForm.legalEntityName
+                            ? createForm.legalEntityName +
+                              ' - ' +
+                              'Company Stamp'
+                            : 'Company Stamp'
+                        "
+                        :commonFileList="
+                          createForm.commonFileListCompanySeal || []
+                        "
+                        :isDelBG="true"
+                      />
+                    </div>
                   </el-form-item>
                 </el-col>
-              </el-row>
-              <el-row>
-                <el-col :span="24">
+                <el-col :span="8">
                   <el-form-item
                     :label="`${$t('organization.trademark')}`"
                     prop="trademark"
                   >
-                    <photo
-                      ref="trademarkPhotoRef"
-                      :limit="1"
-                      :accept="['.jpg', '.jpeg', '.png', '.bmp', '.webp']"
-                      :disabled="comDisFrom"
-                    />
+                    <div class="text-center" style="width: 120px">
+                      <userAvatar
+                        :dlgTitle="$t('organization.trademark')"
+                        :photoUrl="createForm.trademarkUrl"
+                        @change="changeTrademark"
+                        :disabled="comDisFrom"
+                        :documentName="
+                          createForm.legalEntityName
+                            ? createForm.legalEntityName + ' - ' + 'Trademark'
+                            : 'Trademark'
+                        "
+                        :commonFileList="
+                          createForm.commonFileListTrademark || []
+                        "
+                      />
+                    </div>
                   </el-form-item>
                 </el-col>
               </el-row>
@@ -248,7 +314,7 @@
         </div>
         <div class="form-card mt10">
           <el-collapse-item name="2">
-            <template v-slot:title>
+            <template #title>
               <FormCollapseItemTitle
                 :title="$t('organization.titleAddress')"
                 :warning="collapseWarningForTitleAddress"
@@ -264,7 +330,7 @@
                 :disabled="comDisFrom"
               >
                 <el-row class="mt22">
-                  <el-col :span="8">
+                  <el-col :span="24">
                     <el-form-item
                       :label="`${$t('organization.address1')}`"
                       prop="address1"
@@ -277,7 +343,9 @@
                       />
                     </el-form-item>
                   </el-col>
-                  <el-col :span="8">
+                </el-row>
+                <el-row>
+                  <el-col :span="24">
                     <el-form-item
                       :label="`${$t('organization.address2')}`"
                       prop="address2"
@@ -290,7 +358,9 @@
                       />
                     </el-form-item>
                   </el-col>
+                </el-row>
 
+                <el-row>
                   <el-col :span="8">
                     <el-form-item
                       :label="`${$t('organization.province')}`"
@@ -304,9 +374,6 @@
                       />
                     </el-form-item>
                   </el-col>
-                </el-row>
-
-                <el-row>
                   <el-col :span="8">
                     <el-form-item
                       :label="`${$t('organization.city')}`"
@@ -333,7 +400,8 @@
                       />
                     </el-form-item>
                   </el-col>
-
+                </el-row>
+                <el-row>
                   <el-col :span="8">
                     <el-form-item
                       :label="`${$t('organization.postalCode')}`"
@@ -348,15 +416,13 @@
                       />
                     </el-form-item>
                   </el-col>
-                </el-row>
-                <el-row>
                   <el-col :span="8">
                     <el-form-item
                       :label="`${$t('organization.country')}`"
                       prop="country"
                     >
                       <country-select
-                        v-model="addressForm.country"
+                        v-model:value="addressForm.country"
                         :title="addressForm.country"
                         class="form-wd"
                         @select="handleCountrySelect2"
@@ -367,14 +433,14 @@
                 <el-row>
                   <el-col :span="24">
                     <el-form-item :label="`${$t('ui.remarks')}`" prop="remarks">
-                      <el-input
+                      <MyInput
                         type="textarea"
                         v-model="addressForm.remarks"
                         :autosize="{ minRows: 2, maxRows: 4 }"
                         resize="none"
                         show-word-limit
                         :maxlength="3000"
-                      ></el-input>
+                      ></MyInput>
                     </el-form-item>
                   </el-col>
                 </el-row>
@@ -384,8 +450,22 @@
         </div>
 
         <div class="form-card mt10">
+          <el-collapse-item name="4">
+            <template #title>
+              <FormCollapseItemTitle
+                :title="$t('organization.bankInfo')"
+                :warning="collapseWarningForBankInfo"
+              >
+              </FormCollapseItemTitle>
+            </template>
+
+            <bankInfo ref="bankInfo" :createForm="createForm" />
+          </el-collapse-item>
+        </div>
+
+        <div class="form-card mt10">
           <el-collapse-item name="3">
-            <template v-slot:title>
+            <template #title>
               <FormCollapseItemTitle :title="$t('ui.systemOperationLog')">
                 <template v-if="createForm.operationLogForLast">
                   <span
@@ -425,10 +505,12 @@ import {
   queryLegalEntityById,
   updateLegalEntity
 } from '@/api/organization/corporate'
-import CountryCurrencySelect from '@/components/select/countryCurrencySelect.vue'
+import countryCurrencySelect from '@/components/select/countryCurrencySelect.vue'
 import selectPicTable from '@/views/organization/corporate/selectPicTable.vue'
 import SystemOperationLogTable from '@/views/components/systemOperationLog/systemOperationLogTable.vue'
-import photo from './driversPhoto.vue'
+import { queryCurrencyListBySelect } from '@/api/basic/basic'
+import userAvatar from '@/components/Common/htz-image-upload/userAvatar.vue'
+import bankInfo from './components/bankInfo.vue'
 
 function isWebsite(param) {
   const strRegex =
@@ -437,13 +519,16 @@ function isWebsite(param) {
   return re.test(param)
 }
 export default {
+  name: 'UpdateLegalEntity',
   components: {
-    CountryCurrencySelect,
+    countryCurrencySelect,
     countrySelect,
     selectPicTable,
     SystemOperationLogTable,
-    photo
+    userAvatar,
+    bankInfo
   },
+  dicts: ['sys_localization', 'business_contact_person_title'],
   data() {
     const vm = this
     const validWebsite = (rule, value, callback) => {
@@ -454,8 +539,7 @@ export default {
       }
     }
     return {
-      sys_localization: [],
-      fullscreenLoading: false,
+      submitLoading: false,
       // 一定要放在当前文件
       curPath: this.$options.__file,
       propVal: 'currencyCode',
@@ -470,7 +554,15 @@ export default {
             pattern: new RegExp(/^(?!(\s+$))/g)
           }
         ],
+        country: [
+          {
+            required: true,
+            message: vm.$t('ui.reqMsg'),
+            trigger: ['blur', 'change'],
 
+            pattern: new RegExp(/^(?!(\s+$))/g)
+          }
+        ],
         phoneNo1: [
           {
             required: true,
@@ -524,6 +616,8 @@ export default {
           }
         ]
       },
+      currencyOptions: [],
+      currencyOptionsLoading: false,
 
       addressForm: {},
       addressRules: {
@@ -565,10 +659,11 @@ export default {
           }
         ]
       },
-      activeNames: ['1', '2', '3'],
+      activeNames: ['1', '2', '3', '4'],
       isInit: true,
       collapseWarningForBasicInfo: false,
       collapseWarningForTitleAddress: false,
+      collapseWarningForBankInfo: false,
       isView: undefined
     }
   },
@@ -586,13 +681,15 @@ export default {
       if (this.isView) {
         return true
       }
-      return !this.editAuth || this.sysDockingSwitch
+      return !this.editAuth
     },
     sysDockingSwitch() {
-      return this.$store.getters.sysDockingSwitch
+      return (
+        this.$store.getters.sysDockingSwitch ||
+        this.$store.getters.sysDockingSwitchQC
+      )
     }
   },
-  beforeCreate() {},
   created() {
     const vm = this
     this.timeId = this.$route.query.timeId
@@ -602,12 +699,10 @@ export default {
       vm.queryLegalEntityById(id)
     }
     if (this.sysDockingSwitch) {
-      this.createForm['isSystemDocking'] = '1'
+      this.createForm.isSystemDocking = '1'
     } else {
-      this.createForm['isSystemDocking'] = '0'
+      this.createForm.isSystemDocking = '0'
     }
-    const { sys_localization } = this.useDict('sys_localization')
-    this.sys_localization = sys_localization || []
   },
 
   activated() {
@@ -630,11 +725,11 @@ export default {
     },
     // 清空pic
     picUserNameClear() {
-      this.createForm['picUserName'] = undefined
-      this.createForm['picUserId'] = undefined
-      this.createForm['mobilePhone'] = undefined
-      this.createForm['mobileCode'] = undefined
-      this.createForm['mobileNum'] = undefined
+      this.createForm.picUserName = undefined
+      this.createForm.picUserId = undefined
+      this.createForm.mobilePhone = undefined
+      this.createForm.mobileCode = undefined
+      this.createForm.mobileNum = undefined
     },
     // 打开pic弹窗
     openPicTable() {
@@ -642,38 +737,67 @@ export default {
     },
     updatePic(row) {
       const { nickName, userId, mobilePhone, mobileCode, mobileNum } = row
-      this.createForm['picUserName'] = nickName
-      this.createForm['picUserId'] = userId
-      this.createForm['mobilePhone'] = mobilePhone
-      this.createForm['mobileCode'] = mobileCode
-      this.createForm['mobileNum'] = mobileNum
+      this.createForm.picUserName = nickName
+      this.createForm.picUserId = userId
+      this.createForm.mobilePhone = mobilePhone
+      this.createForm.mobileCode = mobileCode
+      this.createForm.mobileNum = mobileNum
     },
-    queryLegalEntityById(id) {
-      const vm = this
-      // vm.fullscreenLoading = true
-      queryLegalEntityById(id).then(res => {
-        // vm.fullscreenLoading = false
-        const { legalEntityAddress, ...params } = res.data
-        vm.createForm = JSON.parse(JSON.stringify(params))
-        vm.addressForm = JSON.parse(JSON.stringify(legalEntityAddress))
-        setTimeout(() => {
-          this.$refs.companySealPhotoRef &&
-            this.$refs.companySealPhotoRef.initFileList(
-              vm.createForm.commonFileListCompanySeal || []
-            )
-          this.$refs.trademarkPhotoRef &&
-            this.$refs.trademarkPhotoRef.initFileList(
-              vm.createForm.commonFileListTrademark || []
-            )
-        }, 100)
-      })
+    changeCompanySeal(file) {
+      this.createForm.commonFileListCompanySeal = file.url ? [file] : []
+      this.createForm.companySealUrl = file.url
+      this.createForm.fileIdsCompanySeal = file.id || ''
+    },
+    changeTrademark(file) {
+      this.createForm.commonFileListTrademark = file.url ? [file] : []
+      this.createForm.trademarkUrl = file.url
+      this.createForm.fileIdsTrademark = file.id || ''
     },
 
+    queryLegalEntityById(id) {
+      const vm = this
+      // vm.submitLoading = true
+      this.queryCurrencyListBySelect()
+      queryLegalEntityById(id).then(res => {
+        // vm.submitLoading = false
+        const { legalEntityAddress, ...params } = res.data
+        vm.createForm = JSON.parse(JSON.stringify(params))
+
+        const CompanySeal = (this.createForm.commonFileListCompanySeal || [])[0]
+        if (CompanySeal) {
+          this.createForm.companySealUrl = CompanySeal.url
+          this.createForm.fileIdsCompanySeal = CompanySeal.id || ''
+        }
+        const Trademark = (this.createForm.commonFileListTrademark || [])[0]
+        if (Trademark) {
+          this.createForm.trademarkUrl = Trademark.url
+          this.createForm.fileIdsTrademark = Trademark.id || ''
+        }
+        vm.addressForm = JSON.parse(JSON.stringify(legalEntityAddress))
+      })
+    },
+    handleCountrySelect(row) {
+      if (row) {
+        const { id, name, en } = row
+        this.createForm.country = name
+        this.createForm.countryId = id
+        this.createForm.countryEn = en
+        this.handleCountrySelect2(row)
+        if (row.mobileCode) {
+          this.createForm.landlineCode = row.mobileCode
+          this.createForm.faxCode = row.mobileCode
+        } else {
+          this.createForm.landlineCode = undefined
+          this.createForm.faxCode = undefined
+        }
+      }
+    },
     handleCountrySelect2(row) {
       if (row) {
-        const { id, name } = row
-        this.addressForm['country'] = name
-        this.addressForm['countryId'] = id
+        const { id, name, en } = row
+        this.addressForm.country = name
+        this.addressForm.countryId = id
+        this.addressForm.countryEn = en
       }
     },
     reset() {
@@ -708,28 +832,42 @@ export default {
       }
       this.collapseWarningForBasicInfo = false
       this.collapseWarningForTitleAddress = false
-      this.activeNames = ['1', '2', '3']
+      this.activeNames = ['1', '2', '3', '4']
       this.resetForm('createForm')
       this.resetForm('addressForm')
       if (this.sysDockingSwitch) {
-        this.createForm['isSystemDocking'] = '1'
+        this.createForm.isSystemDocking = '1'
       } else {
-        this.createForm['isSystemDocking'] = '0'
+        this.createForm.isSystemDocking = '0'
       }
     },
 
+    queryCurrencyListBySelect() {
+      this.currencyOptionsLoading = true
+      queryCurrencyListBySelect()
+        .then(res => {
+          this.currencyOptionsLoading = false
+          const list = res.data || []
+          this.currencyOptions = list.map(item => {
+            item.label = `${item.currencyCode} (${item.currencyDesc})`
+            return item
+          })
+        })
+        .catch(() => {
+          this.currencyOptionsLoading = false
+        })
+    },
     handleCurrencyChange(row) {
       this.$nextTick(() => {
-        this.createForm['currencyId'] = row.id || ''
-        this.createForm['currency'] =
-          `${row.currencyCode} (${row.currencyDesc})`
-        this.createForm['currencyCode'] = row.currencyCode
+        this.createForm.currencyId = row.id || ''
+        this.createForm.currency = row.currency
+        this.createForm.currencyCode = row.currencyCode
       })
     },
 
     updateLegalEntity(param) {
       const vm = this
-      vm.fullscreenLoading = true
+      vm.submitLoading = true
       updateLegalEntity(param)
         .then(() => {
           vm.$message.success(
@@ -738,65 +876,53 @@ export default {
               .replace('$1', `${param.legalEntityName}`)}`
           )
           vm.cancel()
-          vm.fullscreenLoading = false
+          vm.submitLoading = false
         })
         .catch(() => {
-          vm.fullscreenLoading = false
+          vm.submitLoading = false
         })
     },
 
     submitForm() {
       const vm = this
-      this.$refs.createForm.validate(valid => {
+      this.$refs.createForm.validate(async valid => {
         this.collapseWarningForBasicInfo = !valid
         if (valid) {
-          let createValid = false
-
-          const companySealPhotoFileIds =
-            this.$refs.companySealPhotoRef.getFileIds()
-          if (companySealPhotoFileIds === false) {
-            return
-          }
-          const trademarkPhotoFileIds = this.$refs.trademarkPhotoRef.getFileIds(
-            {
-              required: false,
-              requiredMsg: this.$t('ui.commonReqMsg').replace(
+          const createValid = await vm.$refs.addressForm
+            .validate()
+            .catch(() => false)
+          this.collapseWarningForTitleAddress = !createValid
+          if (!createValid) {
+            this.$modal.msgError(
+              this.$t('ui.fromIncomplete').replace(
                 '$1',
-                this.$t('organization.trademark')
+                this.$t('organization.titleAddress')
               )
-            }
-          )
-          if (trademarkPhotoFileIds === false) {
-            this.collapseWarningForBasicInfo = true
+            )
             return
           }
-          this.collapseWarningForBasicInfo = false
 
-          vm.$refs.addressForm.validate(addressFormValid => {
-            this.collapseWarningForTitleAddress = !addressFormValid
-            if (!addressFormValid) {
-              this.$message.error(
-                this.$t('ui.fromIncomplete').replace(
-                  '$1',
-                  this.$t('organization.titleAddress')
-                )
+          this.$modal
+            .confirm(vm.$t('organization.legalEntitySaveConfirm'))
+            .then(() => {
+              const param = JSON.parse(JSON.stringify(vm.createForm))
+              param.legalEntityAddress = JSON.parse(
+                JSON.stringify(vm.addressForm)
               )
-              return
-            }
-            this.$modal
-              .confirm(vm.$t('organization.legalEntitySaveConfirm'))
-              .then(() => {
-                const param = JSON.parse(JSON.stringify(vm.createForm))
-                param.legalEntityAddress = JSON.parse(
-                  JSON.stringify(vm.addressForm)
-                )
-                param.commonFileListCompanySeal = companySealPhotoFileIds
-                param.commonFileListTrademark = trademarkPhotoFileIds
-                vm.updateLegalEntity(param)
-              })
-          })
+              param.bankInfoList = this.$refs.bankInfo.getTableList()
+
+              if (!param.landlineNumber) {
+                param.landlineCode = ''
+                param.landlinePhone = ''
+              }
+              if (!param.fax) {
+                param.faxCode = ''
+                param.faxPhone = ''
+              }
+              vm.updateLegalEntity(param)
+            })
         } else {
-          this.$message.error(
+          this.$modal.msgError(
             this.$t('ui.fromIncomplete').replace('$1', this.$t('ui.basicInfo'))
           )
         }
@@ -805,15 +931,17 @@ export default {
 
     cancel() {
       if (this.isView) {
-        this.$tab.closePage()
+        this.$store.dispatch('tagsView/delView', this.$route)
+        this.$router.back()
         return
       }
       if (this.$route.query.backType === '2') {
-        this.$tab.closePage()
+        this.$store.dispatch('tagsView/delView', this.$route)
+        this.$router.back()
         return
       }
-      const obj = { path: '/organization/corporate' }
-      this.$tab.closeOpenPage(obj)
+      this.$store.dispatch('tagsView/delView', this.$route)
+      this.$router.push({ path: '/organization/corporate' })
     }
   }
 }

@@ -1,5 +1,26 @@
 export default {
   organization: {
+    branchCode: 'Branch Code',
+    bankInfo: 'Bank Info',
+    accountName: 'Account Name',
+    beneficiaryName: 'Beneficiary Name',
+    bankName: 'Bank Name',
+    bankAccountNumber: 'Bank Account Number',
+    bankAddress: 'Bank Address',
+    accountCurrency: 'Account Currency',
+    bankCountry: 'Bank Country',
+    SWIFTCode: 'SWIFT Code',
+    bankCode: 'Bank Code',
+    businessRegNo: 'Business Reg. No.',
+    singaporeDollarAccount: 'Singapore Dollar Account',
+    USDollarAccount: 'US Dollar Account',
+    chineseYuanAccount: 'Chinese Yuan Account',
+    noDefaultBank:
+      'No default bank information is available. Do you want to set it as the default bank.',
+    replaceDefaultConfirm:
+      'A default bank account already exists. Do you still want to set this one as default?',
+    noDefaultBank1:
+      'No default bank will be set after saving. Do you want to continue?',
     /* zone 区域 */
     zone: 'Zone',
     zoneName: 'Zone Name',

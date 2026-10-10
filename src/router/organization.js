@@ -75,6 +75,23 @@ const organization = {
       }
     },
     {
+      path: 'addSonDepartment',
+      component: () =>
+        import('@/views/organization/corporate/addSonDepartment'),
+      name: 'AddSonDepartment',
+      meta: { title: 'addSonDepartment', activeMenu: '/organization/corporate' }
+    },
+    {
+      path: 'editSonDepartment',
+      component: () =>
+        import('@/views/organization/corporate/editSonDepartment'),
+      name: 'EditSonDepartment',
+      meta: {
+        title: 'editSonDepartment',
+        activeMenu: '/organization/corporate'
+      }
+    },
+    {
       path: 'addPost',
       component: () => import('@/views/system/post/addPost'),
       name: 'AddPost',

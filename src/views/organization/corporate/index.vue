@@ -32,13 +32,8 @@
       :default-expand-all="false"
       :tree-props="{ children: 'child', hasChildren: 'hasChildren' }"
       @sort-change="handleSortChange"
-      @row-dblclick="handleRowDbclick"
+      @row-dblclick="handleUpdate"
     >
-      <!-- <el-table-column type="index" :label="$t('ui.sn')" width="60" fixed="left" align="center">
-              <template slot-scope="scope">
-                <span>{{ scope.$index + (queryParams.pageNum - 1) * queryParams.pageSize + 1 }}</span>
-              </template>
-            </el-table-column> -->
       <el-table-column
         v-for="item in visibleColumn"
         :key="item.prop + item.colSortIndex"
@@ -52,7 +47,7 @@
         :align="item.align || 'left'"
         header-align="center"
       >
-        <template v-slot="scope">
+        <template #default="scope">
           <el-switch
             v-if="item.prop === 'isActive'"
             v-model="scope.row.isActive"
@@ -69,7 +64,7 @@
             }}</el-tag>
           </template>
           <template v-else-if="item.prop === 'type'">{{
-            selectDictLabel(corporate_type, scope.row.type)
+            selectDictLabel(dict.type.corporate_type, scope.row.type)
           }}</template>
           <template v-else-if="item.prop === 'createdTime'">{{
             parseTime(scope.row.createdTime, fmtForYmdhms)
@@ -86,45 +81,29 @@
         width="100"
         class-name="small-padding fixed-width"
         fixed="right"
-        v-if="!sysDockingSwitch"
       >
-        <template v-slot="scope">
-          <div class="flexCen">
-            <div style="width: 26px; height: 20px">
-              <el-icon
-                class="primary-pointer mr5"
-                :size="20"
-                :title="$t('uiBtn.edit')"
-                v-if="editAuth && ['1', '2', '3'].includes(scope.row.type + '')"
-                @click="editTblRow(scope.row, scope.$index)"
-              >
-                <Edit />
-              </el-icon>
-            </div>
-            <div style="width: 26px; height: 20px">
-              <el-icon
-                class="primary-pointer"
-                :size="20"
-                :title="$t('uiBtn.add')"
-                v-if="addAuth && ['1', '2'].includes(scope.row.type + '')"
-                @click="addTblRow(scope.row, scope.$index)"
-              >
-                <Plus />
-              </el-icon>
-            </div>
+        <template #default="scope">
+          <div class="flexStart" style="padding-left: 10px">
+            <el-icon
+              class="pointer mr5"
+              style="font-size: 20px; color: #409eff"
+              :title="$t('uiBtn.edit')"
+              v-if="editAuth && ['1', '2', '3'].includes(scope.row.type + '')"
+              @click="editTblRow(scope.row, scope.$index)"
+              ><Edit
+            /></el-icon>
+            <el-icon
+              class="pointer"
+              style="font-size: 20px; color: #409eff"
+              :title="$t('uiBtn.add')"
+              v-if="addAuth && ['1', '2'].includes(scope.row.type + '')"
+              @click="addTblRow(scope.row, scope.$index)"
+              ><Plus
+            /></el-icon>
           </div>
         </template>
       </el-table-column>
     </el-table>
-
-    <!-- <pagination
-      :saveKey="saveKey"
-      v-show="total > 0"
-      :total="total"
-      v-model:page="queryParams.pageNum"
-      v-model:limit="queryParams.pageSize"
-      @pagination="getList"
-    /> -->
   </div>
 </template>
 
@@ -137,11 +116,11 @@ import {
 import UUID from '@/utils/UUID/uuid'
 export default {
   name: 'Corporate',
+  dicts: ['corporate_type'],
   mixins: [pageMixin],
   data() {
     const vm = this
     return {
-      corporate_type: [],
       saveKey: '1',
       loading: false,
       // 显示搜索条件
@@ -207,9 +186,6 @@ export default {
     }
   },
   computed: {
-    sysDockingSwitch() {
-      return this.$store.getters.sysDockingSwitch
-    },
     fmtForYmdhms() {
       return this.$store.getters.fmtForYmdhms
     },
@@ -224,8 +200,6 @@ export default {
     }
   },
   created() {
-    const { corporate_type } = this.useDict('corporate_type')
-    this.corporate_type = corporate_type || []
     this.createdInitTimer = Date.now()
     this.queryParams.pageSize = this.$$initPageSize(this.saveKey)
     this.$$initColumnVisible(this.saveKey, this.columns)
@@ -254,7 +228,7 @@ export default {
           this.loading = false
         })
     },
-    tableRowClassName({ row, rowIndex }) {
+    tableRowClassName({ row }) {
       let color = ''
       for (const item of this.ids.values()) {
         if (item === row.id) {
@@ -282,9 +256,8 @@ export default {
         query: { timeId: +new Date() }
       })
     },
-    handleRowDbclick(row) {
+    editTblRow(row) {
       const vm = this
-      console.log(row, '===')
       const corporateType = row.type
       let query
       switch (corporateType) {
@@ -343,9 +316,15 @@ export default {
       }
     },
 
-    editTblRow(row) {
-      const vm = this
-      vm.handleRowDbclick(row)
+    handleUpdate(row, column, event) {
+      if ((column && column.type === 'selection') || !column.property) {
+        return
+      }
+      /* 展开收起的时候会触发行双击 */
+      if (event?.target?.closest('.el-table__expand-icon')) {
+        return
+      }
+      this.editTblRow(row)
     },
 
     addTblRow(row) {

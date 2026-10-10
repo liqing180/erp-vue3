@@ -1,6 +1,7 @@
 <template>
   <div class="w100">
     <SelectInput
+      v-if="showInput"
       :value="value"
       :title="value"
       @click="handleClick"
@@ -20,7 +21,7 @@
     >
       <search-form
         ref="searchForm"
-        :value="queryParams"
+        v-model="queryParams"
         :searchData="searchData"
         :handleQuery="handleSearchForm"
         :resetQuery="resetSearchForm"
@@ -95,6 +96,10 @@ import pageMixin from '@/mixins/tableMinx'
 export default {
   mixins: [pageMixin],
   props: {
+    showInput: {
+      type: Boolean,
+      default: true
+    },
     value: {
       type: [String, Number],
       default: ''
@@ -188,6 +193,7 @@ export default {
 
     handleRowDbclick(row) {
       this.visible = false
+      this.$emit('update:value', row.currency)
       this.$emit('select', row)
     },
     /** 搜索 */
@@ -217,6 +223,7 @@ export default {
           window.console.error(err)
         })
     }
-  }
+  },
+  emits: ['update:value', 'select', 'clear']
 }
 </script>

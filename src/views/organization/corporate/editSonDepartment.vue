@@ -29,17 +29,17 @@
               <el-row>
                 <el-col :span="8">
                   <el-form-item
-                    :label="`${$t('organization.businessGroupNameName')}`"
-                    prop="businessGroupName"
+                    :label="`${$t('organization.subDepartment')}`"
+                    prop="departmentName"
                   >
                     <el-input
-                      v-model="createForm.businessGroupName"
-                      :title="createForm.businessGroupName"
-                      :maxlength="200"
+                      v-model="createForm.departmentName"
                       class="form-wd"
+                      maxlength="200"
                     />
                   </el-form-item>
                 </el-col>
+
                 <el-col :span="8">
                   <el-form-item
                     :label="`${$t('organization.pic')}`"
@@ -51,54 +51,26 @@
                       @clear="picUserNameClear"
                       clearable
                       @click="openPicTable"
+                      class="form-wd"
                       :disabled="comDisFrom"
-                      class="form-wd"
                     />
                   </el-form-item>
                 </el-col>
+
                 <el-col :span="8">
                   <el-form-item
-                    :label="`${$t('organization.landlineNumber')}`"
-                    prop="landlineNumber"
+                    :label="`${$t('organization.superiorDepartment')}`"
+                    prop="superiorDepartment"
                   >
                     <el-input
-                      v-model="createForm.landlineNumber"
-                      :maxlength="50"
+                      v-model="createForm.superiorDepartment"
+                      disabled
                       class="form-wd"
                     />
                   </el-form-item>
                 </el-col>
               </el-row>
-              <el-row>
-                <el-col :span="8">
-                  <el-form-item
-                    :label="`${$t('organization.email')}`"
-                    prop="email"
-                  >
-                    <el-input
-                      v-model.trim="createForm.email"
-                      :title="createForm.email"
-                      class="form-wd"
-                    />
-                  </el-form-item>
-                </el-col>
-                <el-col :span="8">
-                  <el-form-item
-                    :label="`${$t('organization.currency')}`"
-                    prop="currency"
-                  >
-                    <country-currency-select
-                      v-model:value="createForm.currency"
-                      class="form-wd"
-                      :props="propVal"
-                      :is-currency="true"
-                      :disabled="currencyId"
-                      :cur-path="curPath"
-                      @select="handleCurrencyChange"
-                    />
-                  </el-form-item>
-                </el-col>
-              </el-row>
+
               <el-row>
                 <el-col :span="24">
                   <el-form-item :label="`${$t('ui.remarks')}`" prop="remarks">
@@ -119,6 +91,53 @@
 
         <div class="form-card mt10">
           <el-collapse-item name="2">
+            <template #title>
+              <FormCollapseItemTitle
+                :title="$t('menu.accessPermissions')"
+                :warning="collapseWarningForAccessPermissions"
+              >
+              </FormCollapseItemTitle>
+            </template>
+            <div>
+              <el-form
+                ref="accessPermissionsForm"
+                :model="createForm"
+                :rules="createRules"
+                label-width="195px"
+              >
+                <el-row class="mt22">
+                  <el-col :span="8">
+                    <el-form-item
+                      :label="`${$t('ui.position')}`"
+                      prop="postIdList"
+                    >
+                      <el-select
+                        v-model="createForm.postIdList"
+                        multiple
+                        collapse-tags
+                        placeholder=""
+                        style="width: 100%"
+                        v-default-select="[enterpriseIds]"
+                        class="log-msg-ellipsis"
+                      >
+                        <el-option
+                          v-for="dict in positionOptions"
+                          :key="dict.postId"
+                          :label="dict.postName"
+                          :value="dict.postId"
+                          :disabled="dict.disabled"
+                        ></el-option>
+                      </el-select>
+                    </el-form-item>
+                  </el-col>
+                </el-row>
+              </el-form>
+            </div>
+          </el-collapse-item>
+        </div>
+
+        <div class="form-card mt10">
+          <el-collapse-item name="3">
             <template #title>
               <FormCollapseItemTitle :title="$t('ui.systemOperationLog')">
                 <template v-if="createForm.operationLogForLast">
@@ -155,63 +174,61 @@
 
 <script>
 import {
-  queryBusinessGroupById,
-  updateBusinessGroup
+  updateDepartment,
+  queryDepartmentById,
+  queryAllSysPost
 } from '@/api/organization/corporate'
-import countryCurrencySelect from '@/components/select/countryCurrencySelect.vue'
 import selectPicTable from '@/views/organization/corporate/selectPicTable.vue'
 import SystemOperationLogTable from '@/views/components/systemOperationLog/systemOperationLogTable.vue'
 
 export default {
-  name: 'UpdateBusinessGroup',
+  name: 'EditSonDepartment',
   components: {
-    countryCurrencySelect,
     selectPicTable,
     SystemOperationLogTable
   },
-  mixins: [],
   data() {
     const vm = this
+
     return {
       submitLoading: false,
-      // 一定要放在当前文件
-      curPath: this.$options.__file,
-      timeId: '',
-      activeNames: ['1', '2'],
       propVal: 'currencyCode',
-      createForm: {},
+      activeNames: ['1', '2', '3'],
+      createForm: {
+        departmentName: '',
+        superiorDepartment: '',
+        picUserName: '',
+        remarks: '',
+        creatorName: '',
+        postIdList: []
+      },
       createRules: {
-        businessGroupName: [
+        departmentName: [
           {
             required: true,
-            message: vm.$t('ui.reqMsg'),
+            message: vm
+              .$t('ui.reqMsg')
+              .replace('$1', vm.$t('organization.subDepartment')),
             trigger: ['blur', 'change'],
 
             pattern: new RegExp(/^(?!(\s+$))/g)
           }
         ],
-        currency: [
+        postIdList: [
           {
-            required: true,
+            type: 'array',
+            required: false,
             message: vm.$t('ui.reqMsg'),
-            trigger: ['blur', 'change']
-          }
-        ],
-        email: [
-          {
-            required: true,
             trigger: ['blur', 'change'],
-            message: this.$t('ui.reqMsg').replace('$1', this.$t('ui.email'))
-          },
-          {
-            type: 'email',
-            validator: this.isEmail,
-            trigger: ['blur', 'change']
+
+            pattern: new RegExp(/^(?!(\s+$))/g)
           }
         ]
       },
-      currencyId: undefined,
-      collapseWarningForBasicInfo: false
+      positionOptions: [],
+      enterpriseIds: [],
+      collapseWarningForBasicInfo: false,
+      collapseWarningForAccessPermissions: false
     }
   },
 
@@ -232,10 +249,32 @@ export default {
 
   created() {
     const vm = this
-    vm.queryBusinessGroupById(vm.$route.query.id || '')
+    vm.createForm.creatorName = this.$store.state.user.nickName
+    const query = vm.$route.query
+    vm.createForm = Object.assign(vm.createForm, query)
+    this.queryDepartmentById()
   },
-
+  activated() {
+    if (this.$route.query.timeId !== this.timeId) {
+      this.timeId = this.$route.query.timeId
+      this.reset()
+      const query = this.$route.query
+      this.createForm = Object.assign(this.createForm, query)
+      this.queryDepartmentById()
+    }
+  },
   methods: {
+    // 查询职位
+    queryAllSysPost() {
+      queryAllSysPost().then(res => {
+        this.positionOptions = res.data || []
+        this.positionOptions.forEach(x => {
+          if (this.createForm.postIdList.indexOf(x.postId) !== -1) {
+            x.disabled = true
+          }
+        })
+      })
+    },
     // 清空pic
     picUserNameClear() {
       this.createForm.picUserName = undefined
@@ -243,54 +282,72 @@ export default {
       this.createForm.mobilePhone = undefined
       this.createForm.mobileCode = undefined
       this.createForm.mobileNum = undefined
+      this.createForm.email = undefined
     },
     // 打开pic弹窗
     openPicTable() {
       this.$refs.selectPicTable.handleOpen()
     },
     updatePic(row) {
-      const { nickName, userId, mobilePhone, mobileCode, mobileNum } = row
+      const { nickName, userId, mobilePhone, mobileCode, mobileNum, email } =
+        row
       this.createForm.picUserName = nickName
       this.createForm.picUserId = userId
       this.createForm.mobilePhone = mobilePhone
       this.createForm.mobileCode = mobileCode
       this.createForm.mobileNum = mobileNum
+      this.createForm.email = email
     },
-    handleCurrencyChange(row) {
-      this.$nextTick(() => {
-        this.createForm.currencyId = row.id || ''
-        this.createForm.currency = row.currency
-        this.createForm.currencyCode = row.currencyCode
+    queryDepartmentById() {
+      queryDepartmentById(this.createForm.departmentId).then(res => {
+        const data = res.data
+        data.postIdList = data.postIdList || []
+        this.createForm = data
+        this.enterpriseIds = JSON.parse(
+          JSON.stringify(this.createForm.postIdList)
+        )
+        this.createForm.superiorDepartment =
+          this.createForm.superiorDepartmentName
+        this.queryAllSysPost()
       })
     },
-
-    queryBusinessGroupById(id) {
-      const vm = this
-      queryBusinessGroupById(id).then(res => {
-        this.createForm = res.data
-        if (res.data && res.data.currencyId) {
-          vm.currencyId = res.data.currencyId
-        }
-      })
-    },
-
-    updateBusinessGroup(param) {
+    saveBusinessGroup(param) {
       const vm = this
       vm.submitLoading = true
-      updateBusinessGroup(param)
+      updateDepartment(param)
         .then(() => {
           vm.$message.success(
             `${vm
-              .$t('organization.businessGroupSaveSuccess')
-              .replace('$1', `${param.businessGroupNo}`)}`
+              .$t('organization.submitDepartmentSuccess')
+              .replace('$1', `${param.departmentName}`)}`
           )
           this.cancel()
           vm.submitLoading = false
         })
-        .catch(err => {
+        .catch(() => {
           vm.submitLoading = false
-          window.console.error(err)
         })
+    },
+    reset() {
+      this.activeNames = ['1', '2', '3']
+      this.createForm = {
+        picUserName: '',
+        picUserId: '',
+        mobilePhone: '',
+        mobileCode: '',
+        mobileNum: '',
+        departmentName: '',
+        superiorDepartment: '',
+        email: '',
+        remarks: '',
+        createdBy: this.$store.state.user.nickName,
+        postIdList: []
+      }
+      this.collapseWarningForBasicInfo = false
+      this.collapseWarningForAccessPermissions = false
+
+      this.resetForm('createForm')
+      this.resetForm('accessPermissionsForm')
     },
     // 取消按钮
     cancel() {
@@ -299,16 +356,30 @@ export default {
     },
     submitForm() {
       const vm = this
+
       this.$refs.createForm.validate(valid => {
         this.collapseWarningForBasicInfo = !valid
+
         if (valid) {
-          this.$modal
-            .confirm(vm.$t('organization.businessGroupSaveConfirm'))
-            .then(() => {
-              let param = JSON.parse(JSON.stringify(vm.createForm))
-              param = vm.$trimOfObj(param)
-              vm.updateBusinessGroup(param)
-            })
+          this.$refs.accessPermissionsForm.validate(valid1 => {
+            this.collapseWarningForAccessPermissions = !valid1
+            if (valid1) {
+              this.$modal
+                .confirm(vm.$t('organization.submitDepartment'))
+                .then(() => {
+                  let param = JSON.parse(JSON.stringify(vm.createForm))
+                  param = vm.$trimOfObj(param)
+                  vm.saveBusinessGroup(param)
+                })
+            } else {
+              this.$modal.msgError(
+                this.$t('ui.fromIncomplete').replace(
+                  '$1',
+                  this.$t('menu.accessPermissions')
+                )
+              )
+            }
+          })
         } else {
           this.$modal.msgError(
             this.$t('ui.fromIncomplete').replace('$1', this.$t('ui.basicInfo'))
