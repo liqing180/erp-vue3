@@ -4,18 +4,26 @@
       <el-input v-model="user.oldPassword" type="password" show-password />
     </el-form-item>
     <el-form-item :label="$t('ui.newPassword')" prop="newPassword">
-      <el-input v-model="user.newPassword" type="password" show-password />
+      <el-input
+        v-model="user.newPassword"
+        @input="user.newPassword = user.newPassword.replace(/\s/g, '')"
+        type="password"
+        show-password
+      />
     </el-form-item>
     <el-form-item :label="$t('ui.confirmPassword')" prop="confirmPassword">
-      <el-input v-model="user.confirmPassword" type="password" show-password />
+      <el-input
+        v-model="user.confirmPassword"
+        @input="user.confirmPassword = user.confirmPassword.replace(/\s/g, '')"
+        type="password"
+        show-password
+      />
     </el-form-item>
     <el-form-item>
       <el-button type="primary" size="small" @click="submit">{{
         $t('uiBtn.submit')
       }}</el-button>
-      <el-button type="danger" size="small" @click="close">{{
-        $t('uiBtn.back')
-      }}</el-button>
+      <!-- <el-button type="danger" size="small" @click="close">{{ $t('uiBtn.back') }}</el-button> -->
     </el-form-item>
   </el-form>
 </template>
@@ -33,7 +41,6 @@ export default {
       }
     }
     return {
-      test: '1test',
       user: {
         oldPassword: undefined,
         newPassword: undefined,
@@ -90,14 +97,17 @@ export default {
             .then(() => {
               return updateUserPwd(this.user.oldPassword, this.user.newPassword)
             })
-            .then(response => {
-              this.$modal.msgSuccess(this.$t('ui.submitPageSuccess'))
+            .then(() => {
+              this.$modal.msgSuccess(
+                this.$t('notification.passwordResetSuccessfully')
+              )
             })
         }
       })
     },
     close() {
-      this.$tab.closePage()
+      this.$store.dispatch('tagsView/delView', this.$route)
+      this.$router.push({ path: '/index' })
     }
   }
 }

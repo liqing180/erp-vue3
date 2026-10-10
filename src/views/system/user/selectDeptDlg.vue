@@ -11,7 +11,7 @@
   >
     <search-form
       ref="searchForm"
-      :value="queryParams"
+      v-model="queryParams"
       :searchData="searchData"
       :handleQuery="handleSearchForm"
       :resetQuery="resetSearchForm"
@@ -23,6 +23,7 @@
         :showRefreshBtn="true"
         @queryTable="queryTable"
         :columns="configColumn"
+        :columnsInit="columns"
       ></right-toolbar>
     </search-form>
 
@@ -51,7 +52,7 @@
           fixed="left"
           align="center"
         >
-          <template v-slot="scope">
+          <template #default="scope">
             <span>{{
               scope.$index +
               (queryParams.pageNum - 1) * queryParams.pageSize +
@@ -72,7 +73,7 @@
           :align="item.align || 'left'"
           header-align="center"
         >
-          <template v-slot="scope">
+          <template #default="scope">
             <template v-if="item.prop === 'isActive'">
               <el-tag v-if="scope.row.isActive === '1'">{{
                 $t('uiBtn.active')
@@ -81,33 +82,11 @@
                 $t('uiBtn.inactive')
               }}</el-tag>
             </template>
-
-            <template v-else>{{ scope.row[item.prop] }}</template>
-          </template>
-        </el-table-column>
-        <el-table-column
-          v-for="item in customColumns"
-          :key="item.prop"
-          :prop="item.prop"
-          :label="item.label"
-          :width="item.width"
-          :min-width="item.minWidth"
-          :show-overflow-tooltip="item.tooltip"
-          :sortable="item.sortable"
-          :align="item.align || 'left'"
-          header-align="center"
-        >
-          <template v-slot="scope">
-            <el-switch
-              v-if="item.prop === 'isActive'"
-              v-model="scope.row.isActive"
-              active-value="1"
-              inactive-value="0"
-              :disabled="true"
-            ></el-switch>
-            <template v-else-if="item.prop === 'createdTime'">{{
-              parseTime(scope.row.createdTime, fmtForYmdhms)
-            }}</template>
+            <dict-tag
+              v-else-if="item.prop === 'sex'"
+              :options="dict.type.sys_user_sex"
+              :value="scope.row[item.prop]"
+            />
             <template v-else>{{ scope.row[item.prop] }}</template>
           </template>
         </el-table-column>
@@ -122,7 +101,7 @@
         @pagination="getList"
       />
     </el-row>
-    <template v-slot:footer>
+    <template #footer>
       <div class="dialog-footer">
         <el-button @click="cancel">{{ $t('uiBtn.back') }}</el-button>
         <el-button
@@ -139,22 +118,17 @@
 <script>
 import { queryDepartmentList } from '@/api/system/user'
 import pageMixin from '@/mixins/tableMinx'
-// import searchForm from '@/components/Common/searchForm/Index.vue'
 export default {
+  dicts: ['sys_user_sex'],
   mixins: [pageMixin],
-  // components: { searchForm },
-  props: {
-    customerId: {
-      type: [Number, String]
-    }
-  },
+  emits: ['select'],
   data() {
     const vm = this
     return {
       rowIdKey: 'departmentId',
       saveKey: '2',
       savePath: 'AddUser',
-      searchFormKey: Date.now(),
+      btnLoading: false,
       // 遮罩层
       visible: false,
       // 遮罩层
@@ -230,10 +204,7 @@ export default {
           placeholder: `${vm.$t('ui.dept')} / ${vm.$t('ui.pic')}`,
           type: 'InputEle'
         }
-      ],
-      customColumns: [],
-      /* 已经选择的联系人Id(过滤) */
-      alreadySelectDepartmentIdList: []
+      ]
     }
   },
   computed: {
@@ -249,19 +220,18 @@ export default {
     this.$$initColumnVisible(this.saveKey, this.columns)
   },
   methods: {
-    tableRowClassName({ row, rowIndex }) {
-      let color = ''
+    tableRowClassName({ row }) {
+      let color = 'pointer'
       for (const item of this.plantIdList.values()) {
         if (item === row[this.rowIdKey]) {
-          color = 'table-SelectedRow-bgcolor'
+          color = 'pointer table-SelectedRow-bgcolor'
         }
       }
       return color
     },
     // 显示弹框
     handleAdd(alreadySelectDepartmentIdList) {
-      this.alreadySelectDepartmentIdList = alreadySelectDepartmentIdList || []
-      this.selected = []
+      this.selected = alreadySelectDepartmentIdList || []
       this.queryParams.pageSize = this.$$initPageSize(this.saveKey)
       this.getList()
       this.visible = true
@@ -317,7 +287,6 @@ export default {
       this.loading = true
       let params = { ...this.queryParams }
       params = this.$trimOfObj(params)
-      params.alreadySelectDepartmentIdList = this.alreadySelectDepartmentIdList
       queryDepartmentList(params).then(res => {
         this.loading = false
         const list = res.data || []
@@ -325,7 +294,6 @@ export default {
           delete item.remarks
           return item
         })
-        // this.total = res.total
         this.$nextTick(() => {
           this.selected.forEach(row => {
             this.userList.forEach(item => {
@@ -338,8 +306,8 @@ export default {
       })
     },
     /** 搜索 */
-    handleSearchForm() {
-      this.queryParams.pageNum = 1
+    handleSearchForm(query) {
+      this.queryParams = { ...this.$trimOfObj(query), pageNum: 1 }
       this.getList()
     },
     /** 重置 */
@@ -374,7 +342,6 @@ export default {
       this.$emit('select', this.selected)
       this.cancel()
     }
-  },
-  emits: ['select']
+  }
 }
 </script>

@@ -2,38 +2,34 @@
   <div class="app-container">
     <search-form
       ref="searchForm"
-      :value="queryParams"
+      v-model="queryParams"
       :searchData="searchData"
       :handleQuery="handleSearchForm"
       :resetQuery="resetSearchForm"
-      :topShowCount="1"
-      :isBtn="true"
-      :customSelectData="customSelectData"
       :showCustom="false"
-      operator="OR"
       @updateSearchData="updateSearchData"
       v-show="showSearch"
-    >
-    </search-form>
-
-    <!-- <DatePickerEleShortcuts
-      startDate="startDate"
-      endDate="endDate"
-      :value="queryParams['dateRange']"
-      :label="$t('ui.createdTime')"
-      format="timestamp"
-      style="width: 300px"
-    ></DatePickerEleShortcuts> -->
+    />
 
     <el-row :gutter="10" class="mb8">
       <el-col :span="1.5">
         <el-button
           type="primary"
-          v-if="checkPermi(['organization:user:add']) && !sysDockingSwitch"
           icon="Plus"
-          @click="handleAdd"
           size="small"
+          @click="handleAdd"
+          v-hasPermi="['organization:user:add']"
           >{{ $t('uiBtn.add') }}</el-button
+        >
+      </el-col>
+      <el-col :span="1.5" v-if="false">
+        <el-button
+          type="info"
+          icon="Upload"
+          size="small"
+          @click="handleImport"
+          v-hasPermi="['organization:user:import']"
+          >{{ $t('uiBtn.import') }}</el-button
         >
       </el-col>
 
@@ -49,58 +45,46 @@
           trigger="click"
         >
           <el-button size="small" type="primary" :disabled="multiple">
-            <span class="mr5">{{ $t('ui.action') }}</span>
-            <el-icon :size="12" :color="color">
-              <arrow-down />
-            </el-icon>
+            {{ $t('ui.action')
+            }}<el-icon class="el-icon--right"><ArrowDown /></el-icon>
           </el-button>
-          <template v-slot:dropdown>
+          <template #dropdown>
             <el-dropdown-menu>
               <el-dropdown-item
                 command="delete"
                 icon="Delete"
-                v-hasPermi="['organization:user:remove']"
+                v-if="checkPermi(['organization:user:remove'])"
                 >{{ $t('uiBtn.delete') }}
               </el-dropdown-item>
               <el-dropdown-item
                 command="handleResetPwd"
                 icon="Key"
-                v-hasPermi="['organization:user:resetPwd']"
+                v-if="checkPermi(['organization:user:resetPwd'])"
                 >{{ $t('uiBtn.resetPassword') }}
               </el-dropdown-item>
               <el-dropdown-item
                 command="active"
                 icon="Open"
-                v-hasPermi="['organization:user:edit']"
+                v-if="checkPermi(['organization:user:edit'])"
                 >{{ $t('uiBtn.activeBtn') }}
               </el-dropdown-item>
               <el-dropdown-item
                 command="inactive"
                 icon="TurnOff"
-                v-hasPermi="['organization:user:edit']"
+                v-if="checkPermi(['organization:user:edit'])"
                 >{{ $t('uiBtn.inactiveBtn') }}
               </el-dropdown-item>
             </el-dropdown-menu>
           </template>
         </el-dropdown>
       </el-col>
-      <!-- <el-col :span="1.5">
-        <el-button
-          type="warning"
 
-          icon="el-icon-download"
-          size="small"
-          :loading="exportLoading"
-          @click="openExport"
-          v-hasPermi="['organization:user:export']"
-          >{{ $t('uiBtn.export') }}</el-button
-        >
-      </el-col> -->
       <right-toolbar
         :saveKey="saveKey"
         v-model:showSearch="showSearch"
         @queryTable="queryTable"
         :columns="configColumn"
+        :columnsInit="columns"
       ></right-toolbar>
     </el-row>
 
@@ -113,6 +97,7 @@
       @selection-change="handleSelectionChange"
       @sort-change="handleSortChange"
       @row-dblclick="handleUpdate"
+      style="cursor: pointer"
     >
       <el-table-column
         v-if="
@@ -120,7 +105,7 @@
             'organization:user:remove',
             'organization:user:edit',
             'organization:user:resetPwd'
-          ]) && !sysDockingSwitch
+          ])
         "
         type="selection"
         width="50"
@@ -156,7 +141,7 @@
         <template #default="scope">
           <dict-tag
             v-if="item.prop === 'status'"
-            :options="user_status"
+            :options="dict.type.user_status"
             :value="scope.row[item.prop]"
           />
           <template v-else-if="item.prop === 'loginDate'">{{
@@ -170,7 +155,7 @@
           }}</template>
           <dict-tag
             v-else-if="item.prop === 'sex'"
-            :options="sys_user_sex"
+            :options="dict.type.sys_user_sex"
             :value="scope.row[item.prop]"
           />
           <template v-else>{{ scope.row[item.prop] }}</template>
@@ -183,49 +168,46 @@
         width="180"
         fixed="right"
         class-name="small-padding fixed-width"
-        v-if="!sysDockingSwitch"
       >
         <template #default="scope">
           <div class="flexCen">
             <el-icon
-              class="primary-pointer mr5"
-              :size="20"
+              class="pointer mr5"
+              style="font-size: 20px; color: #409eff"
               :title="$t('uiBtn.edit')"
+              v-hasPermi="['organization:user:edit']"
               @click="handleUpdate(scope.row)"
-            >
-              <Edit />
-            </el-icon>
+              ><Edit
+            /></el-icon>
             <el-icon
+              v-hasPermi="['organization:user:remove']"
               class="pointer"
-              color="#f56c6c"
-              :size="20"
+              style="font-size: 20px; color: #f56c6c"
               :title="$t('uiBtn.delete')"
               @click="handleDelete(scope.row)"
-            >
-              <Delete />
-            </el-icon>
-
+              ><Delete
+            /></el-icon>
             <el-dropdown
               size="small"
               @command="command => handleCommand(command, scope.row)"
+              v-hasPermi="[
+                'organization:user:resetPwd',
+                'organization:user:edit'
+              ]"
               v-if="scope.row.adminFlag !== 1"
             >
               <span class="el-dropdown-link">
-                <el-icon><d-arrow-right /></el-icon>{{ $t('uiBtn.more') }}
+                <el-icon class="el-icon--right"><DArrowRight /></el-icon
+                >{{ $t('uiBtn.more') }}
               </span>
               <template #dropdown>
                 <el-dropdown-menu>
                   <el-dropdown-item
                     command="handleResetPwd"
-                    icon="el-icon-key"
+                    icon="Key"
+                    v-if="checkPermi(['organization:user:resetPwd'])"
                     >{{ $t('uiBtn.resetPassword') }}</el-dropdown-item
                   >
-                  <!-- <el-dropdown-item
-              	  command="handleAuthRole"
-              	  icon="el-icon-circle-check"
-              	  v-hasPermi="['organization:user:edit']"
-              	  >{{ $t('menu.assignRole') }}</el-dropdown-item
-              	> -->
                 </el-dropdown-menu>
               </template>
             </el-dropdown>
@@ -242,24 +224,25 @@
       v-model:limit="queryParams.pageSize"
       @pagination="getList"
     />
-    <!-- 导入 -->
-    <!-- <file-import
+
+    <file-import
       :importOptions="importOptions"
       @updateImport="updateImport"
       @importTemplate="importTemplate"
       @fileImportSuccess="getList"
-    ></file-import> -->
+    ></file-import>
 
-    <!-- query role -->
-    <!-- <assignRoleDlg ref="assignRoleDlgRef" /> -->
+    <assignRoleDlg ref="assignRoleDlgRef" />
 
-    <!-- <ExportDlg ref="ExportDlgRef" :loading="exportLoading" @export="handleExport" /> -->
+    <ExportDlg
+      ref="ExportDlgRef"
+      :loading="exportLoading"
+      @export="handleExport"
+    />
   </div>
 </template>
 
 <script>
-// import DatePickerEleShortcuts from '@/components/Common/searchFormNew/DatePickerEleShortcuts.vue'
-
 import {
   listUser,
   deleteUser,
@@ -269,19 +252,18 @@ import {
   resetPassword
 } from '@/api/system/user'
 import pageMixin from '@/mixins/tableMinx'
-// import assignRoleDlg from './assignRoleDlg'
+import assignRoleDlg from './assignRoleDlg.vue'
 export default {
   name: 'User',
+  dicts: ['sys_user_sex', 'user_status', 'system_active'],
   mixins: [pageMixin],
   components: {
-    // assignRoleDlg
-    // DatePickerEleShortcuts
+    assignRoleDlg
   },
   data() {
     const vm = this
 
     return {
-      range: [],
       saveKey: '1',
       // 遮罩层
       loading: true,
@@ -302,7 +284,8 @@ export default {
       tableList: [],
       // 默认密码
       initPassword: undefined,
-
+      // 日期范围
+      dateRange: [],
       // 导入
       importOptions: {
         // 是否显示弹出层
@@ -325,17 +308,16 @@ export default {
         {
           name: 'condition',
           type: 'InputEle',
-          placeholder: `${vm.$t('ui.userId')} / ${vm.$t(
-            'ui.userName1'
-          )} / ${vm.$t('ui.employeeNo')}`
+          placeholder: `${vm.$t('ui.userId')} / ${vm.$t('ui.userName1')} / ${vm.$t(
+            'ui.employeeNo'
+          )}`
         },
         {
           name: 'status',
           label: vm.$t('ui.status'),
           type: 'SelectEle',
-          width: '200px',
-          selectValue: 'value',
-          selectLabel: 'label',
+          selectValue: 'dictValue',
+          selectLabel: 'dictLabel',
           dict: 'user_status',
           selectData: []
         }
@@ -411,7 +393,7 @@ export default {
         {
           prop: 'loginDate',
           label: vm.$t('ui.lastLoginDate'),
-          width: 160,
+          minWidth: 160,
           visible: true,
           tooltip: true,
           sortable: 'custom'
@@ -427,87 +409,23 @@ export default {
         {
           prop: 'createdTime',
           label: vm.$t('ui.createdTime'),
-          width: 160,
+          minWidth: 160,
           visible: true,
           tooltip: true,
           sortable: 'custom'
         }
-        // {
         //   prop: 'modifiedBy',
         //   label: vm.$t('ui.modifiedBy'),
         //   minWidth: 160,
         //   visible: true,
         //   tooltip: true,
         //   sortable: 'custom'
-        // },
-        // {
         //   prop: 'modifiedTime',
         //   label: vm.$t('ui.modifiedTime'),
         //   minWidth: 160,
         //   visible: true,
         //   tooltip: true,
         //   sortable: 'custom'
-        // }
-      ],
-
-      sys_user_sex: [],
-      user_status: [],
-      system_active: [],
-
-      // 自定义搜索
-      customSelectData: [
-        {
-          label: vm.$t('ui.remarks'),
-          value: 'remarks',
-          type: 'InputEle',
-          maxlength: 200,
-          disabled: false,
-          operator: 'contains'
-        },
-        {
-          label: vm.$t('ui.status'),
-          value: 'status',
-          type: 'ComplexArrayMultipleSelectEle',
-          selectValue: 'dictValue',
-          selectLabel: 'dictLabel',
-          dict: 'user_status',
-          selectData: [],
-          operator: 'in'
-        },
-        {
-          label: vm.$t('ui.createdBy'),
-          value: 'createdBy',
-          type: 'InputEle',
-          disabled: false,
-          operator: 'contains'
-        },
-        {
-          label: vm.$t('ui.createdTime'),
-          value: 'createdTime',
-          type: 'DatePickerEle',
-          format: 'timestamp',
-          disabled: false,
-          startDate: 'startCreatedTime',
-          endDate: 'endCreatedTime',
-          operator: 'between'
-        },
-        {
-          label: vm.$t('ui.modifiedBy'),
-          value: 'modifiedBy',
-          type: 'InputEle',
-          disabled: false,
-          operator: 'contains'
-        },
-        {
-          label: vm.$t('ui.modifiedTime'),
-          value: 'modifiedTime',
-          type: 'DatePickerEle',
-          format: 'timestamp',
-          disabled: false,
-          startDate: 'startModifiedTime',
-          endDate: 'endModifiedTime',
-          operator: 'between'
-        }
       ]
     }
   },
@@ -520,36 +438,23 @@ export default {
     },
     editAuth() {
       return this.checkPermi(['organization:user:edit'])
-    },
-    sysDockingSwitch() {
-      return this.$store.getters.sysDockingSwitch
     }
   },
   created() {
-    // const { proxy } = getCurrentInstance()
-    // 组合式<script setup> 页面使用 proxy.useDict() , vue2 写法直接使用 this.useDict()
-    const { sys_user_sex, user_status, system_active } = this.useDict(
-      'sys_user_sex',
-      'user_status',
-      'system_active'
-    )
-    this.sys_user_sex = sys_user_sex || []
-    this.user_status = user_status || []
-    this.system_active = system_active || []
     this.createdInitTimer = Date.now()
-    // this.queryParams.pageSize = this.$$initPageSize(this.saveKey)
+    this.queryParams.pageSize = this.$$initPageSize(this.saveKey)
     this.$$initColumnVisible(this.saveKey, this.columns)
     this.getList()
-    /* this.getConfigKey('sys.user.initPassword').then((response) => {
+    this.getConfigKey('sys.user.initPassword').then(response => {
       this.initPassword = response.msg
-    }) */
+    })
   },
   activated() {
     if (Date.now() - this.createdInitTimer < 1000) return
     this.getList()
   },
   methods: {
-    tableRowClassName({ row, rowIndex }) {
+    tableRowClassName({ row }) {
       let color = ''
       for (const item of this.ids.values()) {
         if (item === row.userId) {
@@ -559,7 +464,7 @@ export default {
       return color
     },
 
-    selectable(row, rowIndex) {
+    selectable(row) {
       if (row.adminFlag === 1) {
         return false // 禁用
       } else {
@@ -569,7 +474,6 @@ export default {
     /** 查询用户列表 */
     getList() {
       this.loading = true
-      // const params = this.$trimOfObj(this.queryParams)
       let params = { ...this.queryParams }
       params = this.$trimOfObj(params)
       listUser(params).then(response => {
@@ -581,9 +485,7 @@ export default {
     },
     /** 搜索 */
     handleSearchForm(query) {
-      const param = this.$trimOfObj(query)
-      this.queryParams = { ...param }
-      this.queryParams.pageNum = 1
+      this.queryParams = { ...this.$trimOfObj(query), pageNum: 1 }
       this.getList()
     },
     /** 重置 */
@@ -685,7 +587,6 @@ export default {
     /** 重置密码按钮操作 */
     handleResetPwd(row) {
       const userNames = this.selectList.map(item => item.userName).join(', ')
-      // const initPassword = this.initPassword || '123456'
       const confirmMsg = this.$t('ui.resetPsdConfirm')
         .replace('$1', row.userName || userNames)
         .replace('$2', '******')
@@ -693,13 +594,13 @@ export default {
         .confirm(confirmMsg)
         .then(() => {
           if (row.userId) {
-            resetPassword({ selectIdList: [row.userId] }).then(response => {
+            resetPassword({ selectIdList: [row.userId] }).then(() => {
               this.$modal.msgSuccess(
                 this.$t('ui.resetPsdSuccess').replace('$1', '******')
               )
             })
           } else {
-            resetPassword({ selectIdList: this.ids }).then(response => {
+            resetPassword({ selectIdList: this.ids }).then(() => {
               this.$modal.msgSuccess(
                 this.$t('ui.resetPsdSuccess').replace('$1', '******')
               )
@@ -710,8 +611,6 @@ export default {
     },
     /** 分配角色操作 */
     handleAuthRole(row) {
-      // const userId = row.userId
-      // this.$router.push('/system/user-auth/role/' + userId)
       this.$refs.assignRoleDlgRef.handleQueryRole(row)
     },
 
@@ -741,7 +640,7 @@ export default {
     handleExport(data) {
       const vm = this
       const { exportType } = data
-      let params = this.addDateRange(this.queryParams)
+      let params = this.addDateRange(this.queryParams, this.dateRange)
       params = JSON.parse(JSON.stringify(params))
       params = this.$trimOfObj(params)
       params.exportType = exportType
@@ -781,23 +680,3 @@ export default {
   }
 }
 </script>
-
-<style lang="scss" scoped>
-.input-switch-box {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  .con-left {
-    flex: 1;
-    margin-right: 10px;
-  }
-}
-.dept-select {
-  :deep(.vue-treeselect--disabled .vue-treeselect__control) {
-    background-color: #f5f7fa;
-  }
-  :deep(.vue-treeselect__single-value) {
-    color: #c0c4cc;
-  }
-}
-</style>

@@ -100,13 +100,13 @@ export const constantRoutes = [
         path: 'addUser',
         component: () => import('@/views/system/user/addUser'),
         name: 'AddUser',
-        meta: { title: 'addUser', activeMenu: '/organization/user' }
+        meta: { title: 'addUser', activeMenu: '/system/user' }
       },
       {
         path: 'editUser',
         component: () => import('@/views/system/user/editUser'),
         name: 'EditUser',
-        meta: { title: 'editUser', activeMenu: '/organization/user' }
+        meta: { title: 'editUser', activeMenu: '/system/user' }
       }
     ]
   },

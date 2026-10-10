@@ -24,16 +24,16 @@
         }"
       >
         <!--
-              :titles="[' ', ' ']"
-              :format="{
-                noChecked: ' ',
-                hasChecked: ' '
-              }"
-             -->
+        :titles="[' ', ' ']"
+        :format="{
+          noChecked: ' ',
+          hasChecked: ' '
+        }"
+       -->
       </el-transfer>
     </el-row>
-    <template v-slot:footer>
-      <div class="dialog-footer">
+    <template #footer
+      ><div class="dialog-footer">
         <el-button @click="dialogTableVisible = false">{{
           $t('uiBtn.back')
         }}</el-button>
@@ -43,8 +43,8 @@
           :loading="submitLoading"
           >{{ $t('uiBtn.submit') }}</el-button
         >
-      </div>
-    </template>
+      </div></template
+    >
   </el-dialog>
 </template>
 

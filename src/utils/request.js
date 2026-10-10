@@ -58,6 +58,11 @@ const service = axios.create({
 
 service.interceptors.request.use(
   config => {
+    // Axios 0.28 会在 JSON 请求头下序列化 FormData，保留 ERP 文件上传格式。
+    // 浏览器 adapter 会移除该请求头，自动生成带 boundary 的 multipart 请求头。
+    if (typeof FormData !== 'undefined' && config.data instanceof FormData) {
+      config.headers['Content-Type'] = 'multipart/form-data'
+    }
     const isToken = (config.headers || {}).isToken === false
     if (getToken() && !isToken) {
       config.headers.Authorization = 'Bearer ' + getToken()

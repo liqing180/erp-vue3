@@ -3,11 +3,11 @@
     <el-row :gutter="20">
       <el-col :span="8" :xs="24">
         <el-card class="box-card">
-          <template v-slot:header>
+          <template #header>
             <div class="clearfix">
               <span>{{ $t('menu.userInfo') }}</span>
-            </div>
-          </template>
+            </div></template
+          >
           <div>
             <div class="text-center">
               <userAvatar :user="user" />
@@ -81,18 +81,19 @@
                   {{ user.departmentNameListShowStr }}
                 </div>
               </li>
+
               <li class="list-group-item flexSb">
                 <span class="mr20 fs-0">
                   <svg-icon icon-class="peoples" class="mr5" />{{
-                    $t('ui.role')
+                    $t('ui.position')
                   }}
                 </span>
                 <div
                   class="ellipsis-text"
                   style="text-align: right"
-                  :title="user.roleNameListShowStr"
+                  :title="user.positionNameListShowStr"
                 >
-                  {{ user.roleNameListShowStr }}
+                  {{ user.positionNameListShowStr }}
                 </div>
               </li>
               <li class="list-group-item flexSb">
@@ -115,21 +116,17 @@
       </el-col>
       <el-col :span="16" :xs="24">
         <el-card>
-          <template v-slot:header>
+          <template #header>
             <div class="clearfix">
               <span>{{ $t('ui.basicInfo') }}</span>
-            </div>
-          </template>
+            </div></template
+          >
           <el-tabs v-model="activeTab">
             <el-tab-pane :label="$t('ui.basicInfo')" name="userinfo">
               <userInfo :user="user" />
             </el-tab-pane>
-            <el-tab-pane
-              :label="$t('ui.resetPwd')"
-              name="resetPwd"
-              v-if="!sysDockingSwitch"
-            >
-              <resetPwd :user="user" />
+            <el-tab-pane :label="$t('ui.resetPwd')" name="resetPwd">
+              <resetPwd />
             </el-tab-pane>
           </el-tabs>
         </el-card>
@@ -161,9 +158,6 @@ export default {
   computed: {
     fmtForYmdhms() {
       return this.$store.getters.fmtForYmdhms
-    },
-    sysDockingSwitch() {
-      return this.$store.getters.sysDockingSwitch
     }
   },
   methods: {

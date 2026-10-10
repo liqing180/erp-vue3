@@ -6,14 +6,13 @@
     v-model="dialogTableVisible"
     width="1200px"
     top="5vh"
-    @close="close"
   >
     <ul class="card" v-loading="loading">
       <li class="item">
         <div class="title">{{ $t('organization.functionalPermissions') }}</div>
         <div class="child-card mt10">
           <el-tree
-            ref="tree"
+            ref="menuTree"
             :data="menus"
             :default-expand-all="false"
             node-key="id"
@@ -32,7 +31,7 @@
         <div class="title">{{ $t('organization.accessPermissions') }}</div>
         <div class="child-card mt10">
           <el-tree
-            ref="tree"
+            ref="dataTree"
             :data="userData"
             :default-expand-all="false"
             node-key="id"
@@ -47,14 +46,40 @@
           ></el-tree>
         </div>
       </li>
+      <li class="item">
+        <div class="title">{{ $t('organization.warehouse') }}</div>
+        <ul class="child-card" style="padding: 0 10px">
+          <li
+            class="mt10 flow1"
+            v-for="item in warehouseList"
+            :key="item.warehouseId"
+            :title="item.warehouseName"
+          >
+            {{ item.warehouseName }}
+          </li>
+        </ul>
+      </li>
+      <li class="item">
+        <div class="title">{{ $t('organization.vendor') }}</div>
+        <ul class="child-card" style="padding: 0 10px">
+          <li
+            class="mt10 flow1"
+            v-for="item in supplierList"
+            :key="item.businessPartnerId"
+            :title="item.businessPartnerName"
+          >
+            {{ item.businessPartnerName }}
+          </li>
+        </ul>
+      </li>
     </ul>
-    <template v-slot:footer>
-      <div class="dialog-footer">
+    <template #footer
+      ><div class="dialog-footer">
         <el-button @click="dialogTableVisible = false">{{
           $t('uiBtn.back')
         }}</el-button>
-      </div>
-    </template>
+      </div></template
+    >
   </el-dialog>
 </template>
 
@@ -84,9 +109,7 @@ export default {
       supplierList: []
     }
   },
-
   methods: {
-    close() {},
     open(ids) {
       const vm = this
       this.roleIdList = ids
@@ -98,8 +121,11 @@ export default {
       vm.loading = true
       const request1 = queryResourceTreeList({ roleIdList: this.roleIdList })
       const request2 = getAccessPermissions({ roleIdList: this.roleIdList })
-
-      Promise.all([request1, request2])
+      const request3 = getRoleDpForWarehouse({ roleIdList: this.roleIdList })
+      const request4 = queryAlreadyHaveVendorListNoPage({
+        roleIdList: this.roleIdList
+      })
+      Promise.all([request1, request2, request3, request4])
         .then(res => {
           this.checkedKeys = res[0] ? res[0].checkedKeys : []
           this.menus = res[0] ? res[0].menus : []
@@ -112,7 +138,7 @@ export default {
             x => this.checkedKeys.indexOf(x.id) !== -1
           )
           const filterList = data => {
-            data.forEach((x, i) => {
+            data.forEach(x => {
               x.children = (x.children || []).filter(
                 k => this.checkedKeys.indexOf(k.id) !== -1
               )
@@ -138,7 +164,7 @@ export default {
           this.warehouseList = warehouseList.filter(item =>
             warehouseIdList.includes(item.warehouseId)
           )
-
+          this.supplierList = res[3].data || []
           vm.loading = false
         })
         .catch(() => {
@@ -187,7 +213,7 @@ export default {
   .item {
     display: flex;
     flex-direction: column;
-    width: 49%;
+    width: 24%;
     height: 100%;
     flex-shrink: 0;
     border: 1px solid #ccc;
@@ -204,23 +230,28 @@ export default {
     font-size: 14px;
   }
 }
+
 .tree {
-  height: 100%; /*// overflow: hidden auto;*/
+  height: 100%;
+  // overflow: hidden auto;
   :deep(.el-tree-node__label) {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
 }
+
 .child-card::-webkit-scrollbar {
   width: 8px;
   height: 8px;
   background-color: initial;
 }
+
 .child-card::-webkit-scrollbar-thumb {
   border-radius: 4px;
   background-color: rgba(127, 135, 146, 0.5);
 }
+
 .child-card::-webkit-scrollbar-track {
   width: 10px;
   box-shadow: none;

@@ -52,7 +52,7 @@
     <el-dialog
       :close-on-click-modal="false"
       :title="$t('ui.adjustYourSignature')"
-      v-dialogDrag
+      draggable
       v-model="open"
       width="680px"
       append-to-body
@@ -134,7 +134,6 @@
 import { VueCropper } from 'vue-cropper'
 import 'vue-cropper/dist/index.css'
 import { uploadCompanySealFn, downloadFile } from '@/api/basic/basic'
-// import imageCompression from 'browser-image-compression'
 
 import downFile from '@/utils/downFile.js'
 export default {
@@ -266,18 +265,6 @@ export default {
         this.handleFile(file)
       }
     },
-    async compressImage(file) {
-      /* const options = {
-        maxSizeMB: 20, // 最大文件大小为1MB
-        maxWidthOrHeight: 1920, // 最大宽度或高度为1920px
-        useWebWorker: true, // 使用Web Worker进行压缩，避免阻塞UI线程
-        initialQuality: 0.8 // 初始质量为0.8，然后根据需要调整大小以匹配maxSizeMB或maxWidthOrHeight限制。
-      } */
-      /* imageCompression(file, options).then((res) => {
-        this.options.img = URL.createObjectURL(res)
-        this.editCropper()
-      }) */
-    },
     handleFile(file) {
       // 检查文件类型
       if (this.accept && this.accept.length > 0) {
@@ -318,7 +305,7 @@ export default {
         url,
         param,
         { fileName: fileName + file.fileExtension },
-        type => {
+        () => {
           file.downLoading = false
         }
       )

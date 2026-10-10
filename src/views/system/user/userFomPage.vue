@@ -1,5 +1,4 @@
 <template>
-  <!-- formClass="form-page-btn--hide" -->
   <FormPageLayout>
     <template v-slot:btn>
       <el-button
@@ -17,7 +16,7 @@
       <el-collapse v-model="activeNames">
         <div class="form-card">
           <el-collapse-item name="1">
-            <template v-slot:title>
+            <template #title>
               <FormCollapseItemTitle
                 :title="$t('ui.basicInfo')"
                 :warning="collapseWarningForBasicInfo"
@@ -34,21 +33,55 @@
               <el-row>
                 <el-col :span="8">
                   <el-form-item :label="`${$t('ui.userName')}`" prop="nickName">
-                    <el-input
-                      v-model="form.nickName"
-                      :title="form.nickName"
-                      maxlength="200"
-                      :disabled="comDisFrom"
-                    />
+                    <div class="flexStart">
+                      <el-form-item class="fs-0" style="width: 84px">
+                        <el-select
+                          v-model="form.title"
+                          :disabled="comDisFrom"
+                          placeholder=""
+                          style="width: 100%"
+                          clearable
+                          filterable
+                          @change="titleChange"
+                        >
+                          <el-option
+                            v-for="dict in canSelectCptList"
+                            :key="dict.value"
+                            :label="dict.label"
+                            :value="dict.label"
+                          ></el-option>
+                        </el-select>
+                      </el-form-item>
+                      <el-input
+                        v-model="form.nickName"
+                        maxlength="200"
+                        style="width: 100%"
+                        :disabled="comDisFrom"
+                      ></el-input>
+                    </div>
                   </el-form-item>
                 </el-col>
                 <el-col :span="8">
-                  <el-form-item :label="`${$t('ui.userId')}`" prop="userName">
+                  <el-form-item
+                    :label="`${$t('ui.userId')}`"
+                    prop="userName"
+                    :rules="[
+                      {
+                        required: true,
+                        pattern: !form.userId
+                          ? /^[a-zA-Z0-9_\-.]{0,20}$/
+                          : new RegExp(/^(?!(\s+$))/g),
+                        message: $t('ui.reqMsg').replace('$1', $t('ui.userId')),
+                        trigger: ['blur', 'change']
+                      }
+                    ]"
+                  >
                     <el-input
                       :disabled="!!form.userId"
                       v-model="form.userName"
                       :title="form.userName"
-                      maxlength="200"
+                      maxlength="20"
+                      @input="handleInput"
                     />
                   </el-form-item>
                 </el-col>
@@ -106,7 +139,7 @@
                     v-else
                   >
                     <el-input
-                      :disabled="comDisFrom"
+                      :disabled="true"
                       v-model="form.employeeNo"
                       :title="form.employeeNo"
                       maxlength="50"
@@ -125,7 +158,7 @@
                       clearable
                     >
                       <el-option
-                        v-for="dict in sys_user_sex"
+                        v-for="dict in canSelectSexList"
                         :key="dict.value"
                         :label="dict.label"
                         :value="dict.value"
@@ -145,6 +178,7 @@
                       v-model:mobileNum="form.mobileNum"
                       v-model:mobileNo="form.mobilePhone"
                       @clearValidate="$refs.mobileNoRef.clearValidate()"
+                      :isDefaultSelect="!rowId"
                     />
                   </el-form-item>
                 </el-col>
@@ -169,7 +203,7 @@
                       clearable
                     >
                       <el-option
-                        v-for="dict in user_status"
+                        v-for="dict in dict.type.user_status"
                         :key="dict.value"
                         :label="dict.label"
                         :value="dict.value"
@@ -230,11 +264,31 @@
                   </el-form-item>
                 </el-col>
               </el-row>
+              <el-row>
+                <el-col :span="24">
+                  <el-form-item :label="`${$t('ui.signedPicture')}`">
+                    <userSignature
+                      ref="uploadRef"
+                      :accept="['.jpg', '.jpeg', '.png', '.bmp', '.webp']"
+                      :dlgTitle="$t('ui.signedPicture')"
+                      :signatureUrl="form.signatureUrl"
+                      @change="changePhoto"
+                      :disabled="comDisFrom"
+                      :documentName="
+                        form.nickName
+                          ? form.nickName + ' - ' + 'Signed Picture'
+                          : 'Signed Picture'
+                      "
+                      :commonFileList="form.commonFileListSignature || []"
+                    />
+                  </el-form-item>
+                </el-col>
+              </el-row>
 
               <el-row>
                 <el-col :span="24">
                   <el-form-item :label="$t('ui.remarks')">
-                    <el-input
+                    <MyInput
                       type="textarea"
                       v-model="form.remarks"
                       :autosize="{ minRows: 2, maxRows: 4 }"
@@ -242,7 +296,7 @@
                       show-word-limit
                       :maxlength="3000"
                       :disabled="comDisFrom"
-                    ></el-input>
+                    ></MyInput>
                   </el-form-item>
                 </el-col>
               </el-row>
@@ -251,7 +305,7 @@
         </div>
         <div class="form-card mt10">
           <el-collapse-item name="2">
-            <template v-slot:title>
+            <template #title>
               <FormCollapseItemTitle
                 :title="$t('ui.dept')"
                 :warning="collapseWarningForDept"
@@ -285,7 +339,9 @@
                   :showSearchBtn="false"
                   :showRefreshBtn="false"
                   :saveKey="saveKey"
+                  :savePath="savePath"
                   :columns="configColumn"
+                  :columnsInit="columns"
                 ></right-toolbar>
               </el-row>
               <el-table
@@ -296,11 +352,12 @@
                 :data="tableList"
                 @select="handleSelectionChange"
                 @select-all="handleSelectAll"
-                max-height="600"
+                v-table-tab
               >
                 <el-table-column
                   v-if="!comDisFrom"
                   type="selection"
+                  key="selection"
                   align="center"
                   width="55"
                 ></el-table-column>
@@ -313,7 +370,7 @@
                   align="center"
                   class-name="allowDrag"
                 >
-                  <template v-slot="scope">
+                  <template #default="scope">
                     <span>{{ scope.$index + 1 }}</span>
                   </template>
                 </el-table-column>
@@ -330,14 +387,10 @@
                   :align="item.align || 'left'"
                   header-align="center"
                 >
-                  <template v-slot:header="{ column }">
-                    <!-- <span v-if="item.prop === 'postId'">
-                            <span style="color: #ff4949; margin-right: 4px">*</span>{{ column.label }}
-                          </span>
-                          <span v-else>{{ column.label }}</span> -->
+                  <template #header="{ column }">
                     {{ column.label }}
                   </template>
-                  <template v-slot="scope">
+                  <template #default="scope">
                     <template v-if="item.prop === 'postId'">
                       <span v-if="comDisFrom">{{ scope.row.postName }}</span>
                       <el-select
@@ -379,13 +432,10 @@
                       </template>
                     </template>
                     <template v-else-if="item.prop === 'remarks'">
-                      <span v-if="comDisFrom">{{ scope.row.remarks }}</span>
-                      <el-input
-                        v-else
-                        style="width: 98%"
-                        :title="scope.row.remarks"
+                      <descriptionEditDlg
                         v-model="scope.row.remarks"
                         :maxlength="200"
+                        :disabled="comDisFrom"
                       />
                     </template>
                     <template v-else>{{ scope.row[item.prop] }}</template>
@@ -394,22 +444,21 @@
                 <el-table-column
                   v-if="!comDisFrom"
                   :label="$t('ui.action')"
+                  key="action"
                   align="center"
                   min-width="120"
                   class-name="small-padding fixed-width"
                   fixed="right"
                 >
-                  <template v-slot="scope">
+                  <template #default="scope">
                     <div class="flexCen">
                       <el-icon
                         class="pointer"
-                        color="#f56c6c"
-                        :size="20"
+                        style="font-size: 20px; color: #f56c6c"
                         :title="$t('uiBtn.delete')"
                         @click="handleDelRow(scope.$index, scope.row)"
-                      >
-                        <Delete />
-                      </el-icon>
+                        ><Delete
+                      /></el-icon>
                     </div>
                   </template>
                 </el-table-column>
@@ -419,7 +468,7 @@
         </div>
         <div class="form-card mt10" v-if="!!form.userId">
           <el-collapse-item name="3">
-            <template v-slot:title>
+            <template #title>
               <FormCollapseItemTitle :title="$t('ui.systemOperationLog')">
                 <template v-if="form.operationLogForLast">
                   <span
@@ -465,21 +514,33 @@ import { queryDepartmentPost } from '@/api/system/post'
 
 import pageMixin from '@/mixins/tableMinx'
 import selectDeptDlg from './selectDeptDlg.vue'
+import Sortable from 'sortablejs'
 import SystemOperationLogTable from '@/views/components/systemOperationLog/systemOperationLogTable.vue'
 import authDlg from './authDlg.vue'
+import userSignature from '@/components/Common/htz-image-upload/userSignature.vue'
 
 export default {
+  dicts: ['sys_user_sex', 'user_status', 'business_contact_person_title'],
   mixins: [pageMixin],
   components: {
     selectDeptDlg,
     SystemOperationLogTable,
-    authDlg
+    authDlg,
+    userSignature
   },
   data() {
     const vm = this
     const validatorPhoneNo = (rule, value, callback) => {
       if (!this.form.mobileCode || !this.form.mobileNum) {
         callback(this.$t('ui.reqMsg').replace('$1', this.$t('ui.mobilePhone')))
+      } else {
+        callback()
+      }
+    }
+    const validatorNickName = (rule, value, callback) => {
+      const { title, nickName } = vm.form
+      if (!title || !nickName) {
+        callback(vm.$t('ui.reqMsg'))
       } else {
         callback()
       }
@@ -491,29 +552,19 @@ export default {
       activeNames: [],
       // 默认密码
       initPassword: undefined,
-      // 是否自动生成 EmployeeNo
-      isAutoCreateEmployeeNo: '1',
       form: {
         isAutoCreateEmployeeNo: '1'
       },
       rules: {
-        userName: [
-          {
-            required: true,
-
-            pattern: new RegExp(/^(?!(\s+$))/g),
-            message: this.$t('ui.reqMsg').replace('$1', this.$t('ui.userId')),
-            trigger: 'blur'
-          }
-        ],
         nickName: [
           {
             required: true,
 
             pattern: new RegExp(/^(?!(\s+$))/g),
             message: this.$t('ui.reqMsg').replace('$1', this.$t('ui.userName')),
-            trigger: 'blur'
-          }
+            trigger: ['blur', 'change']
+          },
+          { validator: validatorNickName, trigger: ['blur'] }
         ],
         status: [
           {
@@ -578,6 +629,13 @@ export default {
           fixed: true
         },
         {
+          prop: 'branchCompanyName',
+          label: vm.$t('menu.branchCompany'),
+          visible: true,
+          minWidth: 160,
+          tooltip: true
+        },
+        {
           prop: 'departmentName',
           label: vm.$t('ui.deptName'),
           visible: true,
@@ -603,32 +661,21 @@ export default {
           label: vm.$t('ui.remarks'),
           visible: true,
           minWidth: 200,
-          tooltip: true
+          tooltip: false
         }
       ],
       tableList: [],
       selected: [],
       sortableDom: undefined,
       rowIdKey: 'departmentId',
-      positionOptions: [],
       selectLoading: false,
       collapseWarningForDept: false,
       collapseWarningForBasicInfo: false,
       roleList: [],
-      isView: undefined,
-      sys_user_sex: [],
-      user_status: []
+      isView: undefined
     }
   },
-
   created() {
-    const { sys_user_sex, user_status } = this.useDict(
-      'sys_user_sex',
-      'user_status'
-    )
-    this.sys_user_sex = sys_user_sex || []
-    this.user_status = user_status || []
-    // this.queryParams.pageSize = this.$$initPageSize(this.saveKey)
     this.$$initColumnVisible(this.saveKey, this.columns)
     this.timeId = this.$route.query.timeId
     this.rowId = this.$route.query.id
@@ -638,6 +685,9 @@ export default {
     } else {
       this.handleAdd()
     }
+    setTimeout(() => {
+      this.setRouteTitleView(this.comDisFrom)
+    }, 0)
   },
   activated() {
     if (this.$route.query.timeId !== this.timeId) {
@@ -651,6 +701,9 @@ export default {
       }
     }
   },
+  beforeUnmount() {
+    this.destroyDraggable()
+  },
   computed: {
     fmtForYmd() {
       return this.$store.getters.fmtForYmd
@@ -661,31 +714,82 @@ export default {
     editAuth() {
       return this.checkPermi(['organization:user:edit'])
     },
-    sysDockingSwitch() {
-      return this.$store.getters.sysDockingSwitch
-    },
     comDisFrom() {
-      if (this.sysDockingSwitch) {
-        return true
-      }
       if (this.isView) {
         return true
       }
       if (this.rowId) {
-        // return !!this.form.nickName
         return !this.editAuth
       }
       return false
+    },
+    canSelectCptList() {
+      const { sex } = this.form
+      let list = this.dict.type.business_contact_person_title || []
+      if (!isNaN(sex)) {
+        if (sex === '0') {
+          list = list.filter(
+            x => ['Mr', 'Sir', 'Datuk', 'Dr', 'Hon'].indexOf(x.value) !== -1
+          )
+        } else if (sex === '1') {
+          list = list.filter(
+            x =>
+              ['Mrs', 'Ms', 'Mdm', 'Dame', 'Datin', 'Dr', 'Hon'].indexOf(
+                x.value
+              ) !== -1
+          )
+        }
+      }
+      return list
+    },
+    canSelectSexList() {
+      const { title } = this.form
+      let list = this.dict.type.sys_user_sex || []
+      if (title) {
+        if (['Mr', 'Sir', 'Datuk'].indexOf(title) !== -1) {
+          list = list.filter(x => x.value === '0')
+        } else if (
+          ['Mrs', 'Ms', 'Mdm', 'Dame', 'Datin'].indexOf(title) !== -1
+        ) {
+          list = list.filter(x => x.value === '1')
+        }
+      }
+      return list
     }
   },
   methods: {
+    // 实时过滤不允许的字符
+    handleInput() {
+      // 保留字母、数字、下划线、连字符，移除其他字符（包括空格）
+
+      this.form.userName = this.form.userName.replace(/[^a-zA-Z0-9_\-.]/g, '')
+      // 截断超过20的字符（配合maxlength双重保障）
+      if (this.form.userName.length > 20) {
+        this.form.userName = this.form.userName.slice(0, 20)
+      }
+    },
+    changePhoto(file) {
+      this.form.commonFileListSignature = file.url ? [file] : []
+      this.form.signatureUrl = file.url
+      this.form.signature = file.id || ''
+    },
+    titleChange() {
+      const { title } = this.form
+      if (['Mr', 'Sir', 'Datuk'].indexOf(title) !== -1) {
+        this.form.sex = '0'
+      } else if (['Mrs', 'Ms', 'Mdm', 'Dame', 'Datin'].indexOf(title) !== -1) {
+        this.form.sex = '1'
+      }
+      if (this.form.nickName) {
+        this.$refs.form.validateField('nickName')
+      }
+    },
     handleView() {
       this.$refs.authDlg.open(this.form.roleIdList)
     },
     handleAdd() {
       this.reset()
       this.queryRoleListNoPage()
-      // this.queryPositionOptions()
       this.getConfigKey('sys.user.initPassword').then(response => {
         this.initPassword = response.msg
         this.form.password = this.initPassword
@@ -694,7 +798,6 @@ export default {
     handleUpdate() {
       this.reset()
       this.queryRoleListNoPage()
-      // this.queryPositionOptions()
       const userId = this.rowId
       getUser(userId).then(response => {
         const data = response.data || {}
@@ -712,23 +815,24 @@ export default {
     // 取消按钮
     cancel() {
       if (this.isView) {
-        this.$tab.closePage()
+        this.$store.dispatch('tagsView/delView', this.$route)
+        this.$router.back()
         return
       }
       if (this.$route.query.backType === '2') {
-        this.$tab.closePage()
+        this.$store.dispatch('tagsView/delView', this.$route)
+        this.$router.back()
         return
       }
-      const obj = { path: '/organization/user' }
-      this.$tab.closeOpenPage(obj)
+      this.$store.dispatch('tagsView/delView', this.$route)
+      this.$router.push({ name: 'User' })
     },
     /* 表格部分 */
     queryPositionOptions(id, row) {
       this.selectLoading = true
       queryDepartmentPost(id)
         .then(res => {
-          row['positionOptions'] = res.data || []
-          // this.positionOptions = res.data || []
+          row.positionOptions = res.data || []
           this.selectLoading = false
         })
         .catch(() => {
@@ -736,14 +840,13 @@ export default {
         })
     },
     focus(row) {
-      row['positionOptions'] = []
-      // this.positionOptions = []
+      row.positionOptions = []
       this.queryPositionOptions(row.departmentId, row)
     },
     positionIdChange(e, row) {
-      row['postId'] = e.postId
-      row['postName'] = e.postName
-      row['postItem'] = {
+      row.postId = e.postId
+      row.postName = e.postName
+      row.postItem = {
         postId: e.postId,
         postName: e.postName
       }
@@ -753,31 +856,30 @@ export default {
       this.tableList.forEach(item => {
         if (item.legalEntityId === legalEntityId) {
           if (item.departmentId !== row.departmentId) {
-            item['isDefault'] = '0'
+            item.isDefault = '0'
           }
         }
       })
     },
     handleAddBtn() {
-      const alreadySelectIdList = this.tableList.map(
-        item => item[this.rowIdKey]
-      )
-      this.$refs.selectDeptDlg.handleAdd(alreadySelectIdList)
+      const tableList = JSON.parse(JSON.stringify(this.tableList))
+      this.$refs.selectDeptDlg.handleAdd(tableList)
     },
     updateTable(list) {
       const rows = JSON.parse(JSON.stringify(list))
-      this.tableList = [...this.tableList, ...rows]
+      this.tableList.length = 0
+      this.tableList.push(...rows)
       if (this.tableList.length === 1) {
         const item = this.tableList[0]
-        item['isDefault'] = '1'
+        item.isDefault = '1'
       }
       this.tableList.forEach(x => {
         if (x.postId) {
-          x['postItem'] = {
+          x.postItem = {
             postId: x.postId,
             postName: x.postName
           }
-          x['positionOptions'] = [
+          x.positionOptions = [
             {
               postId: x.postId,
               postName: x.postName
@@ -794,6 +896,7 @@ export default {
           })
         })
       })
+      this.initDraggable()
     },
     /* 选中多个删除 */
     handleDelete() {
@@ -855,7 +958,7 @@ export default {
       }
       vm.selected.push(row)
     },
-    tableRowClassName({ row, rowIndex }) {
+    tableRowClassName({ row }) {
       let color = ''
       const cur = this.selected.find(
         item => item[this.rowIdKey] === row[this.rowIdKey]
@@ -865,7 +968,32 @@ export default {
       }
       return color
     },
-
+    initDraggable() {
+      this.destroyDraggable()
+      if (this.comDisFrom) return
+      this.$nextTick(() => {
+        const el = this.$refs.tables?.$el.querySelector(
+          '.el-table__body-wrapper tbody'
+        )
+        if (!el || this.comDisFrom) return
+        this.sortableDom = Sortable.create(el, {
+          handle: '.allowDrag',
+          animation: 100,
+          ghostClass: 'blue-background-class',
+          onEnd: evt => {
+            if (evt.oldIndex === evt.newIndex) return
+            // 先恢复 DOM 顺序，由 Vue 根据数据重排，避免拖拽后节点与数据错位。
+            const anchor =
+              el.children[
+                evt.oldIndex > evt.newIndex ? evt.oldIndex + 1 : evt.oldIndex
+              ]
+            el.insertBefore(evt.item, anchor || null)
+            const targetRow = this.tableList.splice(evt.oldIndex, 1)[0]
+            this.tableList.splice(evt.newIndex, 0, targetRow)
+          }
+        })
+      })
+    },
     destroyDraggable() {
       if (this.sortableDom) {
         this.sortableDom.destroy()
@@ -881,6 +1009,7 @@ export default {
         isAutoCreateEmployeeNo: '1',
         userId: '',
         userName: '',
+        title: undefined,
         nickName: '',
         password: '',
         mobileCode: '',
@@ -917,20 +1046,13 @@ export default {
         if (valid) {
           const password = this.form.password
           let param = { ...this.form }
+
           const departmentList = this.tableList
           if (departmentList.length <= 0) {
             this.$modal.msgError(this.$t('system.departmentTableEmpty'))
             this.collapseWarningForDept = true
             return
           }
-          // const positionReqObj = departmentList.find((item) => {
-          //   return !this.$resultOfBoolean(item.postId)
-          // })
-          // if (positionReqObj) {
-          //   this.$modal.msgError(this.$t('ui.commonReqMsg').replace('$1', this.$t('ui.position')))
-          //   this.collapseWarningForDept = true
-          //   return
-          // }
           const legalEntityIdList = departmentList
             .filter(x => x.isDefault === '1')
             .map(x => x.legalEntityId)
@@ -957,19 +1079,11 @@ export default {
             this.collapseWarningForDept = true
             return
           }
-          // const isDefaultReqObj = departmentList.find((item) => {
-          //   return item.isDefault === '1'
-          // })
-          // if (!isDefaultReqObj) {
-          //   this.$modal.msgError(this.$t('ui.positionIsDefaultReq'))
-          //   this.collapseWarningForDept = true
-          //   return
-          // }
-
           this.collapseWarningForDept = false
           param = this.$trimOfObj(JSON.parse(JSON.stringify(this.form)))
           param.departmentList = departmentList
           param.password = password
+
           this.$modal
             .confirm(this.$t('ui.addUserConfirm'))
             .then(() => {
@@ -978,7 +1092,7 @@ export default {
               }
               return addUser(param)
             })
-            .then(response => {
+            .then(() => {
               this.$modal.msgSuccess(
                 this.$t('ui.addUserSuccess').replace('$1', this.form.nickName)
               )
@@ -991,7 +1105,7 @@ export default {
             })
             .catch(() => {})
         } else {
-          this.$message.error(
+          this.$modal.msgError(
             this.$t('ui.fromIncomplete').replace('$1', this.$t('ui.basicInfo'))
           )
         }

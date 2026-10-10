@@ -1,6 +1,5 @@
-<!-- eslint-disable -->
 <template>
-  <el-form ref="form" :model="user" :rules="rules" label-width="140px">
+  <el-form ref="form" :model="user" :rules="rules" label-width="160px">
     <el-form-item :label="$t('ui.userName')" prop="nickName">
       <!-- eslint-disable-next-line vue/no-mutating-props -->
       <el-input
@@ -14,6 +13,8 @@
       prop="mobilePhone"
       ref="mobileNoRef"
     >
+      <!-- eslint-disable-next-line vue/no-mutating-props -->
+
       <MobilePhoneInput
         v-model:mobileCode="user.mobileCode"
         v-model:mobileNum="user.mobileNum"
@@ -39,19 +40,33 @@
         style="width: 100%"
       >
         <el-option
-          v-for="dict in sys_user_sex"
+          v-for="dict in dict.type.sys_user_sex"
           :key="dict.value"
           :label="dict.label"
           :value="dict.value"
         ></el-option>
       </el-select>
     </el-form-item>
+
+    <el-form-item :label="`${$t('ui.signedPicture')}`">
+      <userSignature
+        ref="uploadRef"
+        :accept="['.jpg', '.jpeg', '.png', '.bmp', '.webp']"
+        :dlgTitle="$t('ui.signedPicture')"
+        :signatureUrl="user.signatureUrl"
+        @change="changePhoto"
+        :documentName="
+          user.nickName
+            ? user.nickName + ' - ' + 'Signed Picture'
+            : 'Signed Picture'
+        "
+        :commonFileList="user.commonFileListSignature || []"
+      />
+    </el-form-item>
+
     <el-form-item>
       <el-button type="primary" size="small" @click="submit">{{
         $t('uiBtn.submit')
-      }}</el-button>
-      <el-button type="danger" size="small" @click="close">{{
-        $t('uiBtn.back')
       }}</el-button>
     </el-form-item>
   </el-form>
@@ -59,8 +74,10 @@
 
 <script>
 import { updateUserProfile } from '@/api/system/user'
+import userSignature from '@/components/Common/htz-image-upload/userSignature.vue'
 
 export default {
+  components: { userSignature },
   props: {
     user: {
       type: Object,
@@ -69,6 +86,7 @@ export default {
       }
     }
   },
+  dicts: ['sys_user_sex'],
 
   data() {
     const validatorPhoneNo = (rule, value, callback) => {
@@ -106,14 +124,8 @@ export default {
         ],
         mobilePhone: [
           { required: true, validator: validatorPhoneNo, trigger: 'change' }
-          // {
-          //   required: true,
-          //   message: this.$t('ui.reqMsg').replace('$1', this.$t('ui.mobilePhone')),
-          //   trigger: 'blur'
-          // }
         ]
-      },
-      sys_user_sex: []
+      }
     }
   },
   computed: {
@@ -129,12 +141,12 @@ export default {
       return isDisabled
     }
   },
-  created() {
-    const { proxy } = getCurrentInstance()
-    const { sys_user_sex } = proxy.useDict('sys_user_sex')
-    this.sys_user_sex = sys_user_sex || []
-  },
   methods: {
+    changePhoto(file) {
+      this.user.commonFileListSignature = file.url ? [file] : []
+      this.user.signatureUrl = file.url
+      this.user.signature = file.id || ''
+    },
     submit() {
       this.$refs.form.validate(valid => {
         if (valid) {
@@ -143,7 +155,7 @@ export default {
             .then(() => {
               return updateUserProfile(this.user)
             })
-            .then(response => {
+            .then(() => {
               this.$modal.msgSuccess(this.$t('ui.submitPageSuccess'))
               this.$store.dispatch('GetInfo')
             })
@@ -151,7 +163,8 @@ export default {
       })
     },
     close() {
-      this.$tab.closePage()
+      this.$store.dispatch('tagsView/delView', this.$route)
+      this.$router.push({ path: '/index' })
     }
   }
 }
