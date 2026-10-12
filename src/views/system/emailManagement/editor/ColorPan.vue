@@ -12,7 +12,7 @@
       <em ref="cur" class="cur"></em>
     </div>
     <div class="color-val-rs">
-      <B>RGB:</B><span>{{ colorRs }}</span>
+      <b>RGB:</b><span>{{ colorRs }}</span>
     </div>
     <div class="color-val-rs" style="text-align: center">
       <el-button size="small" @click="saveHandle">{{

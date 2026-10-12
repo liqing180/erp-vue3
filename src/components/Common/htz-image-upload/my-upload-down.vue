@@ -1,7 +1,7 @@
 <template>
   <el-dialog
     :close-on-click-modal="false"
-    v-dialogDrag
+    draggable
     width="1000px"
     append-to-body
     v-model="warpVisible"
@@ -24,7 +24,12 @@
       <!-- </div> -->
       <div class="drag-warp">
         <div>
-          <div v-for="file in fileList" :key="file.uid" class="drag-item">
+          <div
+            v-for="file in fileList"
+            :key="file.uid"
+            class="drag-item"
+            :class="{ hideFileName }"
+          >
             <div class="drag-item-box">
               <div style="width: 130px; height: 114px">
                 <div v-if="file.fileType === 'video'" class="item-video">
@@ -152,6 +157,10 @@ export default {
     allFileSize: {
       type: [Number],
       default: 300
+    },
+    hideFileName: {
+      type: Boolean,
+      default: false
     }
   },
   data() {
@@ -355,6 +364,15 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+.hideFileName {
+  .upload-file-name {
+    display: none;
+  }
+  .drag-item-box > div {
+    width: 146px !important;
+    height: 146px !important;
+  }
+}
 .dlg-video {
   width: 100%;
   height: 600px;

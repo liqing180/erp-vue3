@@ -155,7 +155,95 @@ export default {
       'Open: Can edit PO section fields (currency/payment method/payment terms/our reference/your reference/trade terms/shipping address/receiving warehouse/receiving contact).' +
       '<br/>Close: Cannot edit PO section fields (currency/payment method/payment terms/our reference/your reference/trade terms/shipping address/receiving warehouse/receiving contact).',
     poPurchaseQtyTip:
-      'Open: Can edit (PO purchase quantity). <br/>Close: Cannot edit (PO purchase quantity). '
+      'Open: Can edit (PO purchase quantity). <br/>Close: Cannot edit (PO purchase quantity). ',
+    quoteLink: 'Quote Link',
+    quoteLinkTip:
+      'On: The supplier email will include the quotation link.<br/>Off: The supplier email will not include the quotation link.',
+    MRPAutoExecute: 'MRP Auto Execute',
+    QTYLimit: 'QTY Limit',
+    expenseItem: 'Expense Item',
+    expenseItemAlreadyExists: 'Expense Item [$1] already exists',
+    serviceSurcharge: 'Service Surcharge',
+    ApprovalFlow: 'Approval Flow',
+    ApprovalFlowTips:
+      'ON: Requires approval after submission<br/>OFF: Takes effect immediately<br/>Default: ON',
+    OverseasSupplier: 'Overseas Supplier',
+    OverseasSupplierTips:
+      'ON: All suppliers including overseas<br/>OFF: Local suppliers only<br/>Default: OFF',
+    ASLValidation: 'ASL Validation',
+    ASLValidationTips:
+      'ON: Supplier-product must exist in ASL<br/>OFF: No ASL validation<br/>Default: ON',
+    defaultRule1: 'Default Rule: Receipt Allowed',
+    defaultRuleTips:
+      'All products are allowed by default. Only checked categories below will be restricted.',
+    RestrictByCategory: 'Restrict by Category (Batch)',
+    AllProducts:
+      'All products under checked categories will be disabled for emergency receipt',
+    checkedCategoryTips:
+      '⚠ Checking a parent category automatically restricts all child categories.',
+    EmergencyGoodsReceipt: 'Emergency Goods Receipt',
+    batchInput: 'Batch Input',
+    nonWorkingDayHoliday: 'Non-Working Day (Holiday)',
+    specialWorkingDay: 'Special Working Day',
+    AddExceptionDate: 'Add Exception Date',
+    holidaysOrSpecial: 'Add public holidays or special working days here.',
+    Work: 'Work',
+    Break: 'Break',
+    AddBreakPeriod: 'Add Break Period',
+    ApplyToWeekdays: 'Apply to Weekdays',
+    Monday: 'Monday',
+    Tuesday: 'Tuesday',
+    Wednesday: 'Wednesday',
+    Thursday: 'Thursday',
+    Friday: 'Friday',
+    Saturday: 'Saturday',
+    Sunday: 'Sunday',
+    dayOfWeek: 'Day of Week',
+    workingDay: 'Working Day',
+    workingBreakPeriods: 'Working & Break Periods',
+    weeklyWorkingHours: 'Weekly Working Hours',
+    holidaysSpecialDates: 'Holidays & Special Dates',
+    businessCalendarSettings: 'Business Calendar Settings',
+    usageScenario:
+      'These settings will be applied to system timeout calculations, SLA timers, and other business scenarios.',
+    month: 'Month',
+    latestTransactionPrice: 'Latest Transaction Price',
+    highestHistoricalPrice: 'Highest Historical Price',
+    movingAverageCost: 'Moving Average Cost',
+    weightedAverageCost: 'Weighted Average Cost',
+    salesCostConfiguration: 'Sales Cost Configuration',
+    warehouseLogicSettings: 'Warehouse Settings',
+    printLabelsForProjectItems: 'Print Labels for Project Items',
+    printLabelsTip:
+      'On: Labels are required when project items are received.<br/>Off: Labels are not required when project items are received.',
+    configureRulesOutbound:
+      'Configure the recommendation algorithm rules for product outbound.',
+    defaultRule: 'Default Rule',
+    FIFO: 'First-In, First-Out (FIFO)',
+    defaultRuleTip:
+      'This is the system\'s basic rule,applicable to all products without a separately configured "Best Match" rule',
+    bestMatchRule: 'Best Match Rule (Priority)',
+    bestMatchRuleTip:
+      'Add this rule for specific products for priority application. You can add or remove products for this rule below.',
+    enterProductTip: 'Enter product name or SKU',
+    addProduct: 'Add Product',
+    appliedBestMatch: 'Products with "Best Match" rule applied:',
+    remove: 'Remove',
+    addConditions: 'Add Conditions',
+    businessPartner: 'Business Partner',
+    product: 'Product',
+    ImportsDefaultStatus: 'Default Status for New Data Imports',
+    open: 'Open',
+    pendApproval: 'Pend. Approval (Recommended)',
+    pendApprovalTip:
+      'A best practice to ensure data quality. Imported data requires approval to become effective.',
+    approved: 'Approved',
+    approvedTip:
+      "Data will become effective immediately. Use only when you are certain of the data's reliability.",
+    taxIncluded: 'Tax Included',
+    days: 'Day(s)',
+    taxIncludedTip:
+      'ON: Displays the "Tax Included" field in Quotations and Purchase Orders. <br/>OFF: Hides the "Tax Included" field.'
   },
   addUserEmail: {
     title: 'Title',

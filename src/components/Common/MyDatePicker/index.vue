@@ -1,9 +1,9 @@
 <template>
-  <element-plus-date-picker
+  <component
+    :is="pickerComponent"
     ref="pickerRef"
-    v-bind="$attrs"
+    v-bind="{ ...$attrs, ...pickerTypeProps }"
     :model-value="sourceValue"
-    :type="type"
     :size="elementSize"
     :format="normalizedFormat"
     :value-format="normalizedValueFormat"
@@ -33,7 +33,7 @@
     <template v-for="(_, slotName) in $slots" #[slotName]="slotProps">
       <slot :name="slotName" v-bind="slotProps || {}" />
     </template>
-  </element-plus-date-picker>
+  </component>
 
   <Teleport v-if="sidecarTarget && shouldShowTimeSidecar" :to="sidecarTarget">
     <erp-date-time-wheel
@@ -48,7 +48,10 @@
 <script>
 import dayjs from 'dayjs'
 import customParseFormat from 'dayjs/plugin/customParseFormat.js'
-import { ElDatePicker as ElementPlusDatePicker } from 'element-plus'
+import {
+  ElDatePicker as ElementPlusDatePicker,
+  ElTimePicker as ElementPlusTimePicker
+} from 'element-plus'
 import ErpDateTimeWheel from './src/basic/TimePicker.vue'
 
 dayjs.extend(customParseFormat)
@@ -84,9 +87,9 @@ function toTimeDate(value) {
 
 function toDateValue(value) {
   if (value instanceof Date) return new Date(value)
-  if (value === undefined || value === null || value === '') return value
+  if (value === undefined || value === null || value === '') return undefined
   const date = new Date(value)
-  return Number.isNaN(date.getTime()) ? value : date
+  return Number.isNaN(date.getTime()) ? undefined : date
 }
 
 function parseClock(value) {
@@ -151,7 +154,6 @@ function doesRangeOverlap(ranges, startOfPeriod, endOfPeriod) {
 export default {
   name: 'MyDatePicker',
   components: {
-    ElementPlusDatePicker,
     ErpDateTimeWheel
   },
   inheritAttrs: false,
@@ -234,6 +236,16 @@ export default {
     }
   },
   computed: {
+    pickerComponent() {
+      return ['time', 'timerange'].includes(this.type)
+        ? ElementPlusTimePicker
+        : ElementPlusDatePicker
+    },
+    pickerTypeProps() {
+      return ['time', 'timerange'].includes(this.type)
+        ? { isRange: this.type === 'timerange' }
+        : { type: this.type }
+    },
     sourceValue() {
       return this.modelValue !== undefined ? this.modelValue : this.value
     },
@@ -409,27 +421,30 @@ export default {
       return date
     },
     handleModelValue(value) {
-      if (value) {
-        const date = new Date(Number(value))
-        const TimePickerRef = this.$refs.timeWheelRef
-        if (
-          TimePickerRef.selectedHour &&
-          TimePickerRef.selectedHour !== date.getHours()
-        ) {
-          date.setHours(TimePickerRef.selectedHour)
-        }
-        if (
-          TimePickerRef.selectedMinute &&
-          TimePickerRef.selectedMinute !== date.getMinutes()
-        ) {
-          date.setMinutes(TimePickerRef.selectedMinute)
-        }
+      value = this.normalizeTimestampValue(value)
+      const timeWheel = this.$refs.timeWheelRef
+      if (
+        this.normalizedValueFormat === 'x' &&
+        value !== null &&
+        value !== undefined &&
+        value !== '' &&
+        !Array.isArray(value) &&
+        timeWheel
+      ) {
+        const date = new Date(value)
+        date.setHours(timeWheel.selectedHour, timeWheel.selectedMinute)
         value = date.getTime()
       }
       this.emitModelValue(value)
     },
+    normalizeTimestampValue(value) {
+      if (this.normalizedValueFormat !== 'x') return value
+      const normalize = item =>
+        item === null || item === undefined || item === '' ? item : Number(item)
+      return Array.isArray(value) ? value.map(normalize) : normalize(value)
+    },
     handleChange(value) {
-      this.$emit('change', value)
+      this.$emit('change', this.normalizeTimestampValue(value))
     },
     handleClear() {
       this.$emit('clear')

@@ -4,7 +4,7 @@
     <div class="form-page-btn" style="text-align: left">
       <slot name="btn"></slot>
     </div>
-    <div class="form-page-content" style="text-align: left">
+    <div ref="pageContent" class="form-page-content" style="text-align: left">
       <slot name="content"></slot>
     </div>
     <slot></slot>

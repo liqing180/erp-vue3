@@ -6,6 +6,66 @@ const system = {
   hidden: true,
   children: [
     {
+      path: 'addIssue',
+      component: () => import('@/views/system/issueList/addIssue'),
+      name: 'AddIssue',
+      meta: { title: 'addIssue', activeMenu: '/system/issueList' }
+    },
+    {
+      path: 'editIssue',
+      component: () => import('@/views/system/issueList/editIssue'),
+      name: 'EditIssue',
+      meta: { title: 'editIssue', activeMenu: '/system/issueList' }
+    },
+    {
+      path: 'addDriver',
+      component: () => import('@/views/system/driverManagement/addDriver'),
+      name: 'AddDriver',
+      meta: { title: 'addDriver', activeMenu: '/system/driverManagement' }
+    },
+    {
+      path: 'editDriver',
+      component: () => import('@/views/system/driverManagement/editDriver'),
+      name: 'EditDriver',
+      meta: { title: 'editDriver', activeMenu: '/system/driverManagement' }
+    },
+    {
+      path: 'addVehicle',
+      component: () => import('@/views/system/vehicleManagement/addVehicle'),
+      name: 'AddVehicle',
+      meta: { title: 'addVehicle', activeMenu: '/system/vehicleManagement' }
+    },
+    {
+      path: 'editVehicle',
+      component: () => import('@/views/system/vehicleManagement/editVehicle'),
+      name: 'EditVehicle',
+      meta: { title: 'editVehicle', activeMenu: '/system/vehicleManagement' }
+    },
+    {
+      path: 'addTax',
+      component: () => import('@/views/system/tax/addTax'),
+      name: 'AddTax',
+      meta: { title: 'addTax', activeMenu: '/system/tax' }
+    },
+    {
+      path: 'editTax',
+      component: () => import('@/views/system/tax/editTax'),
+      name: 'EditTax',
+      meta: { title: 'editTax', activeMenu: '/system/tax' }
+    },
+    {
+      path: 'addSeaport',
+      component: () => import('@/views/system/seaport/addSeaport'),
+      name: 'AddSeaport',
+      meta: { title: 'addSeaport', activeMenu: '/system/seaport' }
+    },
+    {
+      path: 'editSeaport',
+      component: () => import('@/views/system/seaport/editSeaport'),
+      name: 'EditSeaport',
+      meta: { title: 'editSeaport', activeMenu: '/system/seaport' }
+    },
+    {
       path: 'addPaymentTerm',
       component: () => import('@/views/system/paymentTerm/addPaymentTerm'),
       name: 'AddPaymentTerm',
