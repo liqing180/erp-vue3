@@ -7,6 +7,7 @@ import { getDicts } from '@/api/system/dict/data'
 import { useDict } from '@/utils/dict'
 import MyDictDataClass from '@/utils/dict/myDictDataClass'
 import optionsDictCompat from '@/utils/dict/optionsCompat'
+import productLocale from '@/views/productManagement/lang'
 import TypeJudge from '@/utils/jsType/index'
 import bigUtils from '@/utils/bigUtils'
 import delEmptyParam from '@/utils/delEmptyParam'
@@ -116,6 +117,10 @@ const globalComponents = {
 function registerGlobalMethods(app, i18n) {
   const globals = app.config.globalProperties
 
+  // 与 ERP-VUE2 App 的初始化一致，菜单翻译不依赖先打开物料页面。
+  i18n.global.mergeLocaleMessage('zh', productLocale.zh)
+  i18n.global.mergeLocaleMessage('en', productLocale.en)
+
   Object.assign(globals, {
     getConfigKey,
     getDicts,
@@ -142,11 +147,26 @@ function registerGlobalMethods(app, i18n) {
     menuKey
   })
 
-  globals.getMenuTitle = title => i18n.global.t(`menu.${title}`)
+  globals.getMenuTitle = title => {
+    const key = `menu.${title}`
+    const text = i18n.global.t(key)
+    // 旧菜单返回的主数据管理键缺少语言包条目，仅在显示时补全文案。
+    if (text === key && title === 'masterDataManagement') {
+      return i18n.global.locale.value === 'zh'
+        ? '主数据管理'
+        : 'Master Data Management'
+    }
+    return text
+  }
   globals.getMenuTitleDelEdit = title => {
-    const text = i18n.global.t(`menu.${title}`)
+    // 物料表单仍使用旧 productInfo 路由键，显示名称与物料列表一致。
+    const displayTitle =
+      /^(?:(?:add|edit|view|revise)ProductInfo|productInfo)$/.test(title)
+        ? 'materialInfo'
+        : title
+    const text = globals.getMenuTitle(displayTitle)
     return text.replace(
-      /^(Create\s|add\s|edit\s|view\s|revise\s|创建|新增|编辑|查看|修正)/i,
+      /^(Create\s|add\s|edit\s|view\s|revise\s|创建|新增|编辑|修改|查看|修正)/i,
       ''
     )
   }

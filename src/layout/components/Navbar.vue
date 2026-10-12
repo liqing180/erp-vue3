@@ -43,7 +43,6 @@
 
         <el-tooltip
           :content="`${$t('settings.layoutSize')}`"
-          effect="dark"
           placement="bottom"
         >
           <size-select id="size-select" class="right-menu-item hover-effect" />

@@ -5,10 +5,10 @@
         <span
           v-if="item.redirect === 'noRedirect' || index == levelList.length - 1"
           class="no-redirect"
-          >{{ getMenuTitle(item.meta.title) }}</span
+          >{{ getMenuTitleDelEdit(item.meta.title) }}</span
         >
         <a v-else @click.prevent="handleLink(item)">{{
-          getMenuTitle(item.meta.title)
+          getMenuTitleDelEdit(item.meta.title)
         }}</a>
       </el-breadcrumb-item>
     </transition-group>

@@ -16,7 +16,7 @@
         @click.middle="!isAffix(tag) ? closeSelectedTag(tag) : ''"
         @contextmenu.prevent="openMenu(tag, $event)"
       >
-        {{ getMenuTitle(tag.title) }}
+        {{ getMenuTitleDelEdit(tag.title) }}
         <el-badge
           v-if="tag.name === 'ToDoTask' && bpmTaskCountData.myTodoTaskCount"
           :max="99"

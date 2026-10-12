@@ -3,7 +3,6 @@
     <el-row type="flex" align="middle">
       <el-tooltip
         class="item ml10"
-        effect="dark"
         :content="$t('RightToolbar.refreshFrequency')"
         placement="top"
         v-if="refreshTimeSaveKey"
@@ -39,7 +38,6 @@
       <el-tooltip
         v-if="showRefreshBtn"
         class="item"
-        effect="dark"
         :content="$t('RightToolbar.refresh')"
         placement="top"
       >
@@ -53,7 +51,6 @@
       </el-tooltip>
       <el-tooltip
         class="item"
-        effect="dark"
         :content="$t('RightToolbar.setColumns')"
         placement="top"
         v-if="columns && showSetColumns"

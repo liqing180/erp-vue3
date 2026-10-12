@@ -1,7 +1,7 @@
 import { createApp } from 'vue'
 import Cookies from 'js-cookie'
 
-import ElementPlus from 'element-plus'
+import ElementPlus, { ElTable, ElTooltip } from 'element-plus'
 import 'element-plus/dist/index.css'
 import 'element-plus/theme-chalk/dark/css-vars.css'
 
@@ -55,6 +55,13 @@ app.use(elementIcons)
 app.use(trimOfObj)
 app.use(numberTofixed)
 app.use(resultOfBoolean)
+
+// 延续 ERP-VUE2 的全局浅色悬浮提示配置，覆盖普通提示和表格溢出提示。
+ElTooltip.props.effect.default = 'light'
+ElTable.props.tooltipEffect = {
+  type: String,
+  default: 'light'
+}
 
 app.use(ElementPlus, {
   locale: Cookies.get('language') === 'en' ? lang.en : lang.zhCn,
