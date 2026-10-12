@@ -1,6 +1,7 @@
 <template>
-  <div class="flex">
+  <div class="select-and-multiple">
     <el-select
+      class="field-select"
       :size="size"
       :style="{ width: maxTextWidth ? maxTextWidth + 'px' : '120px' }"
       :model-value="selectVal"
@@ -26,7 +27,7 @@
     </el-select>
     <el-select
       :size="size"
-      class="flex-1 select"
+      class="value-select"
       :model-value="inputVal"
       :filterable="filterable"
       :placeholder="placeholder || ''"
@@ -60,7 +61,7 @@
 
 <script>
 export default {
-  name: 'SelectAnInput',
+  name: 'SelectAnMultipleSelect',
   props: [
     'inputVal',
     'selectId',
@@ -84,21 +85,29 @@ export default {
     'filterable',
     'size'
   ],
-  data() {
-    return {
-      selectVal: this.selectId || undefined,
-      inputValue: this.inputVal || ''
+  computed: {
+    selectVal() {
+      return this.selectId || undefined
     }
   },
-  watch: {
-    selectId(newVal, oldVal) {
-      this.selectVal = newVal || undefined
-    },
-    inputVal(newVal, oldVal) {
-      this.inputValue = newVal || ''
-    }
-  },
-  methods: {},
   emits: ['updateForm']
 }
 </script>
+
+<style lang="scss" scoped>
+.select-and-multiple {
+  display: flex;
+  width: 100%;
+  min-width: 0;
+
+  .field-select {
+    flex-shrink: 0;
+  }
+
+  .value-select {
+    flex: 1;
+    width: 0;
+    min-width: 0;
+  }
+}
+</style>

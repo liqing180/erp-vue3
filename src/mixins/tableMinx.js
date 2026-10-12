@@ -7,12 +7,17 @@ function getTableScrollWrapper(tableRef) {
   if (!root?.querySelector) return undefined
 
   return (
+    root.querySelector('.el-table-v2__main .el-table-v2__body > div') ||
     root.querySelector('.el-table__body-wrapper .el-scrollbar__wrap') ||
     root.querySelector('.el-table__body-wrapper')
   )
 }
 
 function setTableScrollTop(tableRef, value) {
+  if (typeof tableRef?.scrollToTop === 'function') {
+    tableRef.scrollToTop(value)
+    return
+  }
   if (typeof tableRef?.setScrollTop === 'function') {
     tableRef.setScrollTop(value)
     return

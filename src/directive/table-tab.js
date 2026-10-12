@@ -1,3 +1,5 @@
+import { nextTick } from 'vue'
+
 const DEFAULT_OPTIONS = {
   enterToNext: false,
   focusableSelector:
@@ -90,10 +92,76 @@ function getFocusableElements(tableEl, config) {
 
 function getScrollWrapper(tableEl) {
   return (
+    tableEl.querySelector('.el-table-v2__main .el-vl__window') ||
+    tableEl.querySelector('.el-table-v2__main .el-table-v2__body > div') ||
     tableEl.querySelector('.el-table__body-wrapper .el-scrollbar__wrap') ||
     tableEl.querySelector('.el-table__body-wrapper') ||
     tableEl.querySelector('.el-scrollbar__wrap')
   )
+}
+
+function getVirtualRowInputs(tableEl, rowIndex, config) {
+  const columns = config.getColumns()
+  const order = [
+    ...columns.filter(column => column.fixed === 'left'),
+    ...columns.filter(column => !column.fixed),
+    ...columns.filter(column => column.fixed === 'right')
+  ]
+  const cells = Array.from(
+    tableEl.querySelectorAll('[data-virtual-row]')
+  ).filter(cell => Number(cell.dataset.virtualRow) === rowIndex)
+  return order.flatMap(column => {
+    const cell = cells.find(
+      item => item.dataset.virtualColumn === String(column.key)
+    )
+    if (!cell) return []
+    return Array.from(cell.querySelectorAll(config.focusableSelector)).filter(
+      input => isElementVisible(input, config.strictVisibilityCheck)
+    )
+  })
+}
+
+function focusVirtualInput(tableEl, input, config) {
+  const cell = input.closest('[data-virtual-column]')
+  const column = config
+    .getColumns()
+    .find(item => String(item.key) === cell?.dataset.virtualColumn)
+  if (config.autoScroll && !column?.fixed) {
+    scrollElementIntoViewWithinTable(tableEl, input)
+  }
+  input.focus()
+}
+
+async function moveVirtualFocus(tableEl, activeElement, backwards, config) {
+  const currentCell = activeElement.closest('[data-virtual-row]')
+  if (!currentCell) return
+  let rowIndex = Number(currentCell.dataset.virtualRow)
+  const currentInputs = getVirtualRowInputs(tableEl, rowIndex, config)
+  const inputIndex = currentInputs.indexOf(activeElement)
+  const nextInput = currentInputs[inputIndex + (backwards ? -1 : 1)]
+  if (nextInput && inputIndex >= 0) {
+    focusVirtualInput(tableEl, nextInput, config)
+    return
+  }
+
+  const rows = config.getRows()
+  const table = config.getTable()
+  const firstEditableColumn = config.getColumns().find(column => column.prop)
+  // 虚拟列表只挂载可视行；逐行滚动并等待渲染，不能在已挂载 DOM 内提前回绕。
+  for (let count = 0; count < rows.length; count += 1) {
+    if (!tableEl.isConnected) return
+    rowIndex = (rowIndex + (backwards ? -1 : 1) + rows.length) % rows.length
+    config.activateRow?.(rows[rowIndex], firstEditableColumn || {})
+    table?.scrollToRow(rowIndex, 'smart')
+    await nextTick()
+    await new Promise(resolve => requestAnimationFrame(resolve))
+    const inputs = getVirtualRowInputs(tableEl, rowIndex, config)
+    const input = backwards ? inputs[inputs.length - 1] : inputs[0]
+    if (input) {
+      focusVirtualInput(tableEl, input, config)
+      return
+    }
+  }
 }
 
 function scrollElementIntoViewWithinTable(tableEl, element) {
@@ -134,6 +202,27 @@ function createHandler(el) {
 
     if (!isTab && !isEnter) return
     if (isFloatingPanelOpen()) return
+
+    if (
+      el.classList.contains('el-table-v2') &&
+      config.getRows &&
+      config.getColumns
+    ) {
+      if (!document.activeElement?.closest('[data-virtual-row]')) return
+      event.preventDefault()
+      // 同一次导航完成前忽略重复按键，避免焦点与滚动请求互相覆盖。
+      if (el.__erpVirtualTabPending) return
+      el.__erpVirtualTabPending = true
+      moveVirtualFocus(
+        el,
+        document.activeElement,
+        event.shiftKey,
+        config
+      ).finally(() => {
+        el.__erpVirtualTabPending = false
+      })
+      return
+    }
 
     const focusableElements = getFocusableElements(el, config)
     const activeElement = document.activeElement
@@ -188,5 +277,6 @@ export default {
     }
     delete el.__erpTableTabHandler
     delete el.__erpTableTabConfig
+    delete el.__erpVirtualTabPending
   }
 }

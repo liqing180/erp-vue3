@@ -8,8 +8,18 @@ import {
   compareRevisionDiff as productDiff
 } from '@/api/productManagement/productInfo'
 import productSchema from './schemas/product'
+import {
+  queryRevisionVersions as salesInquiryVersions,
+  compareRevisionDiff as salesInquiryDiff
+} from '@/api/salesManagement/salesInquiry'
+import salesInquirySchema from './schemas/salesInquiry'
 
 export const revisionModules = {
+  salesInquiry: {
+    loadVersions: salesInquiryVersions,
+    compare: salesInquiryDiff,
+    schema: salesInquirySchema
+  },
   product: {
     loadVersions: productVersions,
     compare: productDiff,

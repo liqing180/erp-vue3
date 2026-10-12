@@ -1,0 +1,76 @@
+.erp-virtual-table {
+  border: 1px solid var(--el-border-color-lighter);
+
+  .el-table-v2 {
+    --el-table-header-bg-color: #f8f8f9;
+  }
+
+  .el-table-v2__empty {
+    pointer-events: none;
+  }
+
+  .virtual-empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    color: var(--el-text-color-secondary);
+    font-size: 14px;
+  }
+
+  .el-table-v2__row-cell,
+  .el-table-v2__header-cell {
+    border-right: 1px solid var(--el-border-color-lighter);
+  }
+
+  .el-table-v2__header-cell {
+    justify-content: center;
+  }
+
+  .virtual-cell-content {
+    width: 100%;
+    min-width: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  .virtual-tree-cell {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    min-width: 0;
+  }
+
+  .virtual-tree-cell > .level {
+    flex-shrink: 0;
+  }
+
+  .virtual-tree-toggle {
+    flex-shrink: 0;
+    width: 18px;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: var(--el-text-color-regular);
+    cursor: pointer;
+  }
+
+  .new-add-row {
+    background: #d2e3fc !important;
+  }
+
+  .cancel-row {
+    background: #f5f5f4 !important;
+    text-decoration: line-through;
+    color: #78716c;
+  }
+
+  .edit-table-cell {
+    background: #f0f7ff !important;
+  }
+
+  .table-SelectedRow-bgcolor {
+    background: #d9ecff !important;
+  }
+}

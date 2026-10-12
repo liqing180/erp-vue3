@@ -341,7 +341,7 @@ td.is-err-table-cell {
 
 .desc-tooltip::-webkit-scrollbar-thumb {
   border-radius: 4px;
-  background-color: rgba(255, 255, 255, 0.5);
+  background-color: #c1c1c1;
 }
 
 .desc-tooltip::-webkit-scrollbar-track {

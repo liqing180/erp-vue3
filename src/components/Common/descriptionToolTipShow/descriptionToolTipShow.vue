@@ -3,6 +3,8 @@
     <el-popover
       trigger="hover"
       placement="top"
+      width="max-content"
+      :popper-style="{ maxWidth: 'calc(100vw - 32px)' }"
       :disabled="!String(showStr || '').trim()"
       :show-after="400"
     >
