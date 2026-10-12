@@ -12,7 +12,7 @@
     @close="handleClose"
     @closed="handleClosed"
   >
-    <template #title
+    <template #header
       ><div class="po-version-v2-titlebar">
         <span class="po-version-v2-title-icon" aria-hidden="true">
           <el-icon><CopyDocument /></el-icon>

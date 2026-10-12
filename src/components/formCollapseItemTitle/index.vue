@@ -5,7 +5,7 @@
         size="20"
         style="cursor: pointer"
         color="#555"
-        class="el-icon-caret-right ml5"
+        class="el-icon-caret-right mr5"
       >
         <CaretRight />
       </el-icon>

@@ -5,6 +5,7 @@ import system from './system'
 import organization from './organization'
 import salesManagement from './salesManagement'
 import purchaseManagement from './purchaseManagement'
+import productManagement from './productManagement'
 
 /**
  * Note: 路由配置项
@@ -126,7 +127,8 @@ export const constantRoutes = [
   system,
   organization,
   salesManagement,
-  purchaseManagement
+  purchaseManagement,
+  productManagement
 ]
 
 // 动态路由，基于用户权限动态去加载

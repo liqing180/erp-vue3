@@ -20,7 +20,8 @@ import {
   selectDictLabels,
   isContain,
   appointTime,
-  showUomLabel
+  showUomLabel,
+  rowGutter
 } from '@/utils/ruoyi'
 import SysNotifyClass from '@/layout/components/notifications/sysNotify/sysNotify.js'
 import { isEmail } from '@/utils/validate.js'
@@ -136,6 +137,7 @@ function registerGlobalMethods(app, i18n) {
     $isContain: isContain,
     $TypeJudge: TypeJudge,
     showUomLabel,
+    rowGutter,
     $EventBus: eventBus,
     menuKey
   })

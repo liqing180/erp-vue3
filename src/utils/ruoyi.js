@@ -319,3 +319,6 @@ export function showUomLabel(value) {
   const item = commonUomList.find(uom => uom.uomName === value)
   return item?.description || ''
 }
+
+// ERP-VUE2 表单列间距，供原 Options API 页面复用。
+export const rowGutter = 120

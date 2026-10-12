@@ -37,6 +37,7 @@ onMounted(() => {
     display: flex;
     align-items: center;
     height: 30px;
+    min-height: 30px;
     line-height: 30px;
     // background: #409effaf;
     padding-left: 10px;

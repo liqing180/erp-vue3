@@ -250,6 +250,7 @@ import SimpleArrayMultipleSelectEle from './SimpleArrayMultipleSelectEle.vue'
 import ComplexArrayMultipleSelectEle from './complexArrayMultipleSelectEle.vue'
 import SelectAnPickerEle from './SelectAnPickerEle.vue'
 import ElcascaderEle from './ElcascaderEle.vue'
+import ATreeSelectCustom from './ATreeSelectCustom.vue'
 import CustomSearchDlg from './CustomSearchDlg.vue'
 import searchMixin from './searchMixin.js'
 import SelectAnInput from './SelectAnInput.vue'
@@ -276,6 +277,7 @@ export default {
     ComplexArrayMultipleSelectEle,
     SelectAnPickerEle,
     ElcascaderEle,
+    ATreeSelectCustom,
     CustomSearchDlg,
     SelectAnInput,
     AutocompleteEle,
@@ -590,7 +592,8 @@ export default {
         if (
           type === 'MultipleSelectEle' ||
           type === 'SelectEle' ||
-          type === 'ElcascaderEle'
+          type === 'ElcascaderEle' ||
+          type === 'ATreeSelectCustom'
         ) {
           shouldSearch = true
         }
@@ -661,6 +664,13 @@ export default {
           if (x.name === name) {
             this.selectTagList.splice(i, 1, obj)
           }
+        })
+      }
+      if (type === 'ATreeSelectCustom') {
+        title = value.map(item => item.label).join('、')
+        obj = { name, title, label, value, type }
+        this.selectTagList.forEach((item, index) => {
+          if (item.name === name) this.selectTagList.splice(index, 1, obj)
         })
       }
       if (type === 'DatePickerEleShortcuts') {
