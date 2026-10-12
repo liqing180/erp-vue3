@@ -79,7 +79,12 @@
               <span v-else>{{ column.title }}</span>
             </template>
             <template #cell="{ column: item, rowData: row, rowIndex }">
-              <VirtualTableCell :show-overflow-tooltip="!!item.tooltip">
+              <VirtualTableCell
+                :row-data="row"
+                :column="item"
+                :row-index="rowIndex"
+                :show-overflow-tooltip="!!item.tooltip"
+              >
                 <template v-if="item.key === '__index0'">
                   <span>{{ rowIndex + 1 }}</span>
                 </template>
@@ -788,6 +793,18 @@ export default {
     }
   },
   computed: {
+    errorColumnProps() {
+      const errors = new Set()
+      this.comVisibleColumn.forEach(column => {
+        if (
+          this.tableList.some(
+            row => !row[column.prop] && row[column.prop + 'Error']
+          )
+        )
+          errors.add(column.prop)
+      })
+      return errors
+    },
     virtualColumns() {
       const columns = [
         {
@@ -1677,11 +1694,7 @@ export default {
           }
         }
       }
-      if (
-        this.tableList.find(
-          item => !item[column.property] && item[column.property + 'Error']
-        )
-      ) {
+      if (this.errorColumnProps.has(column.property)) {
         cellClass = 'is-required-table-cell'
       }
       return cellClass

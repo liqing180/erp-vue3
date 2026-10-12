@@ -101,7 +101,12 @@
                     style="color: #dfdfdf; font-size: 20px"
                   />
                 </div>
-                <VirtualTableCell :show-overflow-tooltip="!!item.tooltip">
+                <VirtualTableCell
+                  :row-data="row"
+                  :column="item"
+                  :row-index="rowIndex"
+                  :show-overflow-tooltip="!!item.tooltip"
+                >
                   <div
                     class="flexCCol"
                     style="flex: 1"
@@ -137,7 +142,13 @@
                   </template>
                 </VirtualTableCell>
               </div>
-              <VirtualTableCell v-else :show-overflow-tooltip="!!item.tooltip">
+              <VirtualTableCell
+                v-else
+                :row-data="row"
+                :column="item"
+                :row-index="rowIndex"
+                :show-overflow-tooltip="!!item.tooltip"
+              >
                 <template v-if="item.key === '__index0'">
                   <span>{{ row.customIndex + 1 }}</span>
                 </template>
