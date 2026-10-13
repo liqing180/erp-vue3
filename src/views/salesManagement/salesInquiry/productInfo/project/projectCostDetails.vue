@@ -38,11 +38,13 @@
             :height="height"
             :row-key="rowIdKey"
             :row-height="rowHeight"
+            :estimated-row-height="rowHeight"
             :header-height="44"
             :row-class="virtualRowClass"
+            :row-props="virtualRowProps"
             :cell-props="virtualCellProps"
             v-table-tab="virtualTabOptions"
-            scrollbar-always-on
+            :scrollbar-always-on="false"
             fixed
           >
             <template #empty>
@@ -134,7 +136,10 @@
                 ></i> -->
                     </div>
 
-                    <TablePropError v-if="row[item.prop + 'ErrorChildren']" />
+                    <TablePropError
+                      floating
+                      v-if="row[item.prop + 'ErrorChildren']"
+                    />
                   </div>
 
                   <template v-else>
@@ -294,7 +299,10 @@
                         >
                         </el-option>
                       </el-select>
-                      <TablePropError v-if="row[item.prop + 'ErrorChildren']" />
+                      <TablePropError
+                        floating
+                        v-if="row[item.prop + 'ErrorChildren']"
+                      />
                     </template>
                     <span v-else :title="showUomLabel(row[item.prop])">{{
                       row[item.prop]
@@ -332,7 +340,10 @@
                         >{{ row.basicUom }}</span
                       >
                     </div>
-                    <TablePropError v-if="row[item.prop + 'ErrorChildren']" />
+                    <TablePropError
+                      floating
+                      v-if="row[item.prop + 'ErrorChildren']"
+                    />
                   </template>
 
                   <template v-else-if="item.prop === 'qty' && !row.isTotal">
@@ -379,7 +390,10 @@
                         :max="999999999"
                         @change="qtyChange(row)"
                       />
-                      <TablePropError v-if="row[item.prop + 'ErrorChildren']" />
+                      <TablePropError
+                        floating
+                        v-if="row[item.prop + 'ErrorChildren']"
+                      />
                     </template>
                     <template v-else>
                       <div
@@ -425,7 +439,10 @@
                         :max="999999.999"
                         @change="netQtyChange(row)"
                       />
-                      <TablePropError v-if="row[item.prop + 'ErrorChildren']" />
+                      <TablePropError
+                        floating
+                        v-if="row[item.prop + 'ErrorChildren']"
+                      />
                     </template>
                     <template v-else>{{
                       $numberStr(row[item.prop], row.decimalNum)
@@ -445,7 +462,10 @@
                         :max="100"
                         @change="scrapRateChange(row)"
                       />
-                      <TablePropError v-if="row[item.prop + 'ErrorChildren']" />
+                      <TablePropError
+                        floating
+                        v-if="row[item.prop + 'ErrorChildren']"
+                      />
                     </template>
                     <template v-else>{{
                       $numberStr(row[item.prop], 2)
@@ -479,7 +499,10 @@
                       {{ $numberStr(row[item.prop], 2) }}
                     </div>
 
-                    <TablePropError v-if="row[item.prop + 'ErrorChildren']" />
+                    <TablePropError
+                      floating
+                      v-if="row[item.prop + 'ErrorChildren']"
+                    />
                   </template>
                   <template
                     v-else-if="item.prop === 'discountPer' && !row.isTotal"
@@ -584,7 +607,10 @@
                         :max="999"
                         @change="changeExpectedDeliveryDate(rowIndex, row)"
                       />
-                      <TablePropError v-if="row[item.prop + 'ErrorChildren']" />
+                      <TablePropError
+                        floating
+                        v-if="row[item.prop + 'ErrorChildren']"
+                      />
                     </template>
 
                     <template v-else>{{
@@ -912,20 +938,6 @@ export default {
           align: 'center'
         })
       return columns
-    },
-    rowHeight() {
-      const hasRowError = tableList => {
-        return tableList.some(item => {
-          // 判断当前节点
-          if (item['ROW-ERROR'] === true) return true
-          // 递归判断子级
-          if (item.childProductList && item.childProductList.length > 0) {
-            return hasRowError(item.childProductList)
-          }
-          return false
-        })
-      }
-      return hasRowError(this.tableList) ? 62 : 38
     },
     fmtForYmdhms() {
       return this.$store.getters.fmtForYmdhms

@@ -2,10 +2,29 @@
 export default {
   data() {
     return {
-      collapsedVirtualRowKeys: []
+      collapsedVirtualRowKeys: [],
+      virtualRowHeights: new Map()
+    }
+  },
+  created() {
+    this.virtualRowObservers = new Map()
+  },
+  beforeUnmount() {
+    this.virtualRowObservers.forEach(({ observer }) => observer.disconnect())
+    this.virtualRowObservers.clear()
+  },
+  watch: {
+    virtualRows(rows) {
+      const keys = new Set(rows.map(row => row[this.rowIdKey]))
+      this.virtualRowHeights.forEach((height, key) => {
+        if (!keys.has(key)) this.virtualRowHeights.delete(key)
+      })
     }
   },
   computed: {
+    rowHeight() {
+      return 38
+    },
     virtualTreeEnabled() {
       return false
     },
@@ -31,7 +50,20 @@ export default {
     virtualTableHeight() {
       return Math.min(
         600,
-        Math.max(100, this.virtualRows.length * this.rowHeight + 56)
+        Math.max(
+          100,
+          this.virtualRows.reduce(
+            (height, row) =>
+              height +
+              Math.max(
+                this.rowHeight,
+                ...Object.values(
+                  this.virtualRowHeights.get(row[this.rowIdKey]) || {}
+                )
+              ),
+            56
+          )
+        )
       )
     },
     virtualTabOptions() {
@@ -51,6 +83,75 @@ export default {
     }
   },
   methods: {
+    virtualRowProps() {
+      return {
+        ref: this.observeVirtualRow,
+        onVnodeUpdated: vnode => this.refreshVirtualRowObserver(vnode.el),
+        onVnodeBeforeUnmount: vnode => {
+          this.virtualRowObservers.get(vnode.el)?.observer.disconnect()
+          this.virtualRowObservers.delete(vnode.el)
+        }
+      }
+    },
+    observeVirtualRow(row) {
+      const element = row?.$el
+      if (!element || this.virtualRowObservers.has(element)) return
+      // Table V2 默认只在行挂载时测量；继续观察内容，保持编辑后的行高和固定列一致。
+      const observer = new ResizeObserver(() => {
+        if (!element.isConnected) return
+        const rowStyle = getComputedStyle(element)
+        const borderHeight =
+          parseFloat(rowStyle.borderTopWidth) +
+          parseFloat(rowStyle.borderBottomWidth)
+        const contentHeight = Math.max(
+          this.rowHeight - borderHeight,
+          ...Array.from(element.children).map(cell => {
+            const style = getComputedStyle(cell)
+            return (
+              Math.max(
+                0,
+                ...Array.from(cell.children).map(
+                  child => child.getBoundingClientRect().height
+                )
+              ) +
+              parseFloat(style.paddingTop) +
+              parseFloat(style.paddingBottom)
+            )
+          })
+        )
+        const height = Math.ceil(contentHeight + borderHeight)
+        const { rowKey, rowIndex, onRowHeightChange } = row.$props
+        const direction = element.closest('.el-table-v2__left')
+          ? 'left'
+          : element.closest('.el-table-v2__right')
+            ? 'right'
+            : false
+        onRowHeightChange?.({ rowKey, rowIndex, height }, direction)
+        // 容器高度取主表和固定列的最大自然高度，测量信息不写入业务行。
+        const heights = this.virtualRowHeights.get(rowKey) || {}
+        const area = direction || 'main'
+        if (heights[area] !== height) {
+          this.virtualRowHeights.set(rowKey, { ...heights, [area]: height })
+        }
+      })
+      this.virtualRowObservers.set(element, { observer, cells: [] })
+      this.refreshVirtualRowObserver(element)
+    },
+    refreshVirtualRowObserver(element) {
+      const record = this.virtualRowObservers.get(element)
+      if (!record) return
+      const cells = Array.from(
+        element.querySelectorAll('.virtual-cell-content')
+      )
+      if (
+        cells.length === record.cells.length &&
+        cells.every((cell, index) => cell === record.cells[index])
+      )
+        return
+      record.observer.disconnect()
+      cells.forEach(cell => record.observer.observe(cell))
+      record.cells = cells
+    },
     virtualCellProps({ rowData, rowIndex, column }) {
       return {
         class: this.tableCellClassName({
